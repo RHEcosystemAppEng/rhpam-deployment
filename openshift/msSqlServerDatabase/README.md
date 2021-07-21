@@ -1,5 +1,5 @@
 # Table of Contents
-* [Deploy RHPAM on OpenShift with MS Sql Server](#deploy-rhpam-on-openshift-with-ms-sql-server)
+* [Deploy RHPAM on OpenShift with MS SQL Server](#deploy-rhpam-on-openshift-with-ms-sql-server)
   * [Deploy MS SQL instance](#deploy-ms-sql-instance)
     * [Create the RHPAM database and validate the MS SQL installation](#create-the-rhpam-database-and-validate-the-ms-sql-installation)
  * [Build the custom KIE Server extension image](#build-the-custom-kie-server-extension-image)
@@ -8,7 +8,7 @@
    * [Deploy the KeiApp instance](#deploy-the-keiapp-instance)
    * [Validate the installation](#validate-the-installation)
 
-# Deploy RHPAM on OpenShift with MS Sql Server
+# Deploy RHPAM on OpenShift with MS SQL Server
 ## Deploy MS SQL instance
 **Note**: These steps are optional if you already have your own running instance of MS SQL server (either as an OpenShift 
 container or as a standalone service)
@@ -115,8 +115,8 @@ OCP_REGISTRY=$(oc get route -n openshift-image-registry | grep image-registry | 
 docker login  -u `oc whoami` -p  `oc whoami -t` ${OCP_REGISTRY}
 
 docker login quay.io
-docker pull quay.io/dmartino/rhpam-kieserver-rhel8-custom:7.11.0-4
-docker tag quay.io/dmartino/rhpam-kieserver-rhel8-custom:7.11.0-4 \
+docker pull quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom:7.11.0-4
+docker tag quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom:7.11.0-4 \
     ${OCP_REGISTRY}/`oc project -q`/rhpam-kieserver-rhel8-custom:7.11.0-4
 docker tag kiegroup/jboss-kie-mssql-extension-openshift-image:7.2.2.jre11 \
     ${OCP_REGISTRY}/`oc project -q`/jboss-kie-mssql-extension-openshift-image:7.2.2.jre11
@@ -135,9 +135,14 @@ insecure registry, adding the following to either `/etc/docker/daemon.json` or f
 the login passwords to `Quay.io` nor to the `Red Hat registry'
 
 ### Deploy the KeiApp instance
+Run the following to deploy the sample application:
 ```shell
 oc create -f custom-rhpam-mssql.yaml
 ```
+
+**Note**: you should at least update the `extensionImageStreamTagNamespace` and `imageContext` properties to match your
+actual project name
+
 ### Validate the installation
 1. Verify the custom library is installed properly:
 ```shell

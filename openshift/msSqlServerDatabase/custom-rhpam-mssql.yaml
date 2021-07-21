@@ -26,7 +26,7 @@ spec:
             extensionImage: true
             driver: mssql
             dialect: org.hibernate.dialect.SQLServer2012Dialect
-            jdbcURL: jdbc:sqlserver://172.30.231.25:31433;DatabaseName=rhpam
+            jdbcURL: jdbc:sqlserver://172.30.23.105:31433;DatabaseName=rhpam
             nonXA: 'true'
             username: sa
             password: msSql2019

@@ -4,7 +4,7 @@ List of Asana tasks and related procedures:
   [procedure](./createCustomKierServerImage/README.md)
 * [Deploy RHPAM on OpenShift with custom Kie-Server image](https://app.asana.com/0/1200498898048415/1200564580523437/f):
   [procedure](./deployCustomJarOnOCP/README.md)
-* [Deploy RHPAM on OpenShift with MS Sql Server](https://app.asana.com/0/1200498898048415/1200565556279281/f):
+* [Deploy RHPAM on OpenShift with MS SQL Server](https://app.asana.com/0/1200498898048415/1200565556279281/f):
   [procedure](./msSqlServerDatabase/README.md)
 * [Configure RHPAM with External Maven Repo](https://app.asana.com/0/1200498898048415/1200564580523441/f):
   [procedure](./externalMavenRepo/README.md)
