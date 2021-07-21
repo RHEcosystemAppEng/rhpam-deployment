@@ -6,7 +6,6 @@
   * [Deploying RHPAM application](#deploying-rhpam-application)
     * [Preliminary steps](#preliminary-steps)
     * [Validating the deployment](#validating-the-deployment)
-  * [Collateral: deploying the OriginationServiceTask custom task](#collateral:-deploying-the-originationservicetask-custom-task)
 
 # Configure RHPAM with External Maven Repo
 **Prerequisites**:
