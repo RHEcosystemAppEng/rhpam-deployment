@@ -22,6 +22,9 @@ This procedure is meant to deploy an instance of RHPAM with the following featur
 * KIE Server runs a Custom image generated from an additional custom extension
 * KIE Server connects an external MS SQL database using an extension image
 
+The following diagram shows the different use cases we want to validate with this procedure.
+![External Maven and Mirror](./ExternalMavenAndMirror.png)
+
 ## Install Maven repository on Nexus
 This step is optional in case you already have a company's repository for Maven2 artifacts.
 
