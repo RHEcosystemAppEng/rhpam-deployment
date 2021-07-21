@@ -1,0 +1,32 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: custom-rhpam
+spec:
+  environment: rhpam-production
+  imageRegistry:
+    registry: quay.io
+  commonConfig:
+    adminPassword: password
+    adminUser: admin
+    amqClusterPassword: password
+    amqPassword: password
+    dbPassword: password
+    keyStorePassword: password
+    applicationName: custom-rhpam
+  objects:
+    console:
+      keystoreSecret: businesscentral-app-secret
+      replicas: 2
+    servers:
+    - database:
+        type: mysql
+      image: rhpam-kieserver-rhel8-custom
+      imageContext: dmartino
+      imageTag: 7.11.0-4
+      id: kieserver-1
+      keystoreSecret: kieserver-app-secret
+      name: custom-keyserver
+      replicas: 2
+    smartRouter:
+      keystoreSecret: smartrouter-app-secret

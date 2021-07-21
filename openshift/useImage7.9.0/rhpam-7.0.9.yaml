@@ -1,0 +1,39 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: rhpam-790
+spec:
+  environment: rhdm-authoring
+  commonConfig:
+    adminPassword: password
+    adminUser: admin
+    amqClusterPassword: password
+    amqPassword: password
+    dbPassword: password
+    keyStorePassword: password
+    applicationName: rhpam-790
+  objects:
+    console:
+      image: rhpam-businesscentral-rhel8
+      imageContext: rhpam-7
+      imageTag: 7.9.0
+      keystoreSecret: businesscentral-app-secret
+      replicas: 1
+      name: console-790
+    servers:
+      - image: rhpam-kieserver-rhel8
+        imageContext: rhpam-7
+        imageTag: 7.9.0
+        id: kieserver-790
+        keystoreSecret: kieserver-app-secret
+        name: kieserver-790
+        replicas: 1
+        database:
+          type: mysql
+    smartRouter:
+      image: rhpam-smartrouter-rhel8
+      imageContext: rhpam-7
+      imageTag: 7.9.0
+      keystoreSecret: smartrouter-app-secret
+      name: smart-router-790
+  useImageTags: true
