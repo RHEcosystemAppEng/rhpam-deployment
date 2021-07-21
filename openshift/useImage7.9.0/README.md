@@ -1,15 +1,12 @@
 # Table of Contents
-* [Configure RHPAM with External Maven Repo](#configure-rhpam-with-external-maven-repo)
-  * [Install Maven repository on Nexus](#install-maven-repository-on-nexus)
-    * [Testing locally](#testing-locally)  
-  * [Populating Maven mirror](#populating-maven-mirror)  
+* [Use images of version 7.9.0 for Operator based install on OpenShift for RHPAM on rhpam-authoring environment](#use-images-of-version-7.9.0-for-operator-based-install-on-openshift-for-rhpam-on-rhpam-authoring-environment)
   * [Deploying RHPAM application](#deploying-rhpam-application)
     * [Preliminary steps](#preliminary-steps)
     * [Validating the deployment](#validating-the-deployment)
 
-# Configure RHPAM with External Maven Repo
+# Use images of version 7.9.0 for Operator based install on OpenShift for RHPAM on rhpam-authoring environment
 **Prerequisites**:
-* Create new project `dmartino-maven`
+* Create new project `dmartino-790`
 
 This procedure is meant to deploy an instance of RHPAM with the following features:
 * rhpam-authoring environment
