@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DNAME="CN=dmartino.redhat.com,OU=Ecosystem Engineering,O=redhat.com,L=Raleigh,S=NC,C=US"
+DNAME="CN=ecosystem-appeng.redhat.com,OU=Ecosystem Engineering,O=redhat.com,L=Raleigh,S=NC,C=US"
 
 create_secret() {
   service_name=$1

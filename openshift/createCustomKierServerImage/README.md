@@ -27,9 +27,9 @@ it to match your actual requirements.
 ### Building with Podman on Linux
 ```sh
 cd <ROOT FOLDER OF temenos-rhpam7>/01-createCustomKierServerImage
-podman build . -t quay.io/dmartino/rhpam-kieserver-rhel8-custom:7.11.0-4
+podman build . -t quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom:7.11.0-4
 podman login quay.io
-podman push quay.io/dmartino/rhpam-kieserver-rhel8-custom:7.11.0-4
+podman push quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom:7.11.0-4
 ```
 You can replace `podman login quay.io` with ad-hoc login command generated from _User Settings_ page in [Quay](https://quay.io/)
 

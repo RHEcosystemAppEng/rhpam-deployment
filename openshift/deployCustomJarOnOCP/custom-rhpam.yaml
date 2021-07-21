@@ -22,11 +22,11 @@ spec:
     - database:
         type: mysql
       image: rhpam-kieserver-rhel8-custom
-      imageContext: dmartino
+      imageContext: ecosystem-appeng
       imageTag: 7.11.0-4
       id: kieserver-1
       keystoreSecret: kieserver-app-secret
-      name: custom-keyserver
+      name: custom-kieserver
       replicas: 2
     smartRouter:
       keystoreSecret: smartrouter-app-secret

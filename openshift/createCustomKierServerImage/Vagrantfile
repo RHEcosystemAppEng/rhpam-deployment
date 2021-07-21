@@ -27,11 +27,11 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision "podman" do |d|
     d.build_image "/home/vagrant/app",
-      args: "-t quay.io/dmartino/rhpam-kieserver-rhel8-custom:7.11.0-4"
+      args: "-t quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom:7.11.0-4"
   end
   config.vm.provision "shell", inline: <<-SHELL
     podman login -u="dmartino" \
-    -p="I2sCbBrIpsrpg6KQNrwU+VmBR9U2l+CLgmlM5tO5b0Ka09CV+fOT+d+4eFuWPpFGYS3cEC7cRq4PNtBode2m+7mHZkaXxzAvJjYNTkJfh4w=" quay.io
-    podman push quay.io/dmartino/rhpam-kieserver-rhel8-custom:7.11.0-4
+    -p="uMtRKZFjc/uuPyBqrOnFRCAN/rWHkWsr1OrfP9l/bVgGW7WQXeBkxv35FkCH0yrsppvOW4PMVx/NCJ9iv/GRrDX/hgrQgU5341LPNBXHxBA=" quay.io
+    podman push quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom:7.11.0-4
   SHELL
 end

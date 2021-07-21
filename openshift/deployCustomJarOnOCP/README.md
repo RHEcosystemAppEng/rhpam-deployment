@@ -1,12 +1,9 @@
 # Deploy RHPAM on OpenShift with custom Kie-Server image
 
 ## Preliminary steps
-Clone the repo and initialize the terminal session:
+Initialize the terminal session:
 ```shell
-git clone git@github.com:dmartinol/temenos-rhpam7.git
-cd temenos-rhpam7
-git checkout deploy_on_ocp
-cd 02-deployCustomJarOnOCP
+cd deployCustomJarOnOCP
 ```
 
 ## Authenticate the Red Hat Registry
@@ -53,6 +50,8 @@ All the certificates have the same distinguished name: `CN=dmartino.redhat.com,O
 You can update the file to configure it with different options.
 
 ## Installing using the Operator
+**Prerequisites**: Install the Business Automation operator.
+
 Use the following command to create the KieApp instance that triggers the creation of all the RHPAM resources through the 
 Business Automation operator:
 ```shell
@@ -62,7 +61,7 @@ Use the given `custom-rhpam.yaml` file as a reference and customize it for your 
 The reference configuration has:
 * 2 replicas for the RHPAM Business Central Monitoring
 * 2 replicas for the KIE Server with name `kieserver-1`
-* Deploy a custom image located at [quay.io/dmartino/rhpam-kieserver-rhel8-custom:7.11.0-4](quay.io/dmartino/rhpam-kieserver-rhel8-custom:7.11.0-4)
+* Deploy a custom image located at [quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom:7.11.0-4](quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom:7.11.0-4)
 ** Note: the image has private access, so we have to configure the token as a secret to access it 
   (see above step `Authenticate the Quay.io Registry`)   
 * Deploy a MySQL database to store the KIE Server state
@@ -114,7 +113,7 @@ oc delete project PROJECT_NAME
 The following command verifies that the expected libraries have been installed in one of the deployed 
 KIE Server pods:
 ```shell
-PODNAME=$(oc get pods | grep custom-keyserver | grep -v "deploy\|mysql" | head -1 | cut -d " " -f1)
+PODNAME=$(oc get pods | grep custom-kieserver | grep -v "deploy\|mysql" | head -1 | cut -d " " -f1)
 oc exec ${PODNAME} -- ls /opt/eap/standalone/deployments/ROOT.war/WEB-INF/lib/ | grep "Get"
 ```
 ### Issues with custom image
@@ -137,7 +136,7 @@ Try to run again the initial steps in case they are missing.
 If the problem persists, you can manually import the image as:
 ```shell
 oc import-image rhpam-kieserver-rhel8-custom:7.11.0-4 \
---from=quay.io/dmartino/rhpam-kieserver-rhel8-custom:7.11.0-4 --confirm
+--from=quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom:7.11.0-4 --confirm
 ```
 Then, cleanup all resources following the instructions in section `Cleanup the configuration`
 and repeat again the configuration steps from `Authenticate the Red Hat Registry`.
