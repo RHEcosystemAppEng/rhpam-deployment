@@ -10,4 +10,6 @@ List of Asana tasks and related procedures:
   [procedure](./externalMavenRepo/README.md)
 * [Use images of version 7.9.0 for Operator based install on OpenShift for RHPAM on rhpam-authoring environment](https://app.asana.com/0/1200498898048415/1200611808655029/f):
   [procedure](./useImage7.9.0/README.md)
+* [Installation of RHPAM with RHSSO configuration](https://app.asana.com/0/1200498898048415/1200564580523451/f):
+  [procedure](./rhpamWithSSO/README.md)
   

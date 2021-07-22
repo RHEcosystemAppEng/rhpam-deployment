@@ -1,0 +1,26 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: rhpam-test
+spec:
+  environment: rhpam-production
+  auth:
+    sso:
+      adminPassword: 'keycloak-user-password'
+      adminUser: keycloak-user
+      realm: keycloak-realm
+      url: keycloak-route-url/auth
+  commonConfig:
+    adminPassword: 'keycloak-user-password'
+    adminUser: keycloak-user
+  objects:
+    console:
+      ssoClient:
+        name: keycloak-business-central-client-name
+        secret: keycloak-business-central-client-secret
+    servers:
+      - id: kieserver
+        name: kieserver
+        ssoClient:
+          name: keycloak-kie-client-name
+          secret: keycloak-kie-client-secret
