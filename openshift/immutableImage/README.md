@@ -7,7 +7,7 @@
     * [Design the `Items Loader` WorkItemHandler](#design-the-items-loader-workitemhandler)
     * [Build the `Items Loader` WorkItemHandler](#build-the-items-loader-workitemhandler)
     * [Install the `Items Loader` WorkItemHandler](#install-the-items-loader-workitemhandler)
-    * [Develop, deploy and test the `Custom Project](#develop-deploy-and-test-the-custom-project)
+    * [Develop, deploy and test the `Custom Project`](#develop-deploy-and-test-the-custom-project)
     * [Develop, deploy and test the Extension API](#develop-deploy-and-test-the-extension-api)
 
 # Repeatable process to create immutable image of KIE server
