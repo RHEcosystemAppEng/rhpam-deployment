@@ -1,3 +1,15 @@
+# Table of Contents
+
+* [Repeatable process to create immutable image of KIE server](#repeatable-process-to-create-immutable-image-of-kie-server)
+  * [Phase 1: deployment on JBoss EAP](#phase-1-deployment-on-jboss-eap)
+    * [Deploying RHPAM](#deploying-rhpam)
+    * [Starting the `work-item-service` REST Service](#starting-the-work-item-service-rest-service)
+    * [Design the `Items Loader` WorkItemHandler](#design-the-items-loader-workitemhandler)
+    * [Build the `Items Loader` WorkItemHandler](#build-the-items-loader-workitemhandler)
+    * [Install the `Items Loader` WorkItemHandler](#install-the-items-loader-workitemhandler)
+    * [Develop, deploy and test the `Custom Project](#develop-deploy-and-test-the-custom-project)
+    * [Develop, deploy and test the Extension API](#develop-deploy-and-test-the-extension-api)
+
 # Repeatable process to create immutable image of KIE server
 
 ## Phase 1: deployment on JBoss EAP
@@ -21,7 +33,7 @@ This picture illustrates the deployment architecture of the ibitial solution:
 ```  
 * Start JBoss EAP following the instructions on the same page
     
-## Starting the `work-item-service` REST Service
+### Starting the `work-item-service` REST Service
 Starting from the current folder, run these commands to start the `work-item-service` REST Service:
 
 ```shell
@@ -45,7 +57,7 @@ Example of response to a GET request:
 **Note**: use any REST client of your choice (e.g., [Postman](https://www.postman.com/downloads/)) to populate the service 
 with some initial data.
 
-### Design the `Items Loader` project
+### Design the `Items Loader` WorkItemHandler
 **References**:
 * [CUSTOM TASKS AND WORK ITEM HANDLERS IN BUSINESS CENTRAL](https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.5/html-single/custom_tasks_and_work_item_handlers_in_business_central/index)
 
@@ -71,7 +83,7 @@ to download the required dependencies
 
 You can inspect the sample implementation of the WorkItemHandler class in [ItemsLoaderWorkItemHandler.java](./custom-work-item-handler/src/main/java/com/redhat/ecosystem/appeng/fsi/ItemsLoaderWorkItemHandler.java)
 
-### Build the `Items Loader` artifact
+### Build the `Items Loader` WorkItemHandler
 The following command generates the required artifact under the `target` folder:
 ```shell
 mvn -s settings.xml clean package
@@ -96,7 +108,7 @@ WorkItemHandler:
 * Create some `Data Assignments` to the `Items Loader` to map I/O parameters to the process variables:
 
 ![data assignments](./images/data_assignments.png)
-* The overall flow we have validated is the following
+* The overall flow has been validated with the following business process:
 
 ![business process](./images/business_process.png)
 
@@ -104,6 +116,67 @@ Once the project is built and deployed, you can run it from the `Process Instanc
 If the execution succeeds, the detailed page for the given process instance shows the values of hte process variables: 
 
 ![process instance](./images/process_instance.png)
+
+### Develop, deploy and test the Extension API
+
+**Requirements**:
+* Have one API endpoint that returns the metadata of a given running task:
+
+&nbsp;&nbsp;&nbsp;&nbsp;`GET extension/custom-api/{containerId}/{taskInstanceId}`
+
+&nbsp;&nbsp;&nbsp;&nbsp;Metadata includes the common task properties, including `task-skippable`
+
+* Have one API endpoint to skip the execution of a given running task:
+&nbsp;&nbsp;&nbsp;&nbsp;`PUT extension/custom-api/{containerId}/{taskInstanceId}/skip`
+
+The reference implementation given in the [custom-endpoints](./custom-endpoints) folder, extends the `BPM/jBPM` capabilities 
+based on the reference documentation  
+[22.1. Extending an existing KIE Server capability with a custom REST API endpoint](https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.9/html-single/managing_red_hat_process_automation_manager_and_kie_server_settings/index#kie-server-extensions-endpoint-proc_execution-server)
+and on the sample implementations of [UserTaskResource](https://github.com/kiegroup/droolsjbpm-integration/blob/7.44.0.Final/kie-server-parent/kie-server-remote/kie-server-rest/kie-server-rest-jbpm/src/main/java/org/kie/server/remote/rest/jbpm/UserTaskResource.java) and
+[JbpmRestApplicationComponentsService](https://github.com/kiegroup/droolsjbpm-integration/blob/762c1570f96d9d5826ea1cb34027b55ac77f1b2b/kie-server-parent/kie-server-remote/kie-server-rest/kie-server-rest-jbpm/src/main/java/org/kie/server/remote/rest/jbpm/JbpmRestApplicationComponentsService.java)
+to generate an artifact that can be installed on the KIE Server with the following commands:
+```shell
+cd custom-endpoints
+mvn -s ../custom-work-item-handler/settings.xml clean package
+cp target/custom-endpoints-1.0.0-SNAPSHOT.jar ~/tools/EAP-7.3.0/standalone/deployments/kie-server.war/WEB-INF/lib/custom-endpoints-1.0.0-SNAPSHOT.jar
+cd JBOSS_HOME/bin
+./jboss-cli.sh --connect --command=shutdown
+./standalone.sh -c standalone-full.xml
+```
+Once the server is successfully started, you can extend the initial business process by adding a Human Task to suspend the 
+process instance after the initial execution:
+![business process with human task](./images/business_process_with_human_task.png)
+Please note that the human task is marked as a `Skippable` task.
+
+Once the process instance has started, it stops on the human task:
+![process_instance_status](./images/process_instance_status.png)
+
+By running the extension APIs, we can read the current status of the task and skip its execution.
+You can test the entire flow using the sample REST queries and actions provided in the given [Postman collection scripts](./custom-endpoints/RHPAM-extensionAPI.postman_collection.json)
+
+**References**:
+* [Chapter 22. KIE Server capabilities and extensions](https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.9/html-single/managing_red_hat_process_automation_manager_and_kie_server_settings/index#kie-server-extensions-con_execution-server)
+* [Swagger API](http://localhost:8080/kie-server/docs/)
+* [INTERACTING WITH RED HAT PROCESS AUTOMATION MANAGER USING KIE APIS](https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.8/html-single/interacting_with_red_hat_process_automation_manager_using_kie_apis/index)
+
+# Troubleshooting
+## Track Extension API log messages
+Check the endpoint has bee properly deployed:
+```shell
+cd JBOSS_HOME/standalone/logs
+grep CustomApplicationComponentsService server.log
+```
+> 2021-07-29 14:52:36,656 INFO  [com.redhat.ecosystem.appeng.fsi.CustomApplicationComponentsService] (ServerService Thread Pool -- 84) Invoked getAppComponents with: jBPM/REST
+> 2021-07-29 14:52:36,658 INFO  [com.redhat.ecosystem.appeng.fsi.CustomApplicationComponentsService] (ServerService Thread Pool -- 84) Invoked getAppComponents. Returning: [com.redhat.ecosystem.appeng.fsi.CustomResource@3e1c4d6f]
+
+Verify the endpoint is working:
+```shell
+grep CustomResource server.log
+```
+> 2021-07-29 14:42:16,189 INFO  [com.redhat.ecosystem.appeng.fsi.CustomResource] (default task-6) Getting task 1 of container CustomProject_1.0.0-SNAPSHOT
+> 2021-07-29 14:42:16,243 INFO  [com.redhat.ecosystem.appeng.fsi.CustomResource] (default task-6) Returning task content '{
+> 2021-07-29 14:42:27,737 INFO  [com.redhat.ecosystem.appeng.fsi.CustomResource] (default task-6) Skipping task 1 of container CustomProject_1.0.0-SNAPSHOT
+> 2021-07-29 14:42:27,800 INFO  [com.redhat.ecosystem.appeng.fsi.CustomResource] (default task-6) Task skipped
 
 # Backup commands **WIP**
 # 2.9. Extracting the source code from Business Central for use in an S2I build
