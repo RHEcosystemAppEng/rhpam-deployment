@@ -166,17 +166,22 @@ Check the endpoint has bee properly deployed:
 cd JBOSS_HOME/standalone/logs
 grep CustomApplicationComponentsService server.log
 ```
-> 2021-07-29 14:52:36,656 INFO  [com.redhat.ecosystem.appeng.fsi.CustomApplicationComponentsService] (ServerService Thread Pool -- 84) Invoked getAppComponents with: jBPM/REST
-> 2021-07-29 14:52:36,658 INFO  [com.redhat.ecosystem.appeng.fsi.CustomApplicationComponentsService] (ServerService Thread Pool -- 84) Invoked getAppComponents. Returning: [com.redhat.ecosystem.appeng.fsi.CustomResource@3e1c4d6f]
+```text
+2021-07-29 14:52:36,656 INFO  [com.redhat.ecosystem.appeng.fsi.CustomApplicationComponentsService] (ServerService Thread Pool -- 84) Invoked getAppComponents with: jBPM/REST
+2021-07-29 14:52:36,658 INFO  [com.redhat.ecosystem.appeng.fsi.CustomApplicationComponentsService] (ServerService Thread Pool -- 84) Invoked getAppComponents. Returning: [com.redhat.ecosystem.appeng.fsi.CustomResource@3e1c4d6f]
+```
 
 Verify the endpoint is working:
 ```shell
 grep CustomResource server.log
 ```
-> 2021-07-29 14:42:16,189 INFO  [com.redhat.ecosystem.appeng.fsi.CustomResource] (default task-6) Getting task 1 of container CustomProject_1.0.0-SNAPSHOT
-> 2021-07-29 14:42:16,243 INFO  [com.redhat.ecosystem.appeng.fsi.CustomResource] (default task-6) Returning task content '{
-> 2021-07-29 14:42:27,737 INFO  [com.redhat.ecosystem.appeng.fsi.CustomResource] (default task-6) Skipping task 1 of container CustomProject_1.0.0-SNAPSHOT
-> 2021-07-29 14:42:27,800 INFO  [com.redhat.ecosystem.appeng.fsi.CustomResource] (default task-6) Task skipped
+
+```text
+2021-07-29 14:42:16,189 INFO  [com.redhat.ecosystem.appeng.fsi.CustomResource] (default task-6) Getting task 1 of container CustomProject_1.0.0-SNAPSHOT 
+2021-07-29 14:42:16,243 INFO  [com.redhat.ecosystem.appeng.fsi.CustomResource] (default task-6) Returning task content '{ 
+2021-07-29 14:42:27,737 INFO  [com.redhat.ecosystem.appeng.fsi.CustomResource] (default task-6) Skipping task 1 of container CustomProject_1.0.0-SNAPSHOT
+2021-07-29 14:42:27,800 INFO  [com.redhat.ecosystem.appeng.fsi.CustomResource] (default task-6) Task skipped
+```
 
 # Backup commands **WIP**
 # 2.9. Extracting the source code from Business Central for use in an S2I build
