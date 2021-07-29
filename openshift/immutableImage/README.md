@@ -127,11 +127,11 @@ If the execution succeeds, the detailed page for the given process instance show
 &nbsp;&nbsp;&nbsp;&nbsp;Metadata includes the common task properties, including `task-skippable`
 
 * Have one API endpoint to skip the execution of a given running task:
+ 
 &nbsp;&nbsp;&nbsp;&nbsp;`PUT extension/custom-api/{containerId}/{taskInstanceId}/skip`
 
 The reference implementation given in the [custom-endpoints](./custom-endpoints) folder, extends the `BPM/jBPM` capabilities 
-based on the reference documentation  
-[22.1. Extending an existing KIE Server capability with a custom REST API endpoint](https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.9/html-single/managing_red_hat_process_automation_manager_and_kie_server_settings/index#kie-server-extensions-endpoint-proc_execution-server)
+based on the reference documentation [22.1. Extending an existing KIE Server capability with a custom REST API endpoint](https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.9/html-single/managing_red_hat_process_automation_manager_and_kie_server_settings/index#kie-server-extensions-endpoint-proc_execution-server)
 and on the sample implementations of [UserTaskResource](https://github.com/kiegroup/droolsjbpm-integration/blob/7.44.0.Final/kie-server-parent/kie-server-remote/kie-server-rest/kie-server-rest-jbpm/src/main/java/org/kie/server/remote/rest/jbpm/UserTaskResource.java) and
 [JbpmRestApplicationComponentsService](https://github.com/kiegroup/droolsjbpm-integration/blob/762c1570f96d9d5826ea1cb34027b55ac77f1b2b/kie-server-parent/kie-server-remote/kie-server-rest/kie-server-rest-jbpm/src/main/java/org/kie/server/remote/rest/jbpm/JbpmRestApplicationComponentsService.java)
 to generate an artifact that can be installed on the KIE Server with the following commands:
