@@ -37,29 +37,38 @@ the following four sets: Uppercase letters, Lowercase letters, Base 10 digits, a
 **Prerequisites**
 * Docker
 
-Run the following command to run an instance of the mssql-tools container:
+Run the following command to run an instance of the mssql-tools container and connect the `sqlcmd` tool to the running 
+MS SQL instance:
 ```shell
 oc run -it --rm mssql-tools --image mcr.microsoft.com/mssql-tools
+/opt/mssql-tools/bin/sqlcmd -Usa -PmsSql2019 -S${MSSQL_SERVICE_SERVICE_HOST},${MSSQL_SERVICE_SERVICE_PORT}
 ```
-Then enter this command to run the "SELECT @@version" command:
-```shell
-/opt/mssql-tools/bin/sqlcmd -Usa -PmsSql2019 -S${MSSQL_SERVICE_SERVICE_HOST},${MSSQL_SERVICE_SERVICE_PORT} -Q "SELECT @@version"
-```
-From the console terminal of the tool, launch the following commands to create the DB instance, verify it is available and 
-switch the command context to the newly created instance:
-```shell
-/opt/mssql-tools/bin/sqlcmd -Usa -PmsSql2019 -S${MSSQL_SERVICE_SERVICE_HOST},${MSSQL_SERVICE_SERVICE_PORT} -Q "CREATE DATABASE rhpam"
-/opt/mssql-tools/bin/sqlcmd -Usa -PmsSql2019 -S${MSSQL_SERVICE_SERVICE_HOST},${MSSQL_SERVICE_SERVICE_PORT} -Q "SELECT name FROM master.sys.databases"
-/opt/mssql-tools/bin/sqlcmd -Usa -PmsSql2019 -S${MSSQL_SERVICE_SERVICE_HOST},${MSSQL_SERVICE_SERVICE_PORT} -Q "use rhpam;"
-/opt/mssql-tools/bin/sqlcmd -Usa -PmsSql2019 -S${MSSQL_SERVICE_SERVICE_HOST},${MSSQL_SERVICE_SERVICE_PORT} -Q "SELECT * FROM information_schema.tables;"
+
+Then run the following SQL commands to check the database version and create the `rhpam` database:
+```roomsql
+SELECT @@version
+GO
+CREATE DATABASE rhpam
+GO
+SELECT name FROM master.sys.databases
+GO
+use rhpam
+GO
+SELECT * FROM information_schema.tables
+GO
+exit
+exit
 ```
 
 **Note**: Look at the content of ${MSSQL_SERVICE_SERVICE_HOST} and ${MSSQL_SERVICE_SERVICE_PORT} because they will also be used for the
 deployment of RHPAM:
 ```shell
-root@mssql-tools:/# echo ${MSSQL_SERVICE_SERVICE_HOST}
+echo ${MSSQL_SERVICE_SERVICE_HOST}
+echo ${MSSQL_SERVICE_SERVICE_PORT}
+```
+Output is:
+```text
 172.30.231.25
-root@mssql-tools:/# echo ${MSSQL_SERVICE_SERVICE_PORT}
 31433
 ```
 

@@ -11,7 +11,7 @@
 * [Troubleshooting](#troubleshooting) 
   * [Track Extension API log messages](#track-extension-api-log-messages)
 
-## Phase 1: deploying on JBoss EAP
+# Phase 1: deploying on JBoss EAP
 This picture illustrates the deployment architecture of the ibitial solution:
 * JBoss EAP hosts RHPAM version 7.9.0
 * The default KIE Server is enhanced with extended API endpoints  
@@ -21,7 +21,7 @@ This picture illustrates the deployment architecture of the ibitial solution:
 
 ![EAP Architecture](./images/jboss_immutable.png)
 
-### Deploying RHPAM 
+## Deploying RHPAM 
 * Download JBoss EAP and RHPAM following this link: [Prerequisite Downloads](https://github.com/rhkp/temenos-build-standalone-rhpam/tree/main/rhpam-setup#prerequisite-downloads)
 * Then install JBoss EAP and RHPAM following the link on the same page
   * Note: there is no need to setup any custom DB, the default settings are sufficient
@@ -32,7 +32,7 @@ This picture illustrates the deployment architecture of the ibitial solution:
 ```  
 * Start JBoss EAP following the instructions on the same page
     
-### Starting the `work-item-service` REST Service
+## Starting the `work-item-service` REST Service
 Starting from the current folder, run these commands to start the `work-item-service` REST Service:
 
 ```shell
@@ -56,7 +56,7 @@ Example of response to a GET request:
 **Note**: use any REST client of your choice (e.g., [Postman](https://www.postman.com/downloads/)) to populate the service 
 with some initial data.
 
-### Design the `Items Loader` WorkItemHandler
+## Design the `Items Loader` WorkItemHandler
 **References**:
 * [CUSTOM TASKS AND WORK ITEM HANDLERS IN BUSINESS CENTRAL](https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.5/html-single/custom_tasks_and_work_item_handlers_in_business_central/index)
 
@@ -77,18 +77,18 @@ mvn archetype:generate \
 ```
 
 **Note*: the value of `archetypeVersion` comes from [What is the mapping between Red Hat Process Automation Manager and the Maven library version?](https://access.redhat.com/solutions/3405361)
-Define a custom [settings.xml](./custom-work-item-handler/settings.xml) to define the reference to the `redhat-ga` repository
+Define a custom [settings.xml](./settings.xml) to define the reference to the `redhat-ga` repository
 to download the required dependencies
 
 You can inspect the sample implementation of the WorkItemHandler class in [ItemsLoaderWorkItemHandler.java](./custom-work-item-handler/src/main/java/com/redhat/ecosystem/appeng/fsi/ItemsLoaderWorkItemHandler.java)
 
-### Build the `Items Loader` WorkItemHandler
+## Build the `Items Loader` WorkItemHandler
 The following command generates the required artifact under the `target` folder:
 ```shell
 mvn -s settings.xml clean package
 ```
 
-### Install the `Items Loader` WorkItemHandler
+## Install the `Items Loader` WorkItemHandler
 From the [Business Central console](http://localhost:8080/business-central), follow these steps:
 * From `Admin>Custom Tasks Administration`, select `Add Custom Task`
   * Select the generated jar under the `target` folder and then `Upload`
@@ -96,7 +96,7 @@ From the [Business Central console](http://localhost:8080/business-central), fol
   * Activate the handler moving the switch to ON:
 ![Activate Handler](./images/wih_ON.png)
     
-### Develop, deploy and test the `Custom Project`
+## Develop, deploy and test the `Custom Project`
 You can create your own project in Business Central, please follow these rules to properly integrate the newly deployed 
 WorkItemHandler:
 * From project Settings, open the `Custom Tasks` page and select `Install` for the 'Items Loader' task
@@ -116,7 +116,7 @@ If the execution succeeds, the detailed page for the given process instance show
 
 ![process instance](./images/process_instance.png)
 
-### Develop, deploy and test the Extension API
+## Develop, deploy and test the Extension API
 
 **Requirements**:
 * Have one API endpoint that returns the metadata of a given running task:

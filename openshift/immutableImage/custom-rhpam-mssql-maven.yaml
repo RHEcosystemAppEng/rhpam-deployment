@@ -1,0 +1,76 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: custom-rhpam-mssql-maven
+spec:
+  environment: rhpam-production
+  commonConfig:
+    adminPassword: password
+    adminUser: admin
+    amqClusterPassword: password
+    amqPassword: password
+    dbPassword: password
+    keyStorePassword: password
+    applicationName: custom-rhpam-mssql-maven
+  objects:
+    console:
+      image: rhpam-businesscentral-monitoring-rhel8
+      imageContext: rhpam-7
+      imageTag: 7.9.0
+      replicas: 1
+      env:
+        - name: MAVEN_REPO_URL
+          value: >-
+            https://repo.repsy.io/mvn/dmartino/rhpam
+        - name: MAVEN_REPO_ID
+          value: rhpam
+        - name: MAVEN_REPO_USERNAME
+          value: dmartino
+        - name: MAVEN_REPO_PASSWORD
+          value: dMartino123
+        - name: MAVEN_MIRROR_URL
+          value: >-
+            http://rhpam-mirror-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/repository/rhpam-mirror790
+        - name: MAVEN_MIRROR_OF
+          value: 'external:*,!rhpam'
+    servers:
+      - build:
+          extensionImageStreamTag: jboss-kie-mssql-extension-openshift-image:7.2.2.jre11
+          extensionImageStreamTagNamespace: dmartino-immutable
+        database:
+          type: external
+          externalConfig:
+            extensionImage: true
+            driver: mssql
+            dialect: org.hibernate.dialect.SQLServer2012Dialect
+            jdbcURL: jdbc:sqlserver://172.30.128.237:31433;DatabaseName=rhpam
+            nonXA: 'true'
+            username: sa
+            password: msSql2019
+            minPoolSize: '10'
+            maxPoolSize: '10'
+            connectionChecker: >-
+              org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker
+            exceptionSorter: org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter
+            backgroundValidation: "true"
+        image: rhpam-kieserver-rhel8-custom
+        imageContext: dmartino-immutable
+        imageTag: '7.9.0'
+        id: kieserver-1
+        name: custom-kieserver
+        replicas: 1
+        env:
+          - name: MAVEN_REPO_URL
+            value: >-
+              https://repo.repsy.io/mvn/dmartino/rhpam
+          - name: MAVEN_REPO_ID
+            value: rhpam
+          - name: MAVEN_REPO_USERNAME
+            value: dmartino
+          - name: MAVEN_REPO_PASSWORD
+            value: dMartino123
+          - name: MAVEN_MIRROR_URL
+            value: >-
+              http://rhpam-mirror-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/repository/rhpam-mirror790
+          - name: MAVEN_MIRROR_OF
+            value: 'external:*,!rhpam'
