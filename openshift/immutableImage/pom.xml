@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<project
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+        xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.redhat.ecosystem.appeng.fsi</groupId>
+    <artifactId>common-pom</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <organization>
+        <name>Red Hat-Ecosystem-App Eng-FSI</name>
+    </organization>
+
+    <properties>
+        <version.org.kie>7.44.0.Final-redhat-00003</version.org.kie>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>rhpam</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <repositories>
+                <repository>
+                    <id>redhat-ga</id>
+                    <url>https://maven.repository.redhat.com/ga/</url>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>redhat-ga</id>
+                    <url>https://maven.repository.redhat.com/ga/</url>
+                </pluginRepository>
+            </pluginRepositories>
+            <distributionManagement>
+                <repository>
+                    <id>rhpam</id>
+                    <url>https://repo.repsy.io/mvn/dmartino/rhpam</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+        <profile>
+            <id>rhpam-mirror</id>
+            <activation>
+                <property>
+                    <name>mirror</name>
+                </property>
+            </activation>
+            <repositories>
+                <repository>
+                    <id>redhat-ga</id>
+                    <url>https://maven.repository.redhat.com/ga/</url>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>redhat-ga</id>
+                    <url>https://maven.repository.redhat.com/ga/</url>
+                </pluginRepository>
+            </pluginRepositories>
+            <distributionManagement>
+                <repository>
+                    <id>rhpam-mirror</id>
+                    <url>
+                        http://rhpam-mirror-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/repository/rhpam-mirror790
+                    </url>
+                </repository>
+            </distributionManagement>
+        </profile>
+    </profiles>
+
+    <modules>
+        <module>custom-endpoints</module>
+        <module>custom-work-item-handler</module>
+        <module>custom-business-project</module>
+        <module>work-item-service</module>
+    </modules>
+</project>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.testspace</groupId>
+    <artifactId>CustomProject</artifactId>
+    <version>1.0.0</version>
+    <packaging>kjar</packaging>
+    <name>Custom Project</name>
+    <description></description>
+
+    <parent>
+        <groupId>com.redhat.ecosystem.appeng.fsi</groupId>
+        <artifactId>common-pom</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../</relativePath>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.kie</groupId>
+            <artifactId>kie-api</artifactId>
+            <version>7.44.0.Final-redhat-00003</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.kie</groupId>
+            <artifactId>kie-internal</artifactId>
+            <version>7.44.0.Final-redhat-00003</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.optaplanner</groupId>
+            <artifactId>optaplanner-core</artifactId>
+            <version>7.44.0.Final-redhat-00003</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.optaplanner</groupId>
+            <artifactId>optaplanner-persistence-jaxb</artifactId>
+            <version>7.44.0.Final-redhat-00003</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <version>1.4.11.1-redhat-00001</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.redhat.ecosystem.appeng.fsi</groupId>
+            <artifactId>custom-work-item-handler</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.kie</groupId>
+                <artifactId>kie-maven-plugin</artifactId>
+                <version>7.44.0.Final-redhat-00003</version>
+                <extensions>true</extensions>
+                <dependencies>
+                    <dependency>
+                        <!-- add this dependency if there are Processes located in the project-->
+                        <groupId>org.jbpm</groupId>
+                        <artifactId>jbpm-bpmn2</artifactId>
+                        <version>7.44.0.Final-redhat-00003</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+</project>

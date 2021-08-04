@@ -6,128 +6,39 @@
 	},
 	"item": [
 		{
-			"name": "Get capabilities",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "redhat123#",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "rhpamAdmin",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8080/kie-server/services/rest/server",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"kie-server",
-						"services",
-						"rest",
-						"server"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get default-kieserver",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "redhat123#",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "rhpamAdmin",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8080/business-central/rest/controller/management/servers/default-kieserver",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"business-central",
-						"rest",
-						"controller",
-						"management",
-						"servers",
-						"default-kieserver"
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "Get containers",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_containerId = jsonData.result['kie-containers']['kie-container'][0]['container-id'];",
+							"pm.collectionVariables.set(\"containerId\", current_containerId);",
+							"",
+							"console.log('current_containerId is', current_containerId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
 			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "redhat123#",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "rhpamAdmin",
-							"type": "string"
-						}
-					]
-				},
 				"method": "GET",
 				"header": [
 					{
-						"key": "Content-Type",
+						"key": "Accept",
 						"value": "application/json",
 						"type": "text"
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/kie-server/services/rest/server/containers",
-					"protocol": "http",
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/server/containers",
+					"protocol": "{{scheme}}",
 					"host": [
-						"localhost"
+						"{{kieserver-url}}"
 					],
-					"port": "8080",
 					"path": [
-						"kie-server",
 						"services",
 						"rest",
 						"server",
@@ -139,18 +50,38 @@
 		},
 		{
 			"name": "Get process instances",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_processInstanceId = jsonData['process-instance'][0]['process-instance-id'];",
+							"pm.collectionVariables.set(\"processInstanceId\", current_processInstanceId);",
+							"",
+							"console.log('current_processInstanceId is', current_processInstanceId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
 			"request": {
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
 				"url": {
-					"raw": "http://localhost:8080/kie-server/services/rest/server/containers/{{containerId}}/processes/instances",
-					"protocol": "http",
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/processes/instances",
+					"protocol": "{{scheme}}",
 					"host": [
-						"localhost"
+						"{{kieserver-url}}"
 					],
-					"port": "8080",
 					"path": [
-						"kie-server",
 						"services",
 						"rest",
 						"server",
@@ -165,33 +96,38 @@
 		},
 		{
 			"name": "Get instance details",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_taskInstanceId = jsonData['active-user-tasks']['task-summary'][0]['task-id'];",
+							"pm.collectionVariables.set(\"taskInstanceId\", current_taskInstanceId);",
+							"",
+							"console.log('current_taskInstanceId is', current_taskInstanceId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
 			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "redhat123#",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "rhpamAdmin",
-							"type": "string"
-						}
-					]
-				},
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
 				"url": {
-					"raw": "http://localhost:8080/kie-server/services/rest/server/containers/{{containerId}}/processes/instances/{{processInstanceId}}",
-					"protocol": "http",
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/processes/instances/{{processInstanceId}}",
+					"protocol": "{{scheme}}",
 					"host": [
-						"localhost"
+						"{{kieserver-url}}"
 					],
-					"port": "8080",
 					"path": [
-						"kie-server",
 						"services",
 						"rest",
 						"server",
@@ -208,38 +144,21 @@
 		{
 			"name": "Custom getTask",
 			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "redhat123#",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "rhpamAdmin",
-							"type": "string"
-						}
-					]
-				},
 				"method": "GET",
 				"header": [
 					{
-						"key": "Content-Type",
+						"key": "Accept",
 						"value": "application/json",
 						"type": "text"
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/kie-server/services/rest/extension/custom-api/{{containerId}}/{{taskInstanceId}}",
-					"protocol": "http",
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/extension/custom-api/{{containerId}}/{{taskInstanceId}}",
+					"protocol": "{{scheme}}",
 					"host": [
-						"localhost"
+						"{{kieserver-url}}"
 					],
-					"port": "8080",
 					"path": [
-						"kie-server",
 						"services",
 						"rest",
 						"extension",
@@ -254,32 +173,15 @@
 		{
 			"name": "Custom skip",
 			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "redhat123#",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "rhpamAdmin",
-							"type": "string"
-						}
-					]
-				},
 				"method": "PUT",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/kie-server/services/rest/extension/custom-api/{{containerId}}/{{taskInstanceId}}/skip",
-					"protocol": "http",
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/extension/custom-api/{{containerId}}/{{taskInstanceId}}/skip",
+					"protocol": "{{scheme}}",
 					"host": [
-						"localhost"
+						"{{kieserver-url}}"
 					],
-					"port": "8080",
 					"path": [
-						"kie-server",
 						"services",
 						"rest",
 						"extension",
@@ -298,12 +200,12 @@
 		"basic": [
 			{
 				"key": "password",
-				"value": "redhat123#",
+				"value": "password",
 				"type": "string"
 			},
 			{
 				"key": "username",
-				"value": "rhpamAdmin",
+				"value": "admin",
 				"type": "string"
 			}
 		]
@@ -326,6 +228,20 @@
 					""
 				]
 			}
+		}
+	],
+	"variable": [
+		{
+			"key": "containerId",
+			"value": ""
+		},
+		{
+			"key": "processInstanceId",
+			"value": ""
+		},
+		{
+			"key": "taskInstanceId",
+			"value": ""
 		}
 	]
 }

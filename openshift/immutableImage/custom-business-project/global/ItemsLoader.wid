@@ -1,0 +1,43 @@
+[
+        [
+            "name" : "ItemsLoader",
+            "displayName" : "Items Loader",
+            "category" : "Custom",
+            "description" : "",
+            "defaultHandler" : "mvel: new com.redhat.ecosystem.appeng.fsi.ItemsLoaderWorkItemHandler()",
+            "documentation" : "custom-work-item-handler/index.html",
+
+            "parameters" : [
+                                "name" : new StringDataType()
+
+            ],
+            "results" : [
+                                "noOfItems" : new StringDataType()
+                ,"items" : new StringDataType()
+
+            ],
+            "mavenDependencies" : [
+                                 "com.redhat.ecosystem.appeng.fsi:custom-work-item-handler:1.0.0-SNAPSHOT"
+
+            ],
+            "icon" : "ItemsLoader.png"
+
+        ]
+
+]
+
+
+
+virtualenv ~/cekit\nsource ~/cekit/bin/activate
+cd cekit
+unzip ../rhpam-7.9.0-openshift-templates.zip
+curl -O https://raw.githubusercontent.com/cekit/cekit/3.2.0/requirements.txt
+pip install -r requirements.txt
+pip install -U "cekit==3.2"
+pip install docker
+pip install docker-squash
+pip install behave
+pip install lxml
+cd templates/contrib/jdbc/cekit
+pip install odcs
+make mssql

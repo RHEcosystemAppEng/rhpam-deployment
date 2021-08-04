@@ -1,0 +1,14 @@
+<settings>
+    <servers>
+        <server>
+            <id>rhpam</id>
+            <username>dmartino</username>
+            <password>dMartino123</password>
+        </server>
+        <server>
+            <id>rhpam-mirror</id>
+            <username>deployer</username>
+            <password>deployer123</password>
+        </server>
+    </servers>
+</settings>
