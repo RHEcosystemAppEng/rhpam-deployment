@@ -2,10 +2,8 @@
 * [Deploy RHPAM on OpenShift with MS SQL Server](#deploy-rhpam-on-openshift-with-ms-sql-server)
   * [Deploy MS SQL instance](#deploy-ms-sql-instance)
     * [Create the RHPAM database and validate the MS SQL installation](#create-the-rhpam-database-and-validate-the-ms-sql-installation)
- * [Build the custom KIE Server extension image](#build-the-custom-kie-server-extension-image)
+ * [Build and push the custom KIE Server image](#build-and-push-the-custom-kie-server-image)
  * [Deploy the RHPAM application](#deploy-the-rhpam-application)
-   * [Pushing the required images](#pushing-the-required-images)
-   * [Deploy the KeiApp instance](#deploy-the-keiapp-instance)
    * [Validate the installation](#validate-the-installation)
 
 # Deploy RHPAM on OpenShift with MS SQL Server
