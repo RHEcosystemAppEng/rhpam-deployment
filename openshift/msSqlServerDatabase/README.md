@@ -18,7 +18,6 @@ The repository was forked to add a fix for latest versions of OpenShift.
 
 **Prerequisites**
 * You are logged into the OpenShift project
-* You downloaded the secret file from Red Hat registry as rh.registry-secret.yaml
 
 Create the password secret and deploy MS SQL instance
 ```shell
@@ -34,129 +33,92 @@ In case you consider changing the password, please consider the password policy 
 the following four sets: Uppercase letters, Lowercase letters, Base 10 digits, and Symbols`
 
 ### Create the RHPAM database and validate the MS SQL installation
-**Prerequisites**
-* Docker
-
-Run the following command to run an instance of the mssql-tools container and connect the `sqlcmd` tool to the running 
-MS SQL instance:
-```shell
-oc run -it --rm mssql-tools --image mcr.microsoft.com/mssql-tools
-/opt/mssql-tools/bin/sqlcmd -Usa -PmsSql2019 -S${MSSQL_SERVICE_SERVICE_HOST},${MSSQL_SERVICE_SERVICE_PORT}
-```
-
-Then run the following SQL commands to check the database version and create the `rhpam` database:
+* Install [Azure Data Studio](https://github.com/Microsoft/azuredatastudio)
+* Forward the MS SQL port to the localhost with:
+  ``oc port-forward `oc get pods -o custom-columns=POD:.metadata.name --no-headers | grep mssql-deployment` 1433:1433``
+* Connect the `Azure Data Studio` using server `localhost`, user `sa` user and password `msSql2019` 
+* Once connected, run the following SQL commands to check the database version and create the `rhpam` database:
 ```roomsql
-SELECT @@version
-GO
-CREATE DATABASE rhpam
-GO
-SELECT name FROM master.sys.databases
-GO
-use rhpam
-GO
-SELECT * FROM information_schema.tables
-GO
-exit
-exit
+SELECT @@version;
+CREATE DATABASE rhpam;
+SELECT name FROM master.sys.databases;
+USE rhpam;
+SELECT * FROM information_schema.tables;
+```
+* Select the `master` DB then create the RHPAM user `rhpam/rhPam123` with:
+```roomsql
+CREATE LOGIN [rhpam] WITH PASSWORD = 'rhPam123';
+CREATE USER [rhpam] FROM LOGIN [rhpam] WITH DEFAULT_SCHEMA=rhpam;
+ALTER ROLE db_owner ADD MEMBER [rhpam];
+```
+* Finally, to fix the issue with the distributed transactions mentioned [here](https://access.redhat.com/solutions/4926011),
+execute the following commands:
+```roomsql
+EXEC sp_sqljdbc_xa_install;
+-- EXEC sp_grantdbaccess 'rhpam', 'rhpam'
+EXEC sp_addrolemember [SqlJDBCXAUser], 'rhpam'
 ```
 
-**Note**: Look at the content of ${MSSQL_SERVICE_SERVICE_HOST} and ${MSSQL_SERVICE_SERVICE_PORT} because they will also be used for the
-deployment of RHPAM:
-```shell
-echo ${MSSQL_SERVICE_SERVICE_HOST}
-echo ${MSSQL_SERVICE_SERVICE_PORT}
-```
-Output is:
-```text
-172.30.231.25
-31433
-```
+## Build and push the custom KIE Server image
+The following steps generate a custom KIE Server image with the following features:
+* Base image is 7.9.0
+* Integrates the `custom-endpoints` artifact generated from the [custom-endpoints](../immutableImage/custom-endpoints) project
+* Integrates the MS SQL driver with no need of an additional xtension image
 
-## Build the custom KIE Server extension image
-
-**Reference**: [2.6. Building a custom KIE Server extension image for an external database](https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.11/html-single/deploying_red_hat_process_automation_manager_on_red_hat_openshift_container_platform/index#externaldb-build-proc_openshift-operator)
-**Prerequisites* [Validated on MacOS]
-* Docker
-* python3  
-
-Follow these instructions to create a virtualenv, activate it and configure it with all the needed dependencies, including
-[CEKit](https://docs.cekit.io/en/3.11.0/index.html), the tool used to create the container image:
+The following commands generate the image with Podman, using the Vagrant configuration file [Vagrantfile](./Vagrantfile)provided as a reference.
+They also push the image on the [Quay repository](https://quay.io/repository/ecosystem-appeng/rhpam-kieserver-rhel8-custom-mssql?tab=tags)
+of the AppEng group:
 ```shell
-virtualenv ~/cekit
-source ~/cekit/bin/activate
-curl https://raw.githubusercontent.com/cekit/cekit/develop/requirements.txt -o requirements.txt
-pip3 install -r requirements.txt
-pip3 install -U cekit
-pip3 install docker
-pip3 install docker-squash
-pip3 install behave
-pip3 install lxml
-```
-Download these [templates](https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=rhpam&productChanged=yes)
-then run the command to generate the extension image:
-```shell
-cd rhpam-7.11.0-openshift-templates/templates/contrib/jdbc/cekit
-make mssql
-```
-Validate the image is created:
-```shell
-docker images | grep jboss-kie-mssql-extension-openshift-image
+./setup.sh
+vagrant up
+podman system connection add fedora33 ssh://vagrant@127.0.0.1:2222
+podman build -t quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom-mssql:7.9.0 .
+podman push quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom-mssql:7.9.0
 ```
 
 ## Deploy the RHPAM application
-[custom-rhpam-mssql.yaml](./custom-rhpam-mssql.yaml) defines the `KieApp` instance for the RHPAM application, with the 
+[custom-rhpam-mssql.yaml](./custom-rhpam-mssql.template) defines the `KieApp` instance for the RHPAM application, with the 
 following features:
 * KIE Server:
-  * Custom image `rhpam-kieserver-rhel8-custom` 
+  * Custom image `rhpam-kieserver-rhel8-custom-mssql`  with extension API and MS SQL driver
   * 1 replica
-  * Using `external` database, pointing to the MS SQL instance defined above
 * Business Central:
   * 1 replica
 
-You can use this file as a reference to configure your instance (in particular, look at properties in the `database.externalConfig` 
-section, to connect it to your exact MS SQL instance)     
+You can use this file as a reference to configure your instance. In particular, if you use your own DB instance, look at 
+properties in the `database.externalConfig` section, to connect it to your exact MS SQL instance.
+**Note**: if you pushed the custom image on a different repository or with a different name, you might updated the
+`image`, `imageContext` and `imageTag` properties to match your actual configuration.
 
-### Pushing the required images
-Tag and push the KIE Server custom image (downloaded from Quay if not already there) and the JDBC extension image to 
-your OCP namespace (`oc project -q`):
+Before deploying the application we must provide the secret to login to Quay, as described [here](../deployCustomJarOnOCP/README.md#authenticate-the-quayio-registry):
 ```shell
-OCP_REGISTRY=$(oc get route -n openshift-image-registry | grep image-registry | awk '{print $2}')
-docker login  -u `oc whoami` -p  `oc whoami -t` ${OCP_REGISTRY}
-
-docker login quay.io
-docker pull quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom:7.11.0-4
-docker tag quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom:7.11.0-4 \
-    ${OCP_REGISTRY}/`oc project -q`/rhpam-kieserver-rhel8-custom:7.11.0-4
-docker tag kiegroup/jboss-kie-mssql-extension-openshift-image:7.2.2.jre11 \
-    ${OCP_REGISTRY}/`oc project -q`/jboss-kie-mssql-extension-openshift-image:7.2.2.jre11
-    
-docker push ${OCP_REGISTRY}/`oc project -q`/rhpam-kieserver-rhel8-custom:7.11.0-4
-docker push ${OCP_REGISTRY}/`oc project -q`/jboss-kie-mssql-extension-openshift-image:7.2.2.jre11
+oc create -f quay.io-secret.yaml
+QUAYIO_SECRET_NAME=$(grep name quay.io-secret.yaml | sed -e 's/.*: //')
+oc secrets link default ${QUAYIO_SECRET_NAME} --for=pull
+oc secrets link builder ${QUAYIO_SECRET_NAME} --for=pull
 ```
 
-**Note**: if `docker login` is not working because of the SSL certificate, add the OCP registry as an
-insecure registry, adding the following to either `/etc/docker/daemon.json` or from the Docker Desktop application (MacOS):
+If you are using the MS SQL instance described above, we need to generate the actual YAML configuration starting from the 
+reference [custom-rhpam-mssql.template](./custom-rhpam-mssql.template) template. 
+The following command sets the actual URL connection of the MS SQL deployment:
+```shell
+sed "s/MSSQL_URL/`oc get svc mssql-service -o jsonpath="{..spec.clusterIP}:{..spec.ports[0].port}"`/g" custom-rhpam-mssql.template > custom-rhpam-mssql.yaml
 ```
-"insecure-registries" : ["default-route-openshift-image-registry.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com"]
+Finally, we can deploy the sample application with:
+```shell
+oc create -f custom-rhpam-mssql.yaml
 ```
 
 **Note**: since we are pushing the container images into the OCP namespace, there's no need to define the secrets to store
 the login passwords to `Quay.io` nor to the `Red Hat registry'
 
-### Deploy the KeiApp instance
-Run the following to deploy the sample application:
-```shell
-oc create -f custom-rhpam-mssql.yaml
-```
-
-**Note**: you should at least update the `extensionImageStreamTagNamespace` and `imageContext` properties to match your
-actual project name
-
 ### Validate the installation
 1. Verify the custom library is installed properly:
 ```shell
-oc exec `oc get pods | grep custom-kieserver | grep Running | awk '{print $1}'` \
-  -- ls /opt/eap/standalone/deployments/ROOT.war/WEB-INF/lib/GetTasksCustomAPI-1.0.jar
+oc exec `oc get pods | grep kieserver-custom-mssql | grep Running | awk '{print $1}'` \
+  -- ls /opt/eap/standalone/deployments/ROOT.war/WEB-INF/lib/custom-endpoints-1.0.0-SNAPSHOT.jar
+oc exec `oc get pods | grep kieserver-custom-mssql | grep Running | awk '{print $1}'` \
+  -- find /opt/eap/modules/com
 ```
 2. Run the application from the `Route` called `custom-rhpam-mssql-rhpamcentrmon`
 
