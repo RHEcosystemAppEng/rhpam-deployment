@@ -75,7 +75,7 @@ podman push quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom-mssql:7.9.0
 ```
 
 ## Deploy the RHPAM application
-[custom-rhpam-mssql.yaml](./custom-rhpam-mssql.template) defines the `KieApp` instance for the RHPAM application, with the 
+[custom-rhpam-mssql.template](./custom-rhpam-mssql.template) defines the `KieApp` instance for the RHPAM application, with the 
 following features:
 * KIE Server:
   * Custom image `rhpam-kieserver-rhel8-custom-mssql`  with extension API and MS SQL driver
@@ -119,4 +119,3 @@ oc exec `oc get pods | grep kieserver-custom-mssql | grep Running | awk '{print 
   -- find /opt/eap/modules/com
 ```
 2. Run the application from the `Route` called `custom-rhpam-mssql-rhpamcentrmon`
-
