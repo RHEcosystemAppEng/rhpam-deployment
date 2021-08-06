@@ -68,11 +68,18 @@ They also push the image on the [Quay repository](https://quay.io/repository/eco
 of the AppEng group:
 ```shell
 ./setup.sh
+export VAGRANT_CWD=$PWD
+export CONTAINER_HOST=ssh://vagrant@127.0.0.1:2222/run/podman/podman.sock
+export CONTAINER_SSHKEY=$PWD/.vagrant/machines/default/virtualbox/private_key
 vagrant up
 podman system connection add fedora33 ssh://vagrant@127.0.0.1:2222
 podman build -t quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom-mssql:7.9.0 .
 podman push quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom-mssql:7.9.0
 ```
+
+**Note**: the actual `Dockerfile` is generated from the template [base-Dockerfile](./templates/base-Dockerfile) that integrates
+both the API and the JDBC extensions. Please provide the required dependencies (e.g., `custom-endpoints-1.0.0-SNAPSHOT.jar`)
+in the runtime folder before running the above procedure.
 
 ## Deploy the RHPAM application
 [custom-rhpam-mssql.template](./custom-rhpam-mssql.template) defines the `KieApp` instance for the RHPAM application, with the 
