@@ -64,7 +64,7 @@ The following steps generate a custom KIE Server image with the following featur
 * Integrates the MS SQL driver with no need of an additional xtension image
 
 The following commands generate the image with Podman, using the Vagrant configuration file [Vagrantfile](./Vagrantfile)provided as a reference.
-They also push the image on the [Quay repository](https://quay.io/repository/ecosystem-appeng/rhpam-kieserver-rhel8-custom-mssql?tab=tags)
+They also push the image on the [Ecosystem App Eng Quay repository](https://quay.io/repository/ecosystem-appeng/rhpam-kieserver-rhel8-custom-mssql?tab=tags)
 of the AppEng group:
 ```shell
 ./setup.sh
@@ -73,16 +73,45 @@ export CONTAINER_HOST=ssh://vagrant@127.0.0.1:2222/run/podman/podman.sock
 export CONTAINER_SSHKEY=$PWD/.vagrant/machines/default/virtualbox/private_key
 vagrant up
 podman system connection add fedora33 ssh://vagrant@127.0.0.1:2222
+
+podman login -u='11009103|dmartino' \
+-p=eyJhbGciOiJSUzUxMiJ9.eyJzdWIiOiJjNjEwOWJjZjcyNjU0ODQzODFiNzUzMzhjNzJmZGExNiJ9.p0KBU_Mn8S5hxQcgSqIj1mac6_c5oc1YY9owoIPzm0eyICdLMej5Jt8BoKFYpn1Pn4alqjQZTzrK3RSg9EM1SHDpLdqS70yEgMObGt62mFNsapRfw6h1F7V7JkS-J9L23jweKX6pfs4L0zgQhsckBVNj7UU-DVnDkHBE3C7-I7bPR92MAy53Po4eon9pV_cj0iWOzGrj7nCVNiQRDFj_AceHGz-A9EgbCH4Itwfa-02zQz7q2I3tzbIAkhGC9nlZq_rtJG96ULTc8wVuNDXznX81q1MpuLTjwpleASF8PEuFILpZlPpfqX-fsO27_EFOkzGzI_EuCs1xpqfgj7wvIWRD3mef7jWQl3mDIUqC5h6xE6b5ofTBj8MMX3-gDTHUA6fJ1JUdmWrkygh8MqN1gAxfHJ7L3i1nfFVEKntkRr_TFLmxzbAjXuB0TuTi9H34BwSDrnj0FAoLSIjOMvjcVKFRKmj_0VpqIesQW61zJssQZRqaMaYEJNXjsUu3QMBaNPgh3ukiJ-t-rxmefCF8c5MSMtpbR_FOrpLmIFq5ft3LifUdfbTQc4tOwZ6KlJLM2geOQxZT2R3mEmqkKWEnaIQXn_w6W7-m6x1E1HDkUkdhYM5VqlwRMm4VPl9uJXoRuB4d7YYGjWEzUZF7nUMxTQzE7OOJ7DypefIPHc8mVpI registry.redhat.io
 podman build -t quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom-mssql:7.9.0 .
+podman login quay.io
 podman push quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom-mssql:7.9.0
 ```
 
+Verify the build was successfully generated and deployed by running `podman images` and looking at the repository details
+on the [Ecosystem App Eng Quay repository](https://quay.io/repository/ecosystem-appeng/rhpam-kieserver-rhel8-custom?tab=tags)
+
+**Note**: in case of issues, verify that the `Podman API Service` service is running:
+```shell
+vagrant ssh default
+systemctl status podman
+```
+The output should be similar to:
+```shell
+● podman.service - Podman API Service
+     Loaded: loaded (/usr/lib/systemd/system/podman.service; static)
+     Active: active (running) since Wed 2021-08-04 09:40:07 UTC; 2s ago
+TriggeredBy: ● podman.socket
+       Docs: man:podman-system-service(1)
+   Main PID: 1728 (podman)
+      Tasks: 7 (limit: 1132)
+     Memory: 23.6M
+        CPU: 81ms
+     CGroup: /system.slice/podman.service
+             └─1728 /usr/bin/podman --log-level=info system service
+```
 **Note**: the actual `Dockerfile` is generated from the template [base-Dockerfile](./templates/base-Dockerfile) that integrates
 both the API and the JDBC extensions. Please provide the required dependencies (e.g., `custom-endpoints-1.0.0-SNAPSHOT.jar`)
 in the runtime folder before running the above procedure.
 
 ## Deploy the RHPAM application
-[custom-rhpam-mssql.template](./custom-rhpam-mssql.template) defines the `KieApp` instance for the RHPAM application, with the 
+**Prerequisites**:
+* Install the `Business Automation` operator
+
+The reference YAML configuration template [custom-rhpam-mssql.template](./custom-rhpam-mssql.template) defines the `KieApp` instance for the RHPAM application, with the 
 following features:
 * KIE Server:
   * Custom image `rhpam-kieserver-rhel8-custom-mssql`  with extension API and MS SQL driver
@@ -113,9 +142,6 @@ Finally, we can deploy the sample application with:
 ```shell
 oc create -f custom-rhpam-mssql.yaml
 ```
-
-**Note**: since we are pushing the container images into the OCP namespace, there's no need to define the secrets to store
-the login passwords to `Quay.io` nor to the `Red Hat registry'
 
 ### Validate the installation
 1. Verify the custom library is installed properly:
