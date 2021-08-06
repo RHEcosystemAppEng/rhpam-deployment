@@ -1,7 +1,7 @@
 # Table of Contents
 
 * [Phase 2: deploying on OCP](#phase-2-deploying-on-ocp)
-  * [Updates from existing procedures])#(updates-from-existing-procedures)
+  * [Updates from existing procedures](#updates-from-existing-procedures)
   * [Configuring Maven repositories](#configuring-maven-repositories)
     * [External Maven repository on Repsy](#external-maven-repository-on-repsy)
     * [Maven mirror on OCP](#maven-mirror-on-ocp)
