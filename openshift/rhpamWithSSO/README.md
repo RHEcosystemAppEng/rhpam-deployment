@@ -6,7 +6,7 @@
 # Creating a RHPAM installation with RHSSO configuration
 
 ## Installation and configuration of RHSSO
-* Install Red Hat Business Automation Operator
+* Install Red Hat Single Sign-On Operator
   Use the following command to create the Keycloak instance:
 ```shell
 oc create -f rhsso.yaml
