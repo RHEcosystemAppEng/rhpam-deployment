@@ -7,8 +7,7 @@
     * [Preliminary steps](#preliminary-steps)
     * [Validating the deployment](#validating-the-deployment)
     * [Test procedure](#test-procedure)
-  * [Collateral: deploying the OriginationServiceTask custom task](#collateral-deploying-the-originationservicetask-custom-task)
-  * [Troubleshooting](#troublehooting)
+  * [Troubleshooting](#troubleshooting)
     * [Define log level in KIE Server container](#define-log-level-in-kie-server-container)
 
 # Configure RHPAM with External Maven Repo
