@@ -43,9 +43,9 @@ rhpam-with-sso.yaml parameters:
 * In sso section the realm should be the realm you created in keycloak.
 * In sso section the adminUser and adminPassword should be the same as the of the user and password you created in Keycloak.
 * In **console** section under ssoClient section the name parameter should be the Business central client name you created in keycloak.
-* In **console** section under ssoClient section the secret parameter should be the Business central client secret which can be found in keycloak when editing the client, it's in confidentials tab.
+* In **console** section under ssoClient section the secret parameter should be the Business central client secret which can be found in keycloak when editing the client, it's in Credentials tab.
 * In **servers** section under ssoClient section the name parameter should be the Kie Server client name you created in keycloak.
-* In **servers** section under ssoClient section the secret parameter should be the Kie Server central client secret which can be found in keycloak when editing the client, it's in confidentials tab.
+* In **servers** section under ssoClient section the secret parameter should be the Kie Server central client secret which can be found in keycloak when editing the client, it's in Credentials tab.
 
 Validate that the installation completes when all the Pods are in `Running` or `Completed` state.
 
