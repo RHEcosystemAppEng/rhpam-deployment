@@ -160,22 +160,6 @@ to locate the `pom.xml` file and add this before the end of the file:
 * Delete the artifact from the `rhpam` Nexus repo
 * Deploy the application on the single KIE Server instance and test it: this time the mirror is used
 
-## Collateral: deploying the OriginationServiceTask custom task
-Download the given `BPM.zip` from the provided artifacts, then:
-```shell
-unzip BPM.zip
-cd BPM/Java
-# Replace all http:// occurrences to https:// & save these pom.xml files
-mvn package -DskipTests=true
-```
-
-Installation procedure:
-* Login to `Business Central`
-* From the `Admin>Custom Tasks Administration` page select `Add Custom Task`
-* Select the file at `BPM/Java/OriginationWorkItem/target/OriginationWorkItem-2021.01.00.jar` and upload it
-
-The new custom task `OriginationServiceTask` is then listed under the `Custom Tasks Administration` page.
-
 ## Troubleshooting
 ### Define log level in KIE Server container
 * Open the `Terminal` for the KIE Server container 
