@@ -4,15 +4,20 @@ metadata:
   name: custom-rhpam-mssql-maven
 spec:
   environment: rhpam-production
+  auth:
+    sso:
+      adminPassword: password
+      adminUser: adminuser
+      realm: demo
+      url: https://keycloak-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/auth
   imageRegistry:
     registry: quay.io
   commonConfig:
     adminPassword: password
-    adminUser: admin
-    amqClusterPassword: password
-    amqPassword: password
-    dbPassword: password
-    keyStorePassword: password
+    adminUser: adminuser
+#    amqClusterPassword: password
+#    amqPassword: password
+#    keyStorePassword: password
     applicationName: custom-rhpam-mssql-maven
   objects:
     console:
@@ -35,6 +40,9 @@ spec:
             http://rhpam-mirror-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/repository/rhpam-mirror790
         - name: MAVEN_MIRROR_OF
           value: 'external:*,!rhpam'
+      ssoClient:
+        name: businesscentral
+        secret: 8fdf94b5-5704-4634-9ff3-7cf83610f9df
     servers:
       - database:
           type: external
@@ -73,3 +81,6 @@ spec:
               http://rhpam-mirror-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/repository/rhpam-mirror790
           - name: MAVEN_MIRROR_OF
             value: 'external:*,!rhpam'
+        ssoClient:
+          name: kieserver
+          secret: 12a085fc-e9b6-421f-bbfd-c9f30cc42d77

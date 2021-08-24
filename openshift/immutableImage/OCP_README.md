@@ -3,6 +3,7 @@
 * [Phase 2: deploying on OCP](#phase-2-deploying-on-ocp)
   * [Updates from existing procedures](#updates-from-existing-procedures)
   * [Deployment architecture](#deployment-architecture)
+  * [Configuring SSO Authentication](#configuring-sso-authentication)
   * [Configuring Maven repositories](#configuring-maven-repositories)
     * [External Maven repository on Repsy](#external-maven-repository-on-repsy)
     * [Maven mirror on OCP](#maven-mirror-on-ocp)
@@ -36,10 +37,25 @@ The system architecture includes the following components:
   * Pushed on [Quay.io](https://quay.io/) registry
 * External Maven artifacts repository on [Repsy.io](https://repsy.io/)
 * Maven mirror created from a Nexus instance deployed in OCP
-* Test RESP API
+* SSO Authentication managed by Keycloack
+* Test REST API
 
 The following picture describes the above components:
 ![OCP Architecture](./images/ocp_immutable.png)
+
+## Configuring SSO Authentication
+Follow these [instructions](../rhpamWithSSO#installation-and-configuration-of-rhsso) to depliy the `Keycloak`
+instance and configure the realm for the RH PAM deployment.
+**Note**: following configuration files assumes these settings have been configured:
+* Realm name is `demo`
+* RHPAM user name is `adminuser`
+* RHPAM user password is `password`
+* Business Central client ID is `businesscentral`
+* KIE Server client ID is `kieserver`
+
+**Note**: Once you configured all the authentication parts, you must replace the `objects.console.ssoClient.secret` and
+`objects.servers[0].ssoClient.secret` with the actual secrets that are available from the Kaycloack console for the
+associated clients.
 
 ## Configuring Maven repositories
 ### External Maven repository on Repsy
@@ -175,6 +191,9 @@ The following command sets the actual URL connection of the MS SQL deployment:
 sed "s/MSSQL_URL/`oc get svc mssql-service -o jsonpath="{..spec.clusterIP}:{..spec.ports[0].port}"`/g" \
   custom-rhpam-mssql-maven.template > custom-rhpam-mssql-maven.yaml
 ```
+
+**Note**: you must first update the template file with the actual SSO secrets as described [here](#configuring-sso-authentication)
+
 Finally, we can deploy the sample application with:
 ```shell
 oc create -f custom-rhpam-mssql-maven.yaml
@@ -214,7 +233,7 @@ oc exec -it `oc get pods | grep kieserver-custom | grep Running | awk '{print $1
 ```
 
 ### Deploy the example Business Process
-From the `Business Central Monitor` application available for the route `custom-rhpam-mssql-maven-rhpamcentrmon` (`admin/password`),
+From the `Business Central Monitor` application available for the route `custom-rhpam-mssql-maven-rhpamcentrmon` (`adminuser/password`),
 go to `Execution Servers` and add a new `Deployment Unit` with these settings:
 ```text
 Name: CustomProject
