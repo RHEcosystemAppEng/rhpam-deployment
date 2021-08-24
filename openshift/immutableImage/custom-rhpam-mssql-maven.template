@@ -15,9 +15,9 @@ spec:
   commonConfig:
     adminPassword: password
     adminUser: adminuser
-#    amqClusterPassword: password
-#    amqPassword: password
-#    keyStorePassword: password
+    amqClusterPassword: password
+    amqPassword: password
+    keyStorePassword: password
     applicationName: custom-rhpam-mssql-maven
   objects:
     console:
