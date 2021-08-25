@@ -13,5 +13,5 @@ List of Asana tasks and related procedures:
 * [Installation of RHPAM with RHSSO configuration](https://app.asana.com/0/1200498898048415/1200564580523451/f):
   [procedure](./rhpamWithSSO/README.md)
 * [Repeatable process to create immutable image of KIE server](https://app.asana.com/0/1200498898048415/1200624087463989/f): 
-  procedure for [EAP environment](./immutableImage/EAP_README.md); procedure for [OCP deployment](./immutableImage/OCP_README.md)
+  procedure for [EAP environment](repeatableProcess/EAP_README.md); procedure for [OCP deployment](repeatableProcess/OCP_README.md)
   

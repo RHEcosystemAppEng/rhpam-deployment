@@ -60,7 +60,7 @@ EXEC sp_addrolemember [SqlJDBCXAUser], 'rhpam'
 ## Build and push the custom KIE Server image
 The following steps generate a custom KIE Server image with the following features:
 * Base image is 7.9.0
-* Integrates the `custom-endpoints` artifact generated from the [custom-endpoints](../immutableImage/custom-endpoints) project
+* Integrates the `custom-endpoints` artifact generated from the [custom-endpoints](../repeatableProcess/custom-endpoints) project
 * Integrates the MS SQL driver with no need of an additional xtension image
 
 The following commands generate the image with Podman, using the Vagrant configuration file [Vagrantfile](./Vagrantfile)provided as a reference.
