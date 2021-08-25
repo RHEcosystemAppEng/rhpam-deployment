@@ -264,4 +264,7 @@ on the KIE Server and only one active process:
 * Run the `Get instance details` request to load the `taskInstanceId` parameter
 * Finally, run the `Custom getTask` and `Custom skip` requests to load the metadata of the given task and to skip the execution
 
+**Note**: Please note that the original `CustomProject` was designed for a user named `rhpamAdmin`, so you might encounter
+some issues when trying to run the `skip` REST API as the `adminuser` user
+
 Once completed, go back to the `Process Diagram` tab and verify that the whole process has completed the execution.
