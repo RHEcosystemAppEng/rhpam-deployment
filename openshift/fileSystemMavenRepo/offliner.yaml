@@ -1,0 +1,43 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: maven-offline-repo-claim
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: ocs-cluster-cephfs
+  volumeMode: Filesystem
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: offliner
+  labels:
+    app: offliner
+spec:
+  restartPolicy: Always
+  securityContext:
+    seLinuxOptions:
+      level: s0:c30,c20
+    supplementalGroups:
+      - 5555
+  containers:
+    - name: offliner
+      volumeMounts:
+        - name: maven-repo
+          mountPath: /maven-repo
+      image: openjdk/openjdk-11-rhel7
+      args:
+        - tail
+        - '-f'
+        - /dev/null
+      securityContext:
+        privileged: true
+  volumes:
+    - name: maven-repo
+      persistentVolumeClaim:
+        claimName: maven-offline-repo-claim

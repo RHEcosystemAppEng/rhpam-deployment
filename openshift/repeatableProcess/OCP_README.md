@@ -265,6 +265,11 @@ on the KIE Server and only one active process:
 * Finally, run the `Custom getTask` and `Custom skip` requests to load the metadata of the given task and to skip the execution
 
 **Note**: Please note that the original `CustomProject` was designed for a user named `rhpamAdmin`, so you might encounter
-some issues when trying to run the `skip` REST API as the `adminuser` user
+some issues when trying to run the `skip` REST API as the `adminuser` user:
+```shell
+14:12:13,371 WARN  [org.jbpm.services.task.persistence.TaskTransactionInterceptor] (default task-8) 
+Could not commit session: org.jbpm.services.task.exception.PermissionDeniedException: User '[UserImpl:'adminuser']' 
+does not have permissions to execute operation 'Skip' on task id 10005
+```
 
 Once completed, go back to the `Process Diagram` tab and verify that the whole process has completed the execution.

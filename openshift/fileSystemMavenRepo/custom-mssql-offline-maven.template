@@ -1,0 +1,71 @@
+apiVersion: app.kiegroup.org/v2
+kind: KieApp
+metadata:
+  name: custom-rhpam-mssql-maven
+spec:
+  environment: rhpam-production
+  auth:
+    sso:
+      adminPassword: password
+      adminUser: adminuser
+      realm: demo
+      url: https://keycloak-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/auth
+  imageRegistry:
+    registry: quay.io
+  commonConfig:
+    adminPassword: password
+    adminUser: adminuser
+    amqClusterPassword: password
+    amqPassword: password
+    keyStorePassword: password
+    applicationName: custom-rhpam-mssql-maven
+  objects:
+    console:
+      image: rhpam-businesscentral-monitoring-rhel8
+      imageContext: ecosystem-appeng
+      imageTag: 7.9.0
+      replicas: 1
+      ssoClient:
+        name: businesscentral
+        secret: 8fdf94b5-5704-4634-9ff3-7cf83610f9df
+    servers:
+      - database:
+          type: external
+          externalConfig:
+            extensionImage: false
+            driver: mssql
+            dialect: org.hibernate.dialect.SQLServer2012Dialect
+            jdbcURL: jdbc:sqlserver://MSSQL_URL;DatabaseName=rhpam
+            nonXA: 'true'
+            username: sa
+            password: msSql2019
+            minPoolSize: '10'
+            maxPoolSize: '10'
+            connectionChecker: >-
+              org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLValidConnectionChecker
+            exceptionSorter: org.jboss.jca.adapters.jdbc.extensions.mssql.MSSQLExceptionSorter
+            backgroundValidation: "true"
+        image: rhpam-kieserver-rhel8-custom-mssql
+        imageContext: ecosystem-appeng
+        imageTag: 7.9.0
+        id: kieserver-custom-mssql-1
+        name: kieserver-custom-mssql
+        replicas: 1
+        env:
+          - name: MAVEN_REPO_URL
+            value: >-
+              https://repo.repsy.io/mvn/dmartino/rhpam
+          - name: MAVEN_REPO_ID
+            value: rhpam
+          - name: MAVEN_REPO_USERNAME
+            value: dmartino
+          - name: MAVEN_REPO_PASSWORD
+            value: dMartino123
+          - name: MAVEN_MIRROR_URL
+            value: >-
+              file:///maven-repo/repository
+          - name: MAVEN_MIRROR_OF
+            value: 'external:*,!rhpam'
+        ssoClient:
+          name: kieserver
+          secret: 12a085fc-e9b6-421f-bbfd-c9f30cc42d77
