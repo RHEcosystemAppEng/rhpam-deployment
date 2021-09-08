@@ -1,9 +1,9 @@
 apiVersion: app.kiegroup.org/v2
 kind: KieApp
 metadata:
-  name: custom-rhpam-mssql-maven
+  name: immutable-custom-server
 spec:
-  environment: rhpam-production
+  environment: rhpam-production-immutable
   auth:
     sso:
       adminPassword: password
@@ -18,13 +18,14 @@ spec:
     amqClusterPassword: password
     amqPassword: password
     keyStorePassword: password
-    applicationName: custom-rhpam-mssql-maven
+    applicationName: immutable-custom-server
   objects:
     console:
-      image: rhpam-businesscentral-monitoring-rhel8
+      image: rhpam-businesscentral-rhel8
       imageContext: ecosystem-appeng
       imageTag: 7.9.0
       replicas: 1
+      name: console-790
       env:
         - name: MAVEN_REPO_URL
           value: >-
@@ -37,22 +38,32 @@ spec:
           value: dMartino123
         - name: MAVEN_MIRROR_URL
           value: >-
-            http://rhpam-mirror-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/repository/rhpam-mirror790
+            http://rhpam-mirror790-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/repository/rhpam-mirror790/
         - name: MAVEN_MIRROR_OF
           value: 'external:*,!rhpam'
         - name: KIE_SERVER_MGMT_DISABLED
           value: 'false'
       ssoClient:
-        name: businesscentral
-        secret: 8fdf94b5-5704-4634-9ff3-7cf83610f9df
+        name:  businesscentral
+        secret: 75b16703-3297-408b-8e0b-5f9a61612312
     servers:
-      - database:
+      - build:
+          gitSource:
+            contextDir: .
+            reference: master
+            uri: >-
+              https://github.com/dmartinol/CustomProject.git
+          kieServerContainerDeployment: >-
+            CustomProject=com.testspace:CustomProject:1.0.0
+          mavenMirrorURL: >-
+            http://rhpam-mirror790-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/repository/rhpam-mirror790
+        database:
           type: external
           externalConfig:
             extensionImage: false
             driver: mssql
             dialect: org.hibernate.dialect.SQLServer2012Dialect
-            jdbcURL: jdbc:sqlserver://MSSQL_URL;DatabaseName=rhpam
+            jdbcURL: jdbc:sqlserver://MSSQL_URL;DatabaseName=rhpam_immutable
             nonXA: 'true'
             username: sa
             password: msSql2019
@@ -65,8 +76,8 @@ spec:
         image: rhpam-kieserver-rhel8-custom-mssql
         imageContext: ecosystem-appeng
         imageTag: 7.9.0
-        id: kieserver-custom-mssql-1
-        name: kieserver-custom-mssql
+        id: immutable-custom-server
+        name: immutable-custom-server
         replicas: 1
         env:
           - name: MAVEN_REPO_URL
@@ -80,11 +91,11 @@ spec:
             value: dMartino123
           - name: MAVEN_MIRROR_URL
             value: >-
-              http://rhpam-mirror-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/repository/rhpam-mirror790
+              http://rhpam-mirror790-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/repository/rhpam-mirror790/
           - name: MAVEN_MIRROR_OF
             value: 'external:*,!rhpam'
           - name: KIE_SERVER_MGMT_DISABLED
             value: 'false'
         ssoClient:
           name: kieserver
-          secret: 12a085fc-e9b6-421f-bbfd-c9f30cc42d77
+          secret: 20f0f33d-ae24-4631-903b-dc3ac8bc67a7
