@@ -21,28 +21,23 @@ spec:
     applicationName: immutable-custom-server
   objects:
     console:
-      image: rhpam-businesscentral-rhel8
+      image: rhpam-businesscentral-monitoring-rhel8
       imageContext: ecosystem-appeng
       imageTag: 7.9.0
       replicas: 1
       name: console-790
       env:
-        - name: MAVEN_REPO_URL
-          value: >-
-            https://repo.repsy.io/mvn/dmartino/rhpam
-        - name: MAVEN_REPO_ID
-          value: rhpam
         - name: MAVEN_REPO_USERNAME
-          value: dmartino
+          value: deployer
         - name: MAVEN_REPO_PASSWORD
-          value: dMartino123
+          value: deployer123
         - name: MAVEN_MIRROR_URL
           value: >-
             http://rhpam-mirror790-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/repository/rhpam-mirror790/
         - name: MAVEN_MIRROR_OF
           value: 'external:*,!rhpam'
         - name: KIE_SERVER_MGMT_DISABLED
-          value: 'false'
+          value: 'true'
       ssoClient:
         name:  businesscentral
         secret: 75b16703-3297-408b-8e0b-5f9a61612312
@@ -80,22 +75,17 @@ spec:
         name: immutable-custom-server
         replicas: 1
         env:
-          - name: MAVEN_REPO_URL
-            value: >-
-              https://repo.repsy.io/mvn/dmartino/rhpam
-          - name: MAVEN_REPO_ID
-            value: rhpam
           - name: MAVEN_REPO_USERNAME
-            value: dmartino
+            value: deployer
           - name: MAVEN_REPO_PASSWORD
-            value: dMartino123
+            value: deployer123
           - name: MAVEN_MIRROR_URL
             value: >-
               http://rhpam-mirror790-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/repository/rhpam-mirror790/
           - name: MAVEN_MIRROR_OF
             value: 'external:*,!rhpam'
           - name: KIE_SERVER_MGMT_DISABLED
-            value: 'false'
+            value: 'true'
         ssoClient:
           name: kieserver
           secret: 20f0f33d-ae24-4631-903b-dc3ac8bc67a7
