@@ -4,6 +4,7 @@ metadata:
   name: immutable-custom-server
 spec:
   environment: rhpam-production-immutable
+  useImageTags: true
   auth:
     sso:
       adminPassword: password
