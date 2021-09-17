@@ -65,7 +65,7 @@
                 <repository>
                     <id>rhpam-mirror</id>
                     <url>
-                        http://rhpam-mirror-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/repository/rhpam-mirror790
+			http://rhpam-mirror790-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/repository/rhpam-mirror790
                     </url>
                 </repository>
             </distributionManagement>
