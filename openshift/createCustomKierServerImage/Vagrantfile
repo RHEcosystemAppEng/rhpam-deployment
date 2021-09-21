@@ -11,27 +11,30 @@ Vagrant.configure("2") do |config|
     rm -rf /home/vagrant/app
     mkdir -p /home/vagrant/app
   SHELL
-  config.vm.provision "file", source: "Dockerfile", destination: "/tmp/"
-  config.vm.provision "file", source: "Binaries/GetTasksCustomAPI-1.0.jar", destination: "/tmp/"
+#   config.vm.provision "file", source: "Dockerfile", destination: "/tmp/"
+#   config.vm.provision "file", source: "custom-endpoints/target/custom-endpoints-1.0.0-SNAPSHOT.jar", destination: "/tmp/"
 
   config.vm.provision "shell", inline: <<-SHELL
-    cp /tmp/Dockerfile /tmp/GetTasksCustomAPI-1.0.jar /home/vagrant/app/
+#     cp /tmp/Dockerfile /tmp/custom-endpoints-1.0.0-SNAPSHOT.jar /home/vagrant/app/
     chown -R vagrant /home/vagrant/app/
     yum install -y podman
     groupadd -f -r podman
 
-    usermod -aG podman $SUDO_USER
-    podman login -u='11009103|dmartino' \
-    -p=eyJhbGciOiJSUzUxMiJ9.eyJzdWIiOiJjNjEwOWJjZjcyNjU0ODQzODFiNzUzMzhjNzJmZGExNiJ9.p0KBU_Mn8S5hxQcgSqIj1mac6_c5oc1YY9owoIPzm0eyICdLMej5Jt8BoKFYpn1Pn4alqjQZTzrK3RSg9EM1SHDpLdqS70yEgMObGt62mFNsapRfw6h1F7V7JkS-J9L23jweKX6pfs4L0zgQhsckBVNj7UU-DVnDkHBE3C7-I7bPR92MAy53Po4eon9pV_cj0iWOzGrj7nCVNiQRDFj_AceHGz-A9EgbCH4Itwfa-02zQz7q2I3tzbIAkhGC9nlZq_rtJG96ULTc8wVuNDXznX81q1MpuLTjwpleASF8PEuFILpZlPpfqX-fsO27_EFOkzGzI_EuCs1xpqfgj7wvIWRD3mef7jWQl3mDIUqC5h6xE6b5ofTBj8MMX3-gDTHUA6fJ1JUdmWrkygh8MqN1gAxfHJ7L3i1nfFVEKntkRr_TFLmxzbAjXuB0TuTi9H34BwSDrnj0FAoLSIjOMvjcVKFRKmj_0VpqIesQW61zJssQZRqaMaYEJNXjsUu3QMBaNPgh3ukiJ-t-rxmefCF8c5MSMtpbR_FOrpLmIFq5ft3LifUdfbTQc4tOwZ6KlJLM2geOQxZT2R3mEmqkKWEnaIQXn_w6W7-m6x1E1HDkUkdhYM5VqlwRMm4VPl9uJXoRuB4d7YYGjWEzUZF7nUMxTQzE7OOJ7DypefIPHc8mVpI registry.redhat.io
-  SHELL
+#     usermod -aG podman $SUDO_USER
+    mkdir -p /etc/systemd/system/podman.socket.d
+    cat >/etc/systemd/system/podman.socket.d/override.conf <<EOF
+[Socket]
+SocketMode=0660
+SocketUser=root
+SocketGroup=podman
+EOF
+    systemctl daemon-reload
+    echo "d /run/podman 0770 root podman" > /etc/tmpfiles.d/podman.conf
+    sudo systemd-tmpfiles --create
 
-  config.vm.provision "podman" do |d|
-    d.build_image "/home/vagrant/app",
-      args: "-t quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom:7.11.0-4"
-  end
-  config.vm.provision "shell", inline: <<-SHELL
-    podman login -u="dmartino" \
-    -p="uMtRKZFjc/uuPyBqrOnFRCAN/rWHkWsr1OrfP9l/bVgGW7WQXeBkxv35FkCH0yrsppvOW4PMVx/NCJ9iv/GRrDX/hgrQgU5341LPNBXHxBA=" quay.io
-    podman push quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom:7.11.0-4
+    systemctl enable podman.socket
+    systemctl start podman.socket
+
+    usermod -aG podman $SUDO_USER
   SHELL
 end
