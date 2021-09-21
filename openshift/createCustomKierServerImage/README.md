@@ -7,7 +7,7 @@
     * [Podman on MacOS](#podman-on-macos)
       * [Configuring Podman on MacOS](#configuring-podman-on-macos)
       * [Building with Podman on MacOS](#building-with-podman-on-macos)
-    * [Podman on Windows OS](podman-on-windows-os)
+    * [Podman on Windows OS](#podman-on-windows-os)
     
 # Creating a custom KIE Server image with an additional JAR file
 
@@ -59,6 +59,10 @@ podman login quay.io
 podman push quay.io/ecosystem-appeng/rhpam-kieserver-rhel8-custom-mssql:7.9.0
 ```
 
+*Troubleshooting*: if you are running podman 3.3.x, you can encounter this error while adding the connection to podman client: 
+`Error: failed to connect: ssh: handshake failed: ssh: unable to authenticate, attempted methods [none publickey],
+no supported methods remain`. This can be fixed by running the following command to setup the SSH environment: `eval "$(ssh-agent -s)"`
+
 *Note*: changes are required to the given [Vagrantfile](./Vagrantfile) to setup the proper token for both the
 _registry.redhat.io_ and the _quay.io_ container registries (look for two occurrences of
 "podman login" command invocation).
@@ -77,8 +81,31 @@ Once you verify that the image was published on Quay registry, you can shutdown 
 `git clone https://github.com/RHEcosystemAppEng/temenos-infinity-cib.git`
 * Install podman client from [Podman Installation Instructions](https://podman.io/getting-started/installation.html)
 * Install VirtualBox from [Download VirtualBox](https://www.virtualbox.org/wiki/Downloads)
+  * **Note** Must be installed as Administrator
 * Install Vagrant from [Download Vagrant](https://www.vagrantup.com/downloads)
 
+**Troubleshooting**:
+* If the `podman system connection add` command fails with `Error: Process exited with status 127`, then open the `Services` 
+page from the Start menu, then select the `Open SSH Authentication Agent` and verify it is enabled with `Manual`
+startup type, then start the agent.
+* Despite multiple attempts, the Vagrant was never able to connect to the VirtualBox, showing after long time the following 
+error:
+```text
+    default: Warning: Connection reset. Retrying...
+The guest machine entered an invalid state while waiting for it
+to boot. Valid states are 'starting, running'. The machine is in the
+'stopping' state. Please verify everything is configured
+properly and try again.
+
+If the provider you're using has a GUI that comes with it,
+it is often helpful to open that and watch the machine, since the
+GUI often has more helpful error messages than Vagrant can retrieve.
+For example, if you're using VirtualBox, run `vagrant up` while the
+VirtualBox GUI is open.
+
+The primary issue for this error is that the provider you're using
+is not properly configured. This is very rarely a Vagrant issue.
+```
 
 
 
