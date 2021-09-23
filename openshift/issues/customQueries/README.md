@@ -6,14 +6,14 @@
 # Custom Queries
 ## Custom Task Query
 The request is to register a query that:
-* Return details on the Tasks, including:
+* Returns details on the Tasks, including:
   * Some well-identified Task and Process variables (see next)
   * Actual and potential owners
   * Status
 * Allows fully configurable filter using the usual SQL operators and with possibility to generate conditional
 expressions with nested conditional groups concatenated by AND or OR operators
 * Returns paginated result
-* Support sorting on one of the exposed columns
+* Supports sorting on one of the exposed columns
 
 To simplify the registration of the custom query, we provide a reference SQL script [view.sql](./view.sql) to define a 
 `CustomView` DB view that exposes all the requested columns:
@@ -28,7 +28,7 @@ To simplify the registration of the custom query, we provide a reference SQL scr
 |PARTYID | TASKVARIABLEIMPL.VALUE WHERE TASKVARIABLEIMPL.NAME LIKE 'partyId' |
 |STAGE | (LATEST) VARIABLEINSTANCELOG.VALUE WHERE VARIABLEINSTANCELOG.VARIABLEID LIKE 'stage' |
 |OVERVIEW | TASKVARIABLEIMPL.VALUE WHERE TASKVARIABLEIMPL.NAME LIKE 'overview' |
-|counter | (latest) variableinstancelog.value where variableinstancelog.variableid like 'counter' |
+|COUNTER | (LATEST) VARIABLEINSTANCELOG.VALUE WHERE VARIABLEINSTANCELOG.VARIABLEID LIKE 'counter' |
 |DUEDATE | AUDITTASKIMPL.DUEDATE |
 |LASTMODIFICATIONDATE | AUDITTASKIMPL.LASTMODIFICATIONDATE|
 |STATUS| TASK.STATUS|
@@ -48,69 +48,64 @@ column in the SELECT statement (see previous table):
 **Note**: at the moment no custom mapper is available to map the response in a detailed JSON object, so the 
 evaluation of the output must follow the ordinal position of the values in the arrays
 
-The following is an example of filter specification that applies the SQL condition :
-'WHERE requestId IN ('R1', '`'R2') AND (facilityId IN ('F1', 'F2') OR partyId in ('P1', 'P2'))
+The following is an example of filter specification that applies the SQL condition : 
+`WHERE requestId IN ('R1', 'R2') AND (facilityId IN ('F1', 'F2') OR partyId in ('P1', 'P2'))`
+
 ```json
 {
-    "order-by": "lastModificationDate",
-    "order-asc": false,
-    "query-params": [
-      {
-        "order-by": "lastModificationDate",
-        "order-asc": false,
-        "query-params": [
-          {
-            "cond-operator": "AND",
-            "cond-values": [
-              {
-                "cond-column": "requestId",
-                "cond-operator": "IN",
-                "cond-values": [
-                  "R1",
-                  "R2"
-                ]
-              },
-              {
-                "cond-operator": "OR",
-                "cond-values": [
-                  {
-                    "cond-column": "requestId",
-                    "cond-operator": "IN",
-                    "cond-values": [
-                      "R1",
-                      "R2"
-                    ]
-                  },
-                  {
-                    "cond-column": "facilityId",
-                    "cond-operator": "IN",
-                    "cond-values": [
-                      "F1",
-                      "F2"
-                    ]
-                  },
-                  {
-                    "cond-column": "partyId",
-                    "cond-operator": "IN",
-                    "cond-values": [
-                      "P1",
-                      "P2"
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    ]
+  "order-by": "lastModificationDate",
+  "order-asc": false,
+  "query-params": [
+    {
+      "cond-operator": "AND",
+      "cond-values": [
+        {
+          "cond-column": "requestId",
+          "cond-operator": "IN",
+          "cond-values": [
+            "R1",
+            "R2"
+          ]
+        },
+        {
+          "cond-operator": "OR",
+          "cond-values": [
+            {
+              "cond-column": "requestId",
+              "cond-operator": "IN",
+              "cond-values": [
+                "R1",
+                "R2"
+              ]
+            },
+            {
+              "cond-column": "facilityId",
+              "cond-operator": "IN",
+              "cond-values": [
+                "F1",
+                "F2"
+              ]
+            },
+            {
+              "cond-column": "partyId",
+              "cond-operator": "IN",
+              "cond-values": [
+                "P1",
+                "P2"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
 ```
 
 The list of supported SQL operators is defined in [CoreFunctionType](https://github.com/kiegroup/kie-soup/blob/e5c909959888ac498782b447851a824291319cdc/kie-soup-dataset/kie-soup-dataset-api/src/main/java/org/dashbuilder/dataset/filter/CoreFunctionType.java),
 while the list of supported logical operator is in [LogicalExprType](https://github.com/kiegroup/kie-soup/blob/e5c909959888ac498782b447851a824291319cdc/kie-soup-dataset/kie-soup-dataset-api/src/main/java/org/dashbuilder/dataset/filter/LogicalExprType.java)
 
-**Note**: the original request from which we derived the definition of the DB View 
+**Note**: the original request from which we derived the definition of the DB View is the following:
 ```text
 Filteration:
 requestId  - task meta data
