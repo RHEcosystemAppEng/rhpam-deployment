@@ -1,0 +1,139 @@
+{
+	"info": {
+		"_postman_id": "aacdb35f-336e-48be-b36c-8e129be66e5a",
+		"name": "Temenos-Custom View",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Register queryOnCustomView",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"query-name\": \"queryOnCustomView\",\n    \"query-source\": \"${org.kie.server.persistence.ds}\",\n    \"query-expression\": \"select v.taskId, v.description, v.taskType, v.requestId, v.facilityId, v.partyId, v.stage, v.overview, v.counter, v.dueDate, v.lastModificationDate, v.status, v.actualOwner, v.potentialOwners from customview v\",\n    \"query-target\": \"CUSTOM\",\n    \"query-columns\": {\n        \"TASKID\": \"NUMBER\",\n        \"ID\": \"NUMBER\",\n        \"TASKTYPE\": \"LABEL\",\n        \"REQUESTID\": \"LABEL\",\n        \"FACILITYID\": \"LABEL\",\n        \"PARTYID\": \"LABEL\",\n        \"STAGE\": \"LABEL\",\n        \"OVERVIEW\": \"LABEL\",\n        \"COUNTER\": \"NUMBER\",\n        \"DUEDATE\": \"DATE\",\n        \"LASTMODIFICATIONDATE\": \"DATE\",\n        \"STATUS\": \"LABEL\",\n        \"ACTUALOWNER\": \"LABEL\",\n        \"POTENTIALOWNERS\": \"LABEL\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/kie-server/services/rest/server/queries/definitions/queryOnCustomView",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"kie-server",
+						"services",
+						"rest",
+						"server",
+						"queries",
+						"definitions",
+						"queryOnCustomView"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Run queryOnCustomView",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"order-by\": \"lastModificationDate\",\n    \"order-asc\": false,\n    \"query-params\": [\n        {\n            \"cond-operator\": \"OR\",\n            \"cond-values\": [\n                {\n                    \"cond-column\": \"requestId\",\n                    \"cond-operator\": \"IN\",\n                    \"cond-values\": [\n                        \"1\"\n                    ]\n                },\n                {\n                    \"cond-column\": \"facilityId\",\n                    \"cond-operator\": \"IN\",\n                    \"cond-values\": [\n                        \"2\"\n                    ]\n                },\n                {\n                    \"cond-column\": \"partyId\",\n                    \"cond-operator\": \"IN\",\n                    \"cond-values\": [\n                        \"3\"\n                    ]\n                }\n            ]\n        }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/kie-server/services/rest/server/queries/definitions/queryOnCustomView/filtered-data?mapper=RawList&page=0&pageSize=10",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"kie-server",
+						"services",
+						"rest",
+						"server",
+						"queries",
+						"definitions",
+						"queryOnCustomView",
+						"filtered-data"
+					],
+					"query": [
+						{
+							"key": "mapper",
+							"value": "RawList"
+						},
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "pageSize",
+							"value": "10"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "redhat123#",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "rhpamAdmin",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

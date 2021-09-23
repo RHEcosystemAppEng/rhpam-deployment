@@ -1,0 +1,182 @@
+{
+	"info": {
+		"_postman_id": "a7d94986-7071-4781-b88b-e8518b1fc16c",
+		"name": "Temenos/Events",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Registered queries",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"query-name\": \"filteredTaskEvents\",\n    \"query-source\": \"${org.kie.server.persistence.ds}\",\n    \"query-expression\": \"SELECT te.TASKID ,te.id,te.LOGTIME ,te.TYPE ,ti.VALUE,te.USERID   FROM TASKVARIABLEIMPL ti inner join TASKEVENT  te on te.TASKID =ti.TASKID  where  ti.NAME ='requestId' and te.TYPE  in('ACTIVATED','STARTED','COMPLETED','ABORTED')\",\n    \"query-target\": \"CUSTOM\",\n    \"query-columns\": {\n        \"TASKID\": \"NUMBER\",\n        \"ID\": \"NUMBER\",\n        \"LOGTIME\": \"DATE\",\n        \"TYPE\": \"LABEL\",\n        \"VALUE\": \"LABEL\",\n        \"USERID\": \"LABEL\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/kie-server/services/rest/server/queries/definitions/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"kie-server",
+						"services",
+						"rest",
+						"server",
+						"queries",
+						"definitions",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Register filteredTaskEvents",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"query-name\": \"filteredTaskEvents\",\n    \"query-source\": \"${org.kie.server.persistence.ds}\",\n    \"query-expression\": \"SELECT te.TASKID ,te.id,te.LOGTIME ,te.TYPE ,ti.VALUE,te.USERID   FROM TASKVARIABLEIMPL ti inner join TASKEVENT  te on te.TASKID =ti.TASKID  where  ti.NAME ='requestId' and te.TYPE  in('ACTIVATED','STARTED','COMPLETED','ABORTED')\",\n    \"query-target\": \"CUSTOM\",\n    \"query-columns\": {\n        \"TASKID\": \"NUMBER\",\n        \"ID\": \"NUMBER\",\n        \"LOGTIME\": \"DATE\",\n        \"TYPE\": \"LABEL\",\n        \"VALUE\": \"LABEL\",\n        \"USERID\": \"LABEL\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/kie-server/services/rest/server/queries/definitions/filteredTaskEvents",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"kie-server",
+						"services",
+						"rest",
+						"server",
+						"queries",
+						"definitions",
+						"filteredTaskEvents"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Run filteredTaskEvents",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"order-by\": \"LOGTIME\",\n    \"order-asc\": false,\n    \"query-params\": [\n        {\n            \"cond-column\": \"USERID\",\n            \"cond-operator\": \"IN\",\n            \"cond-values\": [\n                \"rhpamAdmin\"\n            ]\n        }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/kie-server/services/rest/server/queries/definitions/filteredTaskEvents/filtered-data?mapper=RawList&page=0&pageSize=2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"kie-server",
+						"services",
+						"rest",
+						"server",
+						"queries",
+						"definitions",
+						"filteredTaskEvents",
+						"filtered-data"
+					],
+					"query": [
+						{
+							"key": "mapper",
+							"value": "RawList"
+						},
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "pageSize",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "redhat123#",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "rhpamAdmin",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
