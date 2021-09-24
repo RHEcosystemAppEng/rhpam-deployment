@@ -3,12 +3,14 @@ select t.id as taskId, t.description,
        taskType.value  as taskType, requestId.value as requestId,
        partyId.value as partyId, facilityId.value as facilityId,
        stage.value as stage, overview.value as overview, counter.value as counter,
+       nil.sla_due_date as slaDueDate,
        audit.dueDate, audit.lastModificationDate, t.status,
        t.actualOwner_id as actualOwner,
        (select GROUP_CONCAT(entity_id SEPARATOR ', ')
         FROM PeopleAssignments_PotOwners po WHERE po.task_id =t.id order by entity_id ASC) as potentialOwners
 from  AuditTaskImpl audit JOIN Task t on audit.taskId=t.id
-                          left outer join TaskVariableImpl taskType ON taskType.taskId = t.id AND taskType.name like 'taskType'
+                          JOIN NodeInstanceLog nil on nil.workItemId = t.workItemId
+                              left outer join TaskVariableImpl taskType ON taskType.taskId = t.id AND taskType.name like 'taskType'
                           left outer join TaskVariableImpl requestId ON requestId.taskId = t.id AND requestId.name like 'requestId'
                           left outer join TaskVariableImpl facilityId ON facilityId.taskId = t.id AND facilityId.name like 'facilityId'
                           left outer join TaskVariableImpl partyId ON partyId.taskId = t.id AND partyId.name like 'partyId'
