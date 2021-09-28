@@ -2,6 +2,7 @@
 * [Custom Queries](#custom-queries)
   * [Custom Task Query](#custom-task-query)
   * [Track changes of requestId variable](#track-changes-of-requestid-variable)
+  * [Sequence diagrams](./SequenceDiagrams.md)
 
 # Custom Queries
 ## Custom Task Query
