@@ -18,6 +18,7 @@
 Anyway, if we want to generate it offline and reuse it later we need to clarify the procedure to:
 * Generate the image offline
 * Activate it as part of the deployment
+
 Please note that a single RHPAM server image can be divided into multiple Kogito app and images, depending on the selected
 split strategy.
 
