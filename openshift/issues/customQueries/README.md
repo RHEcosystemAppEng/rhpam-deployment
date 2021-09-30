@@ -3,6 +3,7 @@
   * [Custom Task Query](#custom-task-query)
   * [Track changes of requestId variable](#track-changes-of-requestid-variable)
   * [Sequence diagrams](./SequenceDiagrams.md)
+  * [Troubleshooting](#troubleshooting)
 
 # Custom Queries
 ## Custom Task Query
@@ -168,3 +169,14 @@ Once built, the associated jar archive must be deployed under JBOSS_HOME/standal
 
 **Note**: the Maven project depends on the artifact `com.temenos.infinity:OnboardingPAMAggregator:2021.01.00` that is defined
 in the shared `BPM.zip` collection, so you also need to build this project first.
+
+# Troubleshooting
+To see the query that is executed we can add the below logger to the jboss `standalone-full.xml` (log shows in server.log):
+
+```xml
+<logger category="org.dashbuilder.dataprovider.sql">
+   <level name="DEBUG"/>
+</logger>
+```
+
+
