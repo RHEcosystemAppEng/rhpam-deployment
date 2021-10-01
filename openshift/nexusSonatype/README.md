@@ -27,11 +27,12 @@ oc expose service/nexus-mirror
 By accessing the URL of the Route we can manage the application.
 
 ## Configure the rhpam-mirror790 repository
-Follow these instructions to initialize the Nexus repository: [Install Maven repository on Nexus](../externalMavenRepo#install-maven-repository-on-nexus)
+Follow these instructions to initialize the Nexus repository: [Install Maven repository on Nexus](../externalMavenRepo/README.md#install-maven-repository-on-nexus)
 (just skip the installation through the Nexus operator)
 
 ## Populate Maven mirror
-Follow these instructions to initialize the Nexus repository: [Populating Maven mirror](../externalMavenRepo#populating-maven-mirror)
+Follow these instructions to initialize the Nexus repository: [Populating Maven mirror](../externalMavenRepo/README.md#populating-maven-mirror)
+
 **Note**: you have to change the URL in the Maven provisioner command to match the actual Route, like:
 ```shell
 java --add-opens java.base/java.lang=ALL-UNNAMED \
@@ -78,11 +79,16 @@ oc exec `oc get pods -o jsonpath='{..metadata.name}{"\n"}' --selector=deployment
 After the initial population, the Maven build can fail because Nexus needs to generate all the Maven metadata for the
 bunch of artifacts uploaded at population time. 
 
-If we can identify what are the missing artifacts, and if we can verify 
-that they are instead published in the `rhpam-mirror790` repository, it might be the case that the `maven-metadata.xml` file
-is missing. 
-We can force the generation from `Nexus>Administration>System>Tasks` menu, then we create one task of type 
-`Repair - Rebuild Maven repository metadata (maven-metadata.xml)`, possibly configured for a single `groupId` or `groupId` 
-and `artifactId`, with `Manual` schedule and run it manually. 
+Given that:
+* We can identify what are the missing artifacts
+* We can verify that they are instead published in the `rhpam-mirror790` repository
+* There is no `maven-metadata.xml` file under the `artifactId` folder
+
+Then, we can force the generation from:
+* `Nexus>Administration>System>Tasks` menu
+* Create one task of type `Repair - Rebuild Maven repository metadata (maven-metadata.xml)`
+* Possibly configure the task for a single `groupId` or `groupId` 
+and `artifactId`, with `Manual` schedule
+* Then Run it manually 
 
 After few minutes, the missing metadata are generated and we can try again the Maven build.
