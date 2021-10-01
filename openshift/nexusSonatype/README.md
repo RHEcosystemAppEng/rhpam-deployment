@@ -8,8 +8,7 @@
   * [Missing Maven metadata](#missing-maven-metadata)
 
 # Create production grade Nexus repository
-"Create production grade nexus repo that can act as mirror repo for maven artifactsCreate production grade nexus repo 
-that can act as mirror repo for maven artifacts"
+"Create production grade nexus repo that can act as mirror repo for maven artifacts"
 
 The reference [nexus-mirror.yaml](./nexus-mirror.yaml) defines a configuration to deploy the Nexus repository manager
 with:
