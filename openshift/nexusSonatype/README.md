@@ -28,6 +28,7 @@ By accessing the URL of the Route we can manage the application.
 
 ## Configure the rhpam-mirror790 repository
 Follow these instructions to initialize the Nexus repository: [Install Maven repository on Nexus](../externalMavenRepo#install-maven-repository-on-nexus)
+(just skip the installation through the Nexus operator)
 
 ## Populate Maven mirror
 Follow these instructions to initialize the Nexus repository: [Populating Maven mirror](../externalMavenRepo#populating-maven-mirror)
