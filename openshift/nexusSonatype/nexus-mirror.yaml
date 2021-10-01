@@ -1,0 +1,70 @@
+﻿kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nexus-mirror-data
+  namespace: dmartino-nexus-sonatype
+  labels:
+    app: nexus-mirror
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 8Gi
+  storageClassName: ocs-cluster-cephfs
+  volumeMode: Filesystem
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexus-mirror
+  namespace: dmartino-nexus-sonatype
+  labels:
+    app: nexus-mirror
+    app.kubernetes.io/component: nexus-mirror
+    app.kubernetes.io/instance: nexus-mirror
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: nexus-mirror
+  template:
+    metadata:
+      labels:
+        deployment: nexus-mirror
+    spec:
+      volumes:
+        - name: nexus-mirror-data
+          persistentVolumeClaim:
+            claimName: nexus-mirror-data
+        - name: nexus-mirror-backup
+          emptyDir: {}
+      containers:
+        - name: nexus-mirror
+          image: >-
+            registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:b81e21dfaeff053e51fd46aa62b7d61a2798fa80dc816098d0c56002703cdb4d
+          ports:
+            - containerPort: 8081
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - name: nexus-mirror-data
+              mountPath: /nexus-data
+            - name: nexus-mirror-backup
+              mountPath: /nexus-data/backup
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    deployment: nexus-mirror
+  name: nexus-mirror
+spec:
+  ports:
+    - name: 8081-tcp
+      port: 8081
+      protocol: TCP
+      targetPort: 8081
+  selector:
+    deployment: nexus-mirror

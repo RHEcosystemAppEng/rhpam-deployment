@@ -12,3 +12,4 @@ List of Asana tasks and related procedures:
 | [Repeatable process to create immutable image of KIE server](https://app.asana.com/0/1200498898048415/1200624087463989/f)| [OCP deployment](repeatableProcess/OCP_README.md) |
 | [1- Maven repo using file system](https://app.asana.com/0/1200498898048415/1200767700401689/f)| [README.md](./fileSystemMavenRepo/README.md)|
 | [2- s2I build for immutable kie-server with business monitoring](https://app.asana.com/0/1200498898048415/1200776224366142/f)| [README.md](./immutableImage/README.md) |
+| [Create production grade nexus repo that can act as mirror repo for maven artifacts](https://app.asana.com/0/1200498898048415/1200741222818355/f) | [README.md](./nexusSonatype/README.md) |
