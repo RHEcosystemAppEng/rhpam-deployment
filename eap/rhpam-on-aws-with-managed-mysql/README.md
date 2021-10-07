@@ -17,7 +17,7 @@ Installed on our *EC2 instance* we'll have [Red Hat Process Automation Manager (
 ## Let's dive in
 
 ---
-If you're a [AWS CLI][2] user, you can use [scripts/aws_create_environment.sh](scripts/aws_create_environment.sh) and skip to the [TODO section](#todo).</br>
+If you're an [AWS CLI][2] user, you can use [scripts/aws_create_environment.sh](scripts/aws_create_environment.sh) and skip to the [TODO section](#todo).</br>
 You can also use [scripts/create_import_keypair.sh](scripts/create_import_keypair.sh) to create/import your ssh key-pair.
 
 ---
@@ -173,6 +173,12 @@ Tags: Temenos RHPAM MySQL Back
 
 ### Create the RDS DB Subnet Group
 
+---
+If you prefer an unamaged *MySQL EC2 Instance*, you can reffer to [manuals/unmanaged-mysql-rhel8.md](manuals/unmanaged-mysql-rhel8.md).</br>
+Once you're done, you can skip this step and go directly to the [Populate the Database](#populate-the-database) section.
+
+---
+
 Create a *DB Subnet Group* with the following characteristics:
 
 ```text
@@ -185,6 +191,12 @@ Tags: Name=Temenos RHPAM MySQL Subnet Group
 ```
 
 ### Create a MySQL DB Managed RDS Instance
+
+---
+If you prefer an unamaged *MySQL EC2 Instance*, you can reffer to [manuals/unmanaged-mysql-rhel8.md](manuals/unmanaged-mysql-rhel8.md).</br>
+Once you're done, you can skip this step and go directly to the [Populate the Database](#populate-the-database) section.
+
+---
 
 Create a *Database Instance* with the following characteristics:
 
@@ -202,6 +214,8 @@ Initial database name: jbpm
 Log exports: Error log
 Enable auto minor version upgrade: unchecked
 ```
+
+### Populate the Database
 
 ---
 
