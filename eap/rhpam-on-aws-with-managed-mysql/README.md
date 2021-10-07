@@ -24,7 +24,7 @@ You can also use [scripts/create_import_keypair.sh](scripts/create_import_keypai
 
 ### Prerequisite: Create or import a Key-Pair
 
-The key-pair allowes you to connect remotely via ssh to instances.
+The key pair allows you to connect remotely via ssh to instances.
 You can use the same key for multiple instances/projects, so I wouldn't name it anything obligating.
 
 If you create a new *Key-Pair*,</br>
@@ -120,7 +120,7 @@ Destination: 0.0.0.0/0
 Target: <select the internet gateway you created>
 ```
 
-Press *Actions* -> *Edit subnet associations* and select the all the public subnets you created.
+Press *Actions* -> *Edit subnet associations* and select all of the public subnets you created.
 
 ### Create the Security Groups
 
@@ -169,6 +169,38 @@ Add the following Tag to the backend group:
 
 ```text
 Tags: Temenos RHPAM MySQL Back
+```
+
+### Create the RDS DB Subnet Group
+
+Create a *DB Subnet Group* with the following characteristics:
+
+```text
+Name: rhpam-mysql-subnet-group
+Description: Temenos RHPAM MySQL Subnet Group
+VPC: <select the vpc you created>
+Availability Zones: <select the availability zones you created the subnets with>
+Subnets: <select the **private** subnets you created>
+Tags: Name=Temenos RHPAM MySQL Subnet Group
+```
+
+### Create a MySQL DB Managed RDS Instance
+
+Create a *Database Instance* with the following characteristics:
+
+```text
+Creation method: Standard create
+Engine Type: MySQL
+Version: 8.0.25
+Instance Identifier: rhpam-mysql-db
+Master username: rhadmin
+Master password: redhat123#
+DB instance class: <select from here https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html>
+Virtual private cloud: <select the vpc you created>
+Subnet group: <select the subnet group you created>
+Initial database name: jbpm
+Log exports: Error log
+Enable auto minor version upgrade: unchecked
 ```
 
 ---

@@ -4,21 +4,27 @@ show_usage() {
 	echo "Script creating AWS environment for the Temenos project"
 	echo "-------------------------------------------------------"
 	echo "Usage: $0 -h/--help"
-	echo "Usage: $0"
-	echo "Usage: $0 --project_name <project name> --vpc_cidr <vpc_cidr> --start_cidr <start_cidr> --avail_zones <min_2_az>"
+	echo "Usage: $0 --db_instance_cls <db_instance_cls>"
+	echo "Usage: $0 --project_name <project name> --vpc_cidr <vpc_cidr> --start_cidr <start_cidr> --avail_zones <min_2_az> --db_instance_cls <db_instance_cls>"
 	echo ""
-	echo "Example: $0 --project_name \"Temenos RHPAM\" --vpc_cidr 10.0.0.0/16 --start_cidr 10.0.1.0/24 --avail_zones \"us-east-1a,us-east-1b\""
+	echo "Example: $0 --project_name \"Temenos RHPAM\" --vpc_cidr 10.0.0.0/16 --start_cidr 10.0.1.0/24 --avail_zones \"us-east-1a,us-east-1b\" --db_instance_cls \"db.t2.micro\""
 	echo ""
 	echo "** please note the \'start_cidr\', this script will increment the third part of the required block."
 	echo "** for the example above this script will create:"
 	echo "**     in \'us-east-1a\' a \'10.0.1.0/24\' public subnet and a \'10.0.2.0/24\' private subnet"
 	echo "**     in \'us-east-1b\' a \'10.0.3.0/24\' public subnet and a \'10.0.4.0/24\' private subnet"
 	echo ""
+	echo "** Tip-1: use \'--unmanaged_db\' to skip creation of managed db an validation of db_instance_cls"
+	echo "** Tip-2: use \'--db_master_username\' and \'db_master_password\' to set the db instance credentials"
+	echo ""
 	echo "** requires aws cli to be installed"
 	echo "** https://aws.amazon.com/cli/"
 	echo ""
 	echo "** availability zones:"
 	echo "** https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions"
+	echo ""
+	echo "** db instance classes"
+	echo "** https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html"
 }
 
 # show usage if asked for help
@@ -31,7 +37,11 @@ fi
 while [ $# -gt 0 ]; do
 	if [[ $1 == *"--"* ]]; then
 		param="${1/--/}"
-		declare $param="$2"
+		if [ $param = "unmanaged_db" ]; then
+			declare $param="true"
+		else
+			declare $param="$2"
+		fi
 	fi
 	shift
 done
@@ -41,6 +51,15 @@ vpc_cidr=${vpc_cidr:-10.0.0.0/16}
 start_cidr=${start_cidr:-10.0.1.0/24}
 project_name=${project_name:-Temenos RHPAM}
 avail_zones=${avail_zones:-us-east-1a,us-east-1b}
+unmanaged_db=${unmanaged_db:-false}
+db_master_username=${db_master_username:-rhadmin}
+db_master_password=${db_master_password:-redhat123#}
+
+# in managed db mode, db_instance_cls is required
+if [ "$unmanaged_db" = "false" ] && [ -z $db_instance_cls ]; then
+	show_usage
+	exit 1
+fi
 
 # utility function for incrementing an integer by an integer
 increment_by() { echo $(("$1" + "$2")); }
@@ -69,7 +88,9 @@ echo ""
 echo "creating subnets for vpc $vpc_id..."
 
 increment_sum=0
+# aggregate public and private subnets
 public_subnets=""
+private_subnets=""
 for current_zone in ${avail_zones//,/ } ; do
 	current_pub_cidr=$(increment_cidr "$start_cidr" $increment_sum)
 
@@ -97,10 +118,12 @@ for current_zone in ${avail_zones//,/ } ; do
 		--query Subnet.SubnetId --output text)
 	(( increment_sum++ ))
 	echo "  - created subnet id $priv_sub"
+	private_subnets+="$priv_sub,"
 
 done
-
+# clean last , in subnets aggregation
 public_subnets=${public_subnets::-1}
+private_subnets=${private_subnets::-1}
 echo "created public and private subnets."
 
 ##############################################
@@ -146,9 +169,9 @@ echo "creating secutiry groups for vpc $vpc_id..."
 echo "  - creating rhpam frontend group..."
 front_grp_id=$(aws ec2 create-security-group \
     --group-name rhpam-front \
-    --description "$project_name Front" \
+    --description "$project_name Front Security Group" \
     --vpc-id $vpc_id \
-    --tag-specifications "ResourceType=security-group, Tags=[{Key=Name, Value=$project_name Front}]" \
+    --tag-specifications "ResourceType=security-group, Tags=[{Key=Name, Value=$project_name Front Security Group}]" \
     --query GroupId --output text)
 
 echo "    - adding inbound rule TCP8080..."
@@ -191,9 +214,9 @@ aws ec2 authorize-security-group-ingress \
 echo "  - creating rhpam mysql backend group..."
 back_grp_id=$(aws ec2 create-security-group \
     --group-name rhpam-mysql-back \
-    --description "$project_name MySQL Back" \
+    --description "$project_name MySQL Back Security Group" \
     --vpc-id $vpc_id \
-    --tag-specifications "ResourceType=security-group, Tags=[{Key=Name, Value=$project_name MySQL Back}]" \
+    --tag-specifications "ResourceType=security-group, Tags=[{Key=Name, Value=$project_name MySQL Back Security Group}]" \
     --query GroupId --output text) \
     > /dev/null
 
@@ -216,6 +239,42 @@ aws ec2 authorize-security-group-ingress \
     > /dev/null
 
 echo "created frontend group $front_grp_id and backend group $back_grp_id."
+
+# unamanged_db is a way to opt out of the managed db in case an unmanaged one is needed
+if [ "$unmanaged_db" = false ] ; then
+	##############################################
+	######### Create DB Subnet Groups ############
+	##############################################
+	echo ""
+	echo "creating an db subnet group..."
+	aws rds create-db-subnet-group \
+		--db-subnet-group-name rhpam-mysql-subnet-group \
+		--db-subnet-group-description "$project_name MySQL Subnet Group" \
+		--subnet-ids "[\"$(sed 's/,/","/g' <<< $private_subnets)\"]" \
+		--tags "[{\"Key\": \"Name\", \"Value\": \"$project_name MySQL Subnet Group\"}]" \
+		> /dev/null
+	echo "created db subnet group."
+
+	##############################################
+	####### Create MySQL DB RDS Instance #########
+	##############################################
+	echo "creating mysql db rds instance of class $db_instance_cls..."
+	aws rds create-db-instance \
+		--db-name jbpm \
+		--db-instance-identifier rhpam-mysql-db \
+		--db-instance-class $db_instance_cls \
+		--engine mysql \
+		--engine-version 8.0.25 \
+		--master-username $db_master_username \
+		--master-user-password $db_master_password \
+		--db-subnet-group-name rhpam-mysql-subnet-group \
+		--no-publicly-accessible \
+		--no-auto-minor-version-upgrade \
+		--tags "[{\"Key\": \"Name\", \"Value\": \"$project_name MySQL DB\"}]" \
+		--enable-cloudwatch-logs-exports error \
+		--allocated-storage 20
+	echo "created db instance."
+fi
 
 echo ""
 echo "Done!"
