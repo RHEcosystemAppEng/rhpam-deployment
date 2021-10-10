@@ -35,7 +35,7 @@ Note that you will need to select an [EC2 Instance Type][0] for your instance.
 
 ```text
 Network: <select the vpc you created>
-Subnet: <select on of the subnets you created>
+Subnet: <select one of the subnets you created>
 
 ```
 
@@ -230,9 +230,8 @@ sudo systemctl start mysql-container
 
 ### Optionally create an AMI
 
-When you're done populating the database, its recommended to create an *Amazon Machine Image* at
-this point to save the trouble of the installation part when running more MySQL instances.
+Its recommended creating an *Amazon Machine Image (AMI)* at this point to avoid re-running the
+above instructions, and allow better scalability.
 
 <!-- links -->
 [0]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html
-[1]: https://developers.redhat.com/content-gateway/file/rhpam-7.9.0-add-ons.zip

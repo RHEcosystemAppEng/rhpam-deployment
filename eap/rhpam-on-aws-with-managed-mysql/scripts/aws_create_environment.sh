@@ -5,14 +5,15 @@ show_usage() {
 	echo "-------------------------------------------------------"
 	echo "Usage: $0 -h/--help"
 	echo "Usage: $0 --db_instance_cls <db_instance_cls>"
-	echo "Usage: $0 --project_name <project name> --vpc_cidr <vpc_cidr> --start_cidr <start_cidr> --avail_zones <min_2_az> --db_instance_cls <db_instance_cls>"
+	echo "Usage: $0 --project_name <project name> --vpc_cidr <vpc_cidr> --start_cidr <start_cidr> --border_group <border_group> --avail_zones <avail_zones> --db_instance_cls <db_instance_cls>"
 	echo ""
-	echo "Example: $0 --project_name \"Temenos RHPAM\" --vpc_cidr 10.0.0.0/16 --start_cidr 10.0.1.0/24 --avail_zones \"us-east-1a,us-east-1b\" --db_instance_cls \"db.t2.micro\""
+	echo "Example: $0 --project_name \"Temenos RHPAM\" --vpc_cidr 10.0.0.0/16 --start_cidr 10.0.1.0/24 --border_group us-east-1 --avail_zones \"us-east-1a,us-east-1b\" --db_instance_cls \"db.t2.micro\""
 	echo ""
-	echo "** please note the \'start_cidr\', this script will increment the third part of the required block."
-	echo "** for the example above this script will create:"
-	echo "**     a \'10.0.1.0/24\' public subnet in \'us-east-1a\' and"
-	echo "**     a \'10.0.2.0/24\' public subnet in \'us-east-1b\'"
+	echo "** please note the \'start_cidr\', this script will increment the third octet of the required block."
+	echo "** for the example above this script will create (db require two availibility zones):"
+	echo "**     a \'10.0.1.0/24\' public subnet in \'us-east-1a\',"
+	echo "**     a \'10.0.2.0/24\' private subnet in \'us-east-1a\',"
+	echo "**     a \'10.0.3.0/24\' private subnet in \'us-east-1b\',"
 	echo ""
 	echo "** Tip-1: use \'--unmanaged_db\' to skip creation of managed db an validation of db_instance_cls"
 	echo "** Tip-2: use \'--db_master_username\' and \'db_master_password\' to set the db instance credentials"
@@ -51,6 +52,7 @@ vpc_cidr=${vpc_cidr:-10.0.0.0/16}
 start_cidr=${start_cidr:-10.0.1.0/24}
 project_name=${project_name:-Temenos RHPAM}
 avail_zones=${avail_zones:-us-east-1a,us-east-1b}
+border_group=${border_group:-us-east-1}
 unmanaged_db=${unmanaged_db:-false}
 db_master_username=${db_master_username:-rhadmin}
 db_master_password=${db_master_password:-redhat123#}
@@ -64,20 +66,37 @@ fi
 # utility function for incrementing an integer by an integer
 increment_by() { echo $(("$1" + "$2")); }
 
-# utility function for incrementing the third part of a cidr block
+# utility function for incrementing the third octet of a cidr block
 increment_cidr() {
     read first second third fourth <<<$(sed "s/\./ /g" <<<$1)
     echo "$first.$second.$(increment_by $third $2).$fourth"
 }
 
 ##############################################
+############ Allocate Elastic IP #############
+##############################################
+echo "allocating an elastic IP for border grouo $border_group..."
+allocation_id=$(aws ec2 allocate-address \
+    --network-border-group $border_group \
+    --tag-specifications "ResourceType=elastic-ip, Tags=[{Key=Name, Value=$project_name MySQL Elastic IP}]" \
+    --query AllocationId --output text)
+echo "allocated elastic IP $allocation_id"
+
+##############################################
 ################# Create VPC #################
 ##############################################
+echo ""
 echo "creating a virtual private cloud with cidr block $vpc_cidr..."
 vpc_id=$(aws ec2 create-vpc \
     --cidr-block $vpc_cidr \
     --tag-specifications "ResourceType=vpc, Tags=[{Key=Name, Value=$project_name VPC}]" \
     --query Vpc.VpcId --output text)
+
+
+echo "  - enabling dns hostnaming for new vpc"
+aws ec2 modify-vpc-attribute \
+    --vpc-id $vpc_id \
+	--enable-dns-hostnames
 
 echo "created vpc $vpc_id."
 
@@ -87,30 +106,51 @@ echo "created vpc $vpc_id."
 echo ""
 echo "creating subnets for vpc $vpc_id..."
 
-increment_sum=0
-# aggregate subnets
-subnets_aggregation=""
+first_zone=$(echo $avail_zones | cut -d',' -f1)
+echo "  - creating a public subnet with cidr block $start_cidr for zone $first_zone"
+pub_sub=$(aws ec2 create-subnet \
+	--vpc-id $vpc_id \
+	--cidr-block $start_cidr \
+	--availability-zone $first_zone \
+	--tag-specifications "ResourceType=subnet, Tags=[{Key=Name, Value=$project_name Public Subnet $first_zone}]" \
+	--query Subnet.SubnetId --output text)
+
+echo "  - modifying public subnet to map as public ip addresses source on launch"
+echo "  - created subnet id $pub_sub"
+aws ec2 modify-subnet-attribute --subnet-id $pub_sub --map-public-ip-on-launch > /dev/null
+
+increment_sum=1
+# aggregate private subnets
+private_subnets=""
 for current_zone in ${avail_zones//,/ } ; do
 	current_cidr=$(increment_cidr "$start_cidr" $increment_sum)
 
-	echo "  - creating a subnet with cidr block $current_cidr for zone $current_zone"
-	current_sub=$(aws ec2 create-subnet \
+	echo "  - creating a private subnet with cidr block $current_cidr for zone $current_zone"
+	current_priv_sub=$(aws ec2 create-subnet \
 		--vpc-id $vpc_id \
 		--cidr-block $current_cidr \
 		--availability-zone ${current_zone} \
-		--tag-specifications "ResourceType=subnet, Tags=[{Key=Name, Value=$project_name Subnet $current_zone}]" \
+		--tag-specifications "ResourceType=subnet, Tags=[{Key=Name, Value=$project_name Private Subnet $current_zone}]" \
 		--query Subnet.SubnetId --output text)
 	(( increment_sum++ ))
-	echo "  - created subnet id $current_sub"
-	subnets_aggregation+="$current_sub,"
-
-	echo "  - modifying subnet to map as public ip addresses source on launch"
-	aws ec2 modify-subnet-attribute --subnet-id $current_sub --map-public-ip-on-launch > /dev/null
-
+	echo "  - created subnet id $current_priv_sub"
+	private_subnets+="$current_priv_sub,"
 done
 # clean last ',' in subnets aggregation
-subnets_aggregation=${subnets_aggregation::-1}
+private_subnets=${private_subnets::-1}
 echo "created subnets."
+
+##############################################
+############# Create NAT Gateway #############
+##############################################
+echo ""
+echo "creating a nat gateway..."
+aws ec2 create-nat-gateway \
+    --allocation-id $allocation_id \
+    --subnet-id $pub_sub \
+    --tag-specifications "ResourceType=natgateway, Tags=[{Key=Name, Value=$project_name NAT Gateway}]" \
+    > /dev/null
+echo "created nat gateway."
 
 ##############################################
 ########## Create Internet Gateway ###########
@@ -139,7 +179,7 @@ rt_id=$(aws ec2 create-route-table \
 echo "  - creating a rule in route table $rt_id with CIDR 0.0.0.0/0..."
 aws ec2 create-route --route-table-id $rt_id --destination-cidr-block 0.0.0.0/0 --gateway-id $ig_id > /dev/null
 
-for current_subnet in ${subnets_aggregation//,/ } ; do
+for current_subnet in ${private_subnets//,/ } ; do
 	echo "  - associating route table $rt_id with subnet $current_subnet..."
 	aws ec2 associate-route-table --subnet-id $current_subnet --route-table-id $rt_id > /dev/null
 done
@@ -209,7 +249,7 @@ aws ec2 authorize-security-group-ingress \
     --group-id $back_grp_id \
     --protocol tcp \
     --port 3306 \
-    --cidr "0.0.0.0/0" \
+    --source-group $front_grp_id \
     --tag-specifications 'ResourceType=security-group-rule, Tags=[{Key=Name, Value=MySQL Connection}]' \
     > /dev/null
 
@@ -218,7 +258,7 @@ aws ec2 authorize-security-group-ingress \
     --group-id $back_grp_id \
     --protocol tcp \
     --port 22 \
-    --cidr "0.0.0.0/0" \
+    --source-group $front_grp_id \
     --tag-specifications 'ResourceType=security-group-rule, Tags=[{Key=Name, Value=SSH Connection}]' \
     > /dev/null
 
@@ -234,7 +274,7 @@ if [ "$unmanaged_db" = false ] ; then
 	aws rds create-db-subnet-group \
 		--db-subnet-group-name rhpam-mysql-subnet-group \
 		--db-subnet-group-description "$project_name MySQL Subnet Group" \
-		--subnet-ids "[\"$(sed 's/,/","/g' <<< $subnets_aggregation)\"]" \
+		--subnet-ids "[\"$(sed 's/,/","/g' <<< $private_subnets)\"]" \
 		--tags "[{\"Key\": \"Name\", \"Value\": \"$project_name MySQL Subnet Group\"}]" \
 		> /dev/null
 	echo "created db subnet group."
@@ -256,7 +296,8 @@ if [ "$unmanaged_db" = false ] ; then
 		--no-auto-minor-version-upgrade \
 		--tags "[{\"Key\": \"Name\", \"Value\": \"$project_name MySQL DB\"}]" \
 		--enable-cloudwatch-logs-exports error \
-		--allocated-storage 20
+		--allocated-storage 20 \
+		> /dev/null
 
 	echo "created db instance."
 fi

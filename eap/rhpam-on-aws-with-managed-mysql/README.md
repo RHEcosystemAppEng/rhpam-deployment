@@ -41,6 +41,21 @@ make sure to paste in the **public** key and not the private one.
 
 > If you create a new key, please consider 'chmod 400' the downloaded private key file.
 
+### Prerequisite: Download files
+
+From your local station download the following:
+
+- [rhpam addons zip archive]][12]
+
+### Create an Elastic IP
+
+Allocate an Elastic IP address with the following characteristics:
+
+```text
+Network Border: <depends on your environment>
+Tags: Name=Temenos MySQL Elastic IP
+```
+
 ### Create the VPC
 
 Create a *VPC* with the following characteristics:
@@ -54,30 +69,48 @@ IPv4: 10.0.0.0/16
 
 > Please note, *MySQL* managed instance requires two subnets in two different [availability zones][11].
 
-For our example, create **two** *Subnets*, one in each availability zone,
-with the following characteristics:
+For our example, create **three** *Subnets*, one public in one availibility zone, and two private
+one in each availability zone selected (minumum of 2), with the following characteristics:
 
-A public designated subnet in both zones:</br>
+A private designated subnet in both zones:</br>
 *public zone a*:
 
 ```text
 VPC: <select the vpc you created>
-Subnet Name: Temenos RHPAM Public Subnet **<zone a>**
-Availability Zone: <zone-**a**[11] of your choosing>
+Subnet Name: Temenos RHPAM Public Subnet **<zone b>**
+Availability Zone: <zone-**a** of your choosing>
 IPv4 CIDR block: 10.0.1.0/24
-```
 
-*public zone b*:
+*private zone a*:
 
 ```text
 VPC: <select the vpc you created>
-Subnet Name: Temenos RHPAM Public Subnet **<zone b>**
-Availability Zone: <zone-**b**[11] of your choosing>
+Subnet Name: Temenos RHPAM Private Subnet **<zone a>**
+Availability Zone: <zone-**a** of your choosing>
 IPv4 CIDR block: 10.0.2.0/24
 ```
 
-Select the **public** subnets and press *Actions* -> *Modify auto-assign IP settings*.</br>
+*private zone b*:
+
+```text
+VPC: <select the vpc you created>
+Subnet Name: Temenos RHPAM Private Subnet **<zone b>**
+Availability Zone: <zone-**b** of your choosing>
+IPv4 CIDR block: 10.0.3.0/24
+```
+
+Select the **public** subnet and press *Actions* -> *Modify auto-assign IP settings*.</br>
 Check the *Enable auto-assign public IPv4 address* checkbox and save.
+
+### Create a NAT Gateway
+
+Create an *NAT Gateway* with the following characteristics:
+
+```text
+Name: Temenos RHPAM NAT Gateway
+Subnet: <select the public subnet you created>
+
+```
 
 ### Create an Internet Gateway
 
@@ -204,9 +237,24 @@ Enable auto minor version upgrade: unchecked
 
 ### Populate the Database
 
-> Note that the following actions require a local installation of the *MySQL client*.
+Creating the database can take a couple of minutes,</br>
+and you can't quite continue until it does, so...
+Go grab a cup of coffee - you earned it.
 
-From your local station download the [rhpam addons zip archive]][1], note *mysql_elastic_ip*:
+> If you're running an unmanaged instance of the database,
+> you can skip the part about ontaining the endpoint address, you allready have the ip address.
+
+Obtain the endpoint address of the DB instance from the GUI.</br>
+Or if you're a *cli* user:
+
+```shell
+aws rds describe-db-instances \
+    --db-instance-identifier rhpam-mysql-db \
+    --query DBInstances[].Endpoint.Address --output text
+```
+
+Execute the following commands, note the *mysql_dns_ip* and *your_user* place holders,</br>
+Note that we're making use of a file you were instructed to download at the start of this document.
 
 ```shell
 # unzip and prepare path
@@ -216,16 +264,16 @@ cd ~/rhpam-7.9.0-add-ons
 unzip rhpam-7.9.0-migration-tool.zip
 cd rhpam-7.9.0-migration-tool/ddl-scripts/mysql5
 # runs scripts using mysql client on remote instance, requires mysql client
-mysql -h mysql_elastic_ip -u root -p jbpm < mysql-jbpm-amend-auto-increment-procedure.sql
-mysql -h mysql_elastic_ip -u root -p jbpm < mysql5-jbpm-schema.sql
-mysql -h mysql_elastic_ip -u root -p jbpm < quartz_tables_mysql.sql
-mysql -h mysql_elastic_ip -u root -p jbpm < task_assigning_tables_mysql.sql
+mysql -h mysql_dns_ip -u your_user -p jbpm < mysql-jbpm-amend-auto-increment-procedure.sql
+mysql -h mysql_dns_ip -u your_user -p jbpm < mysql5-jbpm-schema.sql
+mysql -h mysql_dns_ip -u your_user -p jbpm < quartz_tables_mysql.sql
+mysql -h mysql_dns_ip -u your_user -p jbpm < task_assigning_tables_mysql.sql
 # cleanups (optional)
 cd ~
 rm -r rhpam-7.9.0-add-ons (optional)
 rm /path/to/rhpam-7.9.0-add-ons.zip (optional)
 # verify
-mysql -h mysql_elastic_ip -u root -p jbpm -e "show tables"
+mysql -h mysql_dns_ip -u your_user -p jbpm -e "show tables"
 ```
 
 <!-- Links -->
@@ -241,3 +289,4 @@ mysql -h mysql_elastic_ip -u root -p jbpm -e "show tables"
 [9]: https://www.redhat.com/en/technologies/jboss-middleware/application-platform
 [10]: https://aws.amazon.com/ec2/autoscaling/
 [11]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
+[12]: https://developers.redhat.com/content-gateway/file/rhpam-7.9.0-add-ons.zip
