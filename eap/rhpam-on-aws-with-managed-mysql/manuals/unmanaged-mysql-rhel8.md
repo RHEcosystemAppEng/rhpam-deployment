@@ -13,7 +13,7 @@ aws ec2 run-instances \
     --instance-type <select an instance type> \
     --key-name <the name of the key-pair you created/imported> \
     --security-group-ids <the id of the security group you created for the backend> \
-    --subnet-id <the subnet id of one of the created **private** subnets> \
+    --subnet-id <the subnet id of one of the created subnets> \
     --tag-specifications "ResourceType=instance, Tags=[{Key=Name, Value=Temenos RHPAM MySQL Unmanaged}]" \
     --block-device-mappings "[{\"DeviceName\": \"/dev/sdb\", \"Ebs\": {\"DeleteOnTermination\": false, \"VolumeSize\": 10 }}]" \
     --no-associate-public-ip-address
@@ -35,7 +35,7 @@ Note that you will need to select an [EC2 Instance Type][0] for your instance.
 
 ```text
 Network: <select the vpc you created>
-Subnet: <select on of the **private** subnets you created>
+Subnet: <select on of the subnets you created>
 
 ```
 
@@ -163,10 +163,76 @@ Tags: Name=Temenos RHPAM MySQL Load Balancer
 
 ## Install MySQL
 
----
-Under Construction
+Connect to the created instance using ssh:
 
----
+```shell
+ssh -i /path/to/private.pem ec2-user@mysql_elastic_ip
+```
+
+### Mount persistent storage
+
+```shell
+# identify device, i.e. */dev/sdb*
+lsblk
+# create ext4 filesystem
+sudo mkfs -t ext4 <the device i.e. i.e. /dev/sdb>
+# create folder for mounting
+sudo mkdir /opt/mysql
+# mount device to folder
+sudo mount /dev/xvdb /opt/mysql
+# verify mount
+df -h /opt/mysql
+# use sudo mode to set auto mount
+sudo -i
+echo '/dev/xvdb   /opt/mysql    ext4    defaults,nofail    0    0' >> /etc/fstab (add auto mount)
+exit
+# validate auto mount
+sudo mount -a
+```
+
+### Install podman
+
+```shell
+sudo dnf update -y
+sudo dnf install podman -y
+```
+
+### Set SELinux context
+
+```shell
+sudo semanage fcontext -a -t container_file_t '/opt/mysql(/.*)?'
+sudo restorecon -Rv /opt/mysql
+```
+
+### Run MySQL container
+
+**Note the password.**
+
+```shell
+sudo podman run -d \
+    --name mysql \
+    -p 3306:3306 \
+    -v /opt/mysql:/var/lib/mysql \
+    -e MYSQL_ROOT_PASSWORD=redhat \
+    -e MYSQL_DATABASE=jbpm \
+    docker.io/library/mysql:8.0.26
+```
+
+### Set the container to run on startup
+
+```shell
+sudo -i
+podman generate systemd --new --name mysql > /etc/systemd/system/mysql-container.service
+exit
+sudo systemctl enable mysql-container
+sudo systemctl start mysql-container
+```
+
+### Optionally create an AMI
+
+When you're done populating the database, its recommended to create an *Amazon Machine Image* at
+this point to save the trouble of the installation part when running more MySQL instances.
 
 <!-- links -->
 [0]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html
+[1]: https://developers.redhat.com/content-gateway/file/rhpam-7.9.0-add-ons.zip

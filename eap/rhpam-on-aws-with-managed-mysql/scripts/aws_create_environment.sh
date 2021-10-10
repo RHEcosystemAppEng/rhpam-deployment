@@ -11,8 +11,8 @@ show_usage() {
 	echo ""
 	echo "** please note the \'start_cidr\', this script will increment the third part of the required block."
 	echo "** for the example above this script will create:"
-	echo "**     in \'us-east-1a\' a \'10.0.1.0/24\' public subnet and a \'10.0.2.0/24\' private subnet"
-	echo "**     in \'us-east-1b\' a \'10.0.3.0/24\' public subnet and a \'10.0.4.0/24\' private subnet"
+	echo "**     a \'10.0.1.0/24\' public subnet in \'us-east-1a\' and"
+	echo "**     a \'10.0.2.0/24\' public subnet in \'us-east-1b\'"
 	echo ""
 	echo "** Tip-1: use \'--unmanaged_db\' to skip creation of managed db an validation of db_instance_cls"
 	echo "** Tip-2: use \'--db_master_username\' and \'db_master_password\' to set the db instance credentials"
@@ -88,43 +88,29 @@ echo ""
 echo "creating subnets for vpc $vpc_id..."
 
 increment_sum=0
-# aggregate public and private subnets
-public_subnets=""
-private_subnets=""
+# aggregate subnets
+subnets_aggregation=""
 for current_zone in ${avail_zones//,/ } ; do
-	current_pub_cidr=$(increment_cidr "$start_cidr" $increment_sum)
+	current_cidr=$(increment_cidr "$start_cidr" $increment_sum)
 
-	echo "  - creating public subnet with cidr block $current_pub_cidr for zone $current_zone"
-	pub_sub=$(aws ec2 create-subnet \
+	echo "  - creating a subnet with cidr block $current_cidr for zone $current_zone"
+	current_sub=$(aws ec2 create-subnet \
 		--vpc-id $vpc_id \
-		--cidr-block $current_pub_cidr \
+		--cidr-block $current_cidr \
 		--availability-zone ${current_zone} \
-		--tag-specifications "ResourceType=subnet, Tags=[{Key=Name, Value=$project_name Public Subnet $current_zone}]" \
+		--tag-specifications "ResourceType=subnet, Tags=[{Key=Name, Value=$project_name Subnet $current_zone}]" \
 		--query Subnet.SubnetId --output text)
 	(( increment_sum++ ))
-	echo "  - created subnet id $pub_sub"
-	public_subnets+="$pub_sub,"
+	echo "  - created subnet id $current_sub"
+	subnets_aggregation+="$current_sub,"
 
-	echo "  - modifying public subnet to map as public ip addresses source on launch"
-	aws ec2 modify-subnet-attribute --subnet-id $pub_sub --map-public-ip-on-launch > /dev/null
-
-	current_priv_cidr=$(increment_cidr "$start_cidr" $increment_sum)
-	echo "  - creating private subnet with cidr block $current_priv_cidr for zone $current_zone"
-	priv_sub=$(aws ec2 create-subnet \
-		--vpc-id $vpc_id \
-		--cidr-block $current_priv_cidr \
-		--availability-zone ${current_zone} \
-		--tag-specifications "ResourceType=subnet, Tags=[{Key=Name, Value=$project_name Private Subnet $current_zone}]" \
-		--query Subnet.SubnetId --output text)
-	(( increment_sum++ ))
-	echo "  - created subnet id $priv_sub"
-	private_subnets+="$priv_sub,"
+	echo "  - modifying subnet to map as public ip addresses source on launch"
+	aws ec2 modify-subnet-attribute --subnet-id $current_sub --map-public-ip-on-launch > /dev/null
 
 done
-# clean last , in subnets aggregation
-public_subnets=${public_subnets::-1}
-private_subnets=${private_subnets::-1}
-echo "created public and private subnets."
+# clean last ',' in subnets aggregation
+subnets_aggregation=${subnets_aggregation::-1}
+echo "created subnets."
 
 ##############################################
 ########## Create Internet Gateway ###########
@@ -153,8 +139,8 @@ rt_id=$(aws ec2 create-route-table \
 echo "  - creating a rule in route table $rt_id with CIDR 0.0.0.0/0..."
 aws ec2 create-route --route-table-id $rt_id --destination-cidr-block 0.0.0.0/0 --gateway-id $ig_id > /dev/null
 
-for current_subnet in ${public_subnets//,/ } ; do
-	echo "  - associating route table $rt_id with public subnet $current_subnet..."
+for current_subnet in ${subnets_aggregation//,/ } ; do
+	echo "  - associating route table $rt_id with subnet $current_subnet..."
 	aws ec2 associate-route-table --subnet-id $current_subnet --route-table-id $rt_id > /dev/null
 done
 
@@ -210,15 +196,13 @@ aws ec2 authorize-security-group-ingress \
     --tag-specifications 'ResourceType=security-group-rule, Tags=[{Key=Name, Value=SSH Connection}]' \
     > /dev/null
 
-
 echo "  - creating rhpam mysql backend group..."
 back_grp_id=$(aws ec2 create-security-group \
     --group-name rhpam-mysql-back \
     --description "$project_name MySQL Back Security Group" \
     --vpc-id $vpc_id \
     --tag-specifications "ResourceType=security-group, Tags=[{Key=Name, Value=$project_name MySQL Back Security Group}]" \
-    --query GroupId --output text) \
-    > /dev/null
+    --query GroupId --output text)
 
 echo "    - adding inbound rule TCP3306..."
 aws ec2 authorize-security-group-ingress \
@@ -250,7 +234,7 @@ if [ "$unmanaged_db" = false ] ; then
 	aws rds create-db-subnet-group \
 		--db-subnet-group-name rhpam-mysql-subnet-group \
 		--db-subnet-group-description "$project_name MySQL Subnet Group" \
-		--subnet-ids "[\"$(sed 's/,/","/g' <<< $private_subnets)\"]" \
+		--subnet-ids "[\"$(sed 's/,/","/g' <<< $subnets_aggregation)\"]" \
 		--tags "[{\"Key\": \"Name\", \"Value\": \"$project_name MySQL Subnet Group\"}]" \
 		> /dev/null
 	echo "created db subnet group."
@@ -268,11 +252,12 @@ if [ "$unmanaged_db" = false ] ; then
 		--master-username $db_master_username \
 		--master-user-password $db_master_password \
 		--db-subnet-group-name rhpam-mysql-subnet-group \
-		--no-publicly-accessible \
+		--publicly-accessible \
 		--no-auto-minor-version-upgrade \
 		--tags "[{\"Key\": \"Name\", \"Value\": \"$project_name MySQL DB\"}]" \
 		--enable-cloudwatch-logs-exports error \
 		--allocated-storage 20
+
 	echo "created db instance."
 fi
 
