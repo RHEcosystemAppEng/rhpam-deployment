@@ -5,7 +5,7 @@
 ## Create the initial EC2 Instance
 
 ---
-If your a *cli* user, you can use the following command and skip to the [Create an Elastic IP or an Elastic Load Balancer](#create-an-elastic-ip-or-an-elastic-load-balancer) section:
+If you are a *cli* user, you can use the following command and skip to the [Create an Elastic IP or an Elastic Load Balancer](#create-an-elastic-ip-or-an-elastic-load-balancer) section:
 
 ```shell
 aws ec2 run-instances \
@@ -16,7 +16,7 @@ aws ec2 run-instances \
     --subnet-id <the subnet id of one of the created **private** subnets> \
     --tag-specifications "ResourceType=instance, Tags=[{Key=Name, Value=Temenos RHPAM MySQL Unmanaged}]" \
     --block-device-mappings "[{\"DeviceName\": \"/dev/sdb\", \"Ebs\": {\"DeleteOnTermination\": false, \"VolumeSize\": 10 }}]" \
-    --no-associate-public-ip-address 
+    --no-associate-public-ip-address
 ```
 
 ---
@@ -39,13 +39,11 @@ Subnet: <select on of the **private** subnets you created>
 
 ```
 
-> Having subnets in multiple availibilty zones is not mandatory when opting for the unmanaged db instance.
-
 ### Add Storage
 
-Add a New Volume and make sure the *Delete on Termination* is unchecked to make it a persistant volume.
+Add a New Volume and make sure the *Delete on Termination* is unchecked to make it a persistent volume.
 
-> Note the device (i.e. `/dev/sdb`), we will use it later on for storing of the database.
+> Note the device (i.e. `/dev/sdb`), we will use it later on for storing the database.
 
 ### Add Tags
 
@@ -62,13 +60,14 @@ Select the *rhpam-mysql-back* Security Group you created.
 
 You will need static access to your instance,</br>
 This means that you create either an *Elastic IP* or an *Elastic Load Balancer*, both options will provide a sort of static address for your instance.</br>
-It's no mandatory, you can stick to the dynamic public ip assinged to your instance.
 
-Weather you go for an ip or a load balancer, note the created ip/name, we'll use later on.
+Whether you go for an IP or a load balancer, note the created IP/name, we'll use later on.
 
 ### Create an Elastic IP
 
-If your a *cli* user, you can use the following commands:
+---
+
+If you are a *cli* user, you can use the following commands:
 
 ```shell
 allocation_id=$(aws ec2 allocate-address \
@@ -83,6 +82,8 @@ aws ec2 associate-address \
 unset allocation_id
 ```
 
+---
+
 Allocate an Elastic IP address with the following characteristics:
 
 ```text
@@ -90,14 +91,75 @@ Network Border: <depends on your environment>
 Tags: Name=Temenos MySQL Elastic IP
 ```
 
-Press *Actions* and associate the elastic ip to your instance.
+Press *Actions* and associate the elastic IP to your instance.
 
 ### Create an Elastic Load Balancer
 
 ---
-Under Construction
+
+If you are a *cli* user, you can use the following commands:
+
+```shell
+tg_arn=$(aws elbv2 create-target-group \
+    --name rhpam-mysql-target \
+    --protocol TCP \
+    --port 3306 \
+    --vpc-id <the vpc id> \
+    --target-type instance \
+    --tags "[{\"Key\": \"Name\", \"Value\": \"Temenos RHPAM MySQL Target Group\"}]" \
+    --query TargetGroups[].TargetGroupArn --output text)
+
+aws elbv2 register-targets \
+    --target-group-arn $tg_arn \
+    --targets Id=<your unmanged instance id>
+
+read lb_arn lb_dns <<< $(aws elbv2 create-load-balancer \
+    --name rhpam-mysql-load-balancer \
+    --subnets <list of the **public** subnet id> \
+    --type network \
+    --tags "[{\"Key\": \"Name\", \"Value\": \"Temenos RHPAM MySQL Load Balancer\"}]"\
+    --query "LoadBalancers[].[LoadBalancerArn,DNSName]" --output text)
+
+aws elbv2 create-listener \
+    --load-balancer-arn $lb_arn \
+    --protocol TCP \
+    --port 3306 \
+    --default-actions Type=forward,TargetGroupArn=$tg_arn \
+    --tags "[{\"Key\": \"Name\", \"Value\": \"Temenos RHPAM MySQL LB Listener\"}]" \
+    > /dev/null
+
+echo $lb_dns
+
+unset tg_arn lb_arn lb_dns
+```
 
 ---
+
+Create a Target Group of type Instance with the following characteristics:
+
+```text
+Name: rhpam-mysql-target
+Protocol: TCP
+Port: 3306
+VPC: <select the vpc you created>
+Tags: Name=Temenos RHPAM MySQL Target Group
+<select the instance you created>
+```
+
+Create a Load Balancer of type Network  with the following characteristics:
+
+```text
+Name: rhpam-mysql-load-balancer
+VPC: <select the vpc you created>
+Mapping: <select the **public** subnets in at least two zones>
+Protocol: TCP
+Port: 3306
+Forward to: <your created target group>
+Tags: Name=Temenos RHPAM MySQL Load Balancer
+
+```
+
+> Note the *DNS* name, we will use it later on.
 
 ## Install MySQL
 
