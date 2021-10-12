@@ -56,6 +56,13 @@ From your local station download the following files:
 
 > Please take a look at [this matrix][18] before attempting to download other versions.
 
+### Prerequisite: Get projects from Temenos
+
+Grab the following projects from *Temenos* or from another team member:
+
+- The sources for the *BPM* project, i.e. *BPM.zip*.
+- The sources and dependencies for the *Origination* project, i.e. *Origination_PAM_v202104.01.zip*.
+
 ---
 If you're an [AWS CLI][2] user, you can use
 [scripts/aws_create_environment.sh](scripts/aws_create_environment.sh) and skip ahead to the
@@ -154,7 +161,7 @@ Create an *Internet Gateway* with the following characteristics:
 Name: Temenos RHPAM Internet Gateway
 ```
 
-Select the new gateway and press *Actions* -> *Attach*,</br>
+Select the new gateway and click *Actions* -> *Attach*,</br>
 and attach the gateway to the vpc you created.
 
 ### Create the Route Table
@@ -174,7 +181,7 @@ VPC: <select the vpc you created>
 Tags: Name=Temenos RHPAM NAT Route Table
 ```
 
-Press *Edit Routes* -> *Add Route*,</br>
+Click *Edit Routes* -> *Add Route*,</br>
 and add a route with the following characteristics:
 
 ```text
@@ -182,7 +189,7 @@ Destination: 0.0.0.0/0
 Target: <select the nat gateway you created>
 ```
 
-Press *Actions* -> *Set main route table*,</br>
+Click *Actions* -> *Set main route table*,</br>
 to make the *NAT* table as the **main** table.</br>
 While you're at it, feel free to delete the table that was marked as main for your *VPC* before the
 new one, it was created by default, it has no more usage.
@@ -195,7 +202,7 @@ VPC: <select the vpc you created>
 Tags: Name=Temenos RHPAM Internet Route Table
 ```
 
-Press *Edit Routes* -> *Add Route*,</br>
+Click *Edit Routes* -> *Add Route*,</br>
 and add a route with the following characteristics:
 
 ```text
@@ -362,7 +369,11 @@ scp /path/to/rhpam-7.9.0-add-ons.zip ec2-user@ec2_instance_public:/home/ec2-user
 scp /path/to/jboss-eap-7.3.0-installer.jar ec2-user@ec2_instance_public:/home/ec2-user
 scp /path/to/rhpam-installer-7.9.0.jar ec2-user@ec2_instance_public:/home/ec2-user
 scp /path/to/mysql-connector-java-8.0.25.zip ec2-user@ec2_instance_public:/home/ec2-user
+scp /path/to/Origination_PAM_v202104.01.zip ec2-user@ec2_instance_public:/home/ec2-user
 ```
+
+> Other than these five files, you also have *BPM.zip* from *Temenos*, you'll use it locally,
+> there's no need to copy it to the instance.
 
 #### Connect to the EC2 Instance
 
@@ -372,20 +383,22 @@ Connect to the created instance using ssh (note *ec2_instance_public*):
 ssh -i /path/to/private.pem ec2-user@ec2_instance_public
 ```
 
-#### Update Packages
+#### Install Packages
 
 ```shell
 sudo dnf upgrade -y
+sudo rpm -Uvh https://repo.mysql.com/mysql80-community-release-el8-1.noarch.rpm
+sudo dnf install mysql.x86_64 unzip java-1.8.0-openjdk-devel.x86_64 -y
 ```
 
-#### Install MySQL Client
-
-Install *MySQL* for database connectivity:
+#### Install Maven
 
 ```shell
-sudo rpm -Uvh https://repo.mysql.com/mysql80-community-release-el8-1.noarch.rpm
-sudo sed -i 's/enabled=1/enabled=0/' /etc/yum.repos.d/mysql-community.repo
-sudo dnf --enablerepo=mysql80-community install mysql.x86_64
+curl https://dlcdn.apache.org/maven/maven-3/3.8.3/binaries/apache-maven-3.8.3-bin.tar.gz \
+    -o apache-maven-3.8.3-bin.tar.gz
+sudo tar xzvf apache-maven-3.8.3-bin.tar.gz -C /opt
+rm apache-maven-3.8.3-bin.tar.gz
+sudo ln -s /opt/apache-maven-3.8.3/bin/mvn /usr/local/bin/mvn
 ```
 
 #### Populate Database
@@ -411,22 +424,6 @@ rm -r rhpam-7.9.0-add-ons
 rm ~/rhpam-7.9.0-add-ons.zip
 # verify
 mysql -h mysql_dns_address -u your_user -p jbpm -e "show tables"
-```
-
-#### Install JDK
-
-```shell
-sudo dnf install java-1.8.0-openjdk-devel.x86_64 -y
-```
-
-#### Install Maven
-
-```shell
-curl https://dlcdn.apache.org/maven/maven-3/3.8.3/binaries/apache-maven-3.8.3-bin.tar.gz \
-    -o apache-maven-3.8.3-bin.tar.gz
-sudo tar xzvf apache-maven-3.8.3-bin.tar.gz -C /opt
-rm apache-maven-3.8.3-bin.tar.gz
-sudo ln -s /opt/apache-maven-3.8.3/bin/mvn /usr/local/bin/mvn
 ```
 
 #### Install JBoss
@@ -475,9 +472,8 @@ Extract the downloaded *MySQL* connector and add it as a *JBoss* module:
 # extract the connector
 unzip ~/mysql-connector-java-8.0.25.zip -d ~
 # create module path
-cd /home/ec2-user/EAP-7.3.0/modules/system/layers/base/com/
-mkdir -p mysql/main
-cd mysql/main
+mkdir -p /home/ec2-user/EAP-7.3.0/modules/system/layers/base/com/mysql/main
+cd /home/ec2-user/EAP-7.3.0/modules/system/layers/base/com/mysql/main
 # copy module
 cp ~/mysql-connector-java-8.0.25/mysql-connector-java-8.0.25.jar .
 ```
@@ -486,7 +482,7 @@ Create the module file:
 
 ```shell
 cat << EOF > module.xml
-<module xmlns="urn:jboss:module:1.5" name="com.mysql"> 
+<module xmlns="urn:jboss:module:1.5" name="com.mysql">
     <resources>
         <resource-root path="mysql-connector-java-8.0.25.jar"/>
     </resources>
@@ -545,7 +541,7 @@ expect to find the element:
 <subsystem xmlns="urn:jboss:domain:datasources:5.0">
 ```
 
-press `i` to enter into *insert mode*,</br>
+type `i` to enter into *insert mode*,</br>
 under `<datasources><drivers>` add the folowwing node (watch identation):
 
 ```xml
@@ -588,7 +584,7 @@ add the following property nodes (watch the identation):
 ```
 
 Press `esc` to get back to *visual mode*.</br>
-Press `:wq` (and enter) to write and quit.
+Type `:wq` (and press enter) to *write and quit*.
 
 Get back home and run the server:
 
@@ -597,15 +593,127 @@ cd ~
 /home/ec2-user/EAP-7.3.0/bin/standalone.sh -c standalone-full.xml -b 0.0.0.0
 ```
 
-To verify RHPAM Installation, from your local browser (note rhpam_public_ip):</br>
-`http://rhpam_public_ip:8080/business-central`
+To verify RHPAM Installation, from your local browser (note ec2_instance_public):</br>
+`http://ec2_instance_public:8080/business-central`
 
-Use the user name and password you created with *RHPAM* installation.
+Use the user name and password you created while installing *RHPAM*.
 
-#### Deploy BPM and ORIGINATOR
+#### Start RHPAM at startup
 
 ---
-Under construction.
+Under construction
+
+---
+
+#### Build and Deploy Temenos projects
+
+##### Add lib GetTasksCustomAPI
+
+```shell
+unzip ~/Origination_PAM_v202104.01.zip -d ~/origination
+cd origination/Binaries
+cp GetTasksCustomAPI-1.0.jar /home/ec2-user/EAP-7.3.0/standalone/deployments/kie-server.war/WEB-INF/lib
+# cleanup (optional)
+cd ~
+sudo rm -r origination
+rm Origination_PAM_v202104.01.zip
+```
+
+Start or restart the server:
+
+```shell
+/home/ec2-user/EAP-7.3.0/bin/standalone.sh -c standalone-full.xml -b 0.0.0.0
+```
+
+##### Build and Upload artifact OriginationWorkItem
+
+First, prepare the project for build and deployment.
+
+```shell
+unzip /path/to/BPM.zip -d ~
+cd ~/BPM/Java
+find . -name 'pom.xml' | xargs sed -i 's/http:\/\//https:\/\//g'
+sed -i -e '/<distributionManagement>/,/<\/distributionManagement>/d' pom.xml
+mvn package -DskipTests=true
+```
+
+Now you need to upload the artifact.
+
+- From your local browser login to the *Business Central* (note ec2_instance_public):
+  `http://ec2_instance_public:8080/business-central`.
+- Click the *Settings* icon and click *Artifacts*.
+- Click *Upload* and navigate to *~/BPM/Java/pom.xml* and click *Upload*.
+- Click *Upload* again and navigate to *~/BPM/Java/OriginationWorkItem/target/OriginationWorkItem-2021.01.00.jar*
+  and click *Upload*.
+- Click *Settings* again, and this time click *Custom Tasks Administration* (at the bottom).
+- Click *Add Custom Task* and navigate to *~/BPM/Java/OriginationWorkItem/target/OriginationWorkItem-2021.01.00.jar*
+  and click *Upload*.
+- Scroll down and look for the added task *OriginationServiceTask*, turn it on.
+
+Cleanup (optional):
+
+```shell
+cd ~
+rm -r ~/BPM
+```
+
+##### Import and Deploy Origination project
+
+Extract your local copy of the *Origination* project.</br>
+You'll need to modify the sources and create a git repository for the deployment.
+
+> Please note that you'll need to push the project to a remote repository that is accessible over
+> the internet. A private one is preferable.</br>
+> You can, and should, delete the remote repository after importing.
+
+First, prepare the project for build and push it.
+
+```shell
+unzip /path/to/Origination_PAM_v202104.01.zip -d ~/origination
+cd ~/origination/
+unzip Origination_PAM_Source_v202104.01.zip -d sources
+cd sources
+sed -i 's/http:\/\//https:\/\//g' pom.xml
+git init -b main
+git add .
+git commit -m "Onboarding"
+git remote add origin <your-repo-goes-here>
+git push -u origin main
+```
+
+Now, you need to import the project:
+
+- From your local browser get back to (note ec2_instance_public):
+  `http://ec2_instance_public:8080/business-central`.
+- Click *Project* in the bottom part of the *Design* tile.
+- Click *Import Project* and paste in the *Git* repo for your modified version of the *Origination*
+  project.
+- Select and import the *Origination* project.
+- Enter the *Settings* tab in the project, and click the *Custom Tasks* menu on the left.
+- Look for the task *OriginationServiceTask*, install it.
+- You can verify the action by clicking the *Deployments* menu on the left, and then the
+  *Work Item Handlers*, you should see a handler named *OriginationServiceTask* instantiating
+  *com.temenos.infinity.OriginationWorkItemHandler*.
+- Click *Deploy* at the upper right corner to deploy the project.
+
+Cleanup (optional):
+
+```shell
+cd ~
+rm -r ~/origination/
+```
+
+### Create an RHPAM AMI
+
+---
+Under construction
+
+---
+
+### Auto Scaling
+
+---
+Under construction
 
 ---
 
