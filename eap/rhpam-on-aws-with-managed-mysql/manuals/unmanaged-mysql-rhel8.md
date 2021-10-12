@@ -230,7 +230,7 @@ sudo systemctl start mysql-container
 
 ### Optionally create an AMI
 
-It's recommended creating an *Amazon Machine Image (AMI)* at this point to avoid re-running the
+It's recommended to create an *Amazon Machine Image (AMI)* at this point to avoid re-running the
 above instructions, and allow better scalability.
 
 <!-- links -->

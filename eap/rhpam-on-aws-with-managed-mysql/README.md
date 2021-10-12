@@ -2,43 +2,50 @@
 
 ## What's this
 
-This document exemplifies a couple of approaches for deploying RHPAM backed with MySQL on [AWS][0].</br>
-From the operation standpoint, the same can be achieved using either [AWS Console][1] or [AWS CLI][2].</br>
-We will explain how to run a managed/unmanaged MySQL instance, as well as how to use prepared images (AMI),
-and manual installations.</br>
-We will also touch base in regards to [Auto Scaling][10].
+In this document, we will walk through the preparation and installation of *RHPAM* backed with a
+managed/unmanaged *MySQL* instance using [AWS][0].
 
 ## A brief walkthrough and some glossary
 
-Using [Amazon Web Services][0] we will create an isolated cloud environment using [Virtual Private Cloud (VPC)][3].</br>
-Connected to our *VPC*, will have a [Relational Database Service (RDS)][4] instance hosting a *MySQL*
-database, we will also have an [Elastic Compute Cloud (EC2)][5] instance running an
+Using [Amazon Web Services][0] we will create an isolated cloud environment with the
+[Virtual Private Cloud (VPC)][3] service.</br>
+Connected to our *VPC*, we'll have a [Relational Database Service (RDS)][4] instance hosting a
+*MySQL* database, we will also have an [Elastic Compute Cloud (EC2)][5] instance running an
 [Amazon Machine Image (AMI)][6] based on [Red Hat Enterprise Linux 8][7].</br>
-Installed on our *EC2 instance* we'll have [Red Hat Process Automation Manager (RHPAM)][8] running on
-[Red Hat JBoss Enterprise Application Platform (JBoss EAP)][9] and using our *RDS instance* as the
-backend *MySQL* database.</br>
-The *MySQL* instance will reside inside a *private designated subnet* and will not be accessible from the internet,</br>
-the *RHPAM* instance will reside inside a *public designated subnet* and will be accessible from the internet.
+Installed on our *EC2 instance* we'll have [Red Hat Process Automation Manager (RHPAM)][8] running
+on [Red Hat JBoss Enterprise Application Platform (JBoss EAP)][9] and using our *RDS instance* as
+the backend *MySQL* database.</br>
+The *MySQL* instance will reside inside a *private designated subnet* and will not be accessible
+from the internet,</br>
+the *RHPAM* instance will reside inside a *public designated subnet* and will be accessible from
+the internet.</br>
+Once done, we'll create a custom [Amazon Machine Image (AMI)][6], which will be later used for
+[Auto Scaling][10].
 
 ## Let's dive in
+
+You can use [AWS Console][1] to access all the services required for this document.
 
 ---
 If you're an [AWS CLI][2] user, you can use
 [scripts/aws_create_environment.sh](scripts/aws_create_environment.sh) and skip to the
 [Prepare EC2 Instance](#prepare-ec2-instance) section.</br>
 
-You can also use [scripts/create_import_keypair.sh](scripts/create_import_keypair.sh) to create/import your ssh key-pair.</br>
+You can also use [scripts/aws_create_import_keypair.sh](scripts/aws_create_import_keypair.sh) to
+create/import your ssh key-pair.</br>
 
 If you decide to opt for the manual setup,</br>
-please note that you can probably use the `VPC Wizard` and save a couple of steps described in this document.</br>
-You can follow [this tutorial which][13] which achieves a similar setup to what we're going for here.
+please note that you can probably use the *VPC Wizard* and save a couple of steps described in
+this document.</br>
+You can follow [this tutorial][13] which achieves a similar setup to what we're going for here.
 
 ---
 
 ### Prerequisite: Create or import a Key-Pair
 
 The key pair allows you to connect remotely via ssh to instances.
-You can use the same key for multiple instances/projects, so I wouldn't name it anything obligating.
+You can use the same key for multiple instances/projects,</br>
+so I wouldn't name it anything obligating.
 
 If you create a new *Key-Pair*,</br>
 once created, you will be able to download the private key to your local station.
@@ -46,7 +53,7 @@ once created, you will be able to download the private key to your local station
 If you import an existing key,</br>
 make sure to paste in the **public** key and not the private one.
 
-> If you create a new key with *aws*, please consider 'chmod 400' the downloaded private key file.
+> If you create a new key with *aws*, please consider `chmod 400` the downloaded private key file.
 
 ### Prerequisite: Download files
 
@@ -85,30 +92,32 @@ IPv4: 10.0.0.0/16
 ### Create the Subnets
 
 For this runbook, we'll create **three** *Subnets*.</br>
-The first one will be attached later on our *Internet Gateway* to be accessible over the
-internet. This subnet will host our *RHPAM* instance.</br>
+The first one will be attached later on our *Internet Gateway* to be accessible over the internet.</br>
+This subnet will host our *RHPAM* instance.</br>
 The other **two** subnets will **not be** attached to an *Internet Gateway* and therefore will not
-be accessible over the internet. These subnets will host our *MySQL* instance.
+be accessible over the internet.</br>
+These subnets will host our *MySQL* instance.
 
 > Please note, *MySQL* instance requires two private/public subnets in two different [availability zones][11].
 
-Create **three** *Subnets*, one public and two private,
-each in a different availability zone, with the following characteristics:
+Create **three** *Subnets*, one public and two private,</br>
+each in a different availability zone, with the following characteristics,</br>
+replace the *zone-x* with real availability zones. i.e. *us-east-1a*, *us-east-1-b*, *us-east-1c*:
 
 *public zone a*:
 
 ```text
 VPC: <select the vpc you created>
-Subnet Name: Temenos RHPAM Public Subnet **<zone b>**
-Availability Zone: <zone**a**>
+Subnet Name: Temenos RHPAM Public Subnet <zone-a>
+Availability Zone: <zone-a>
 IPv4 CIDR block: 10.0.1.0/24
 
 *private zone b*:
 
 ```text
 VPC: <select the vpc you created>
-Subnet Name: Temenos RHPAM Private Subnet **<zone b>**
-Availability Zone: <zone**b**>
+Subnet Name: Temenos RHPAM Private Subnet <zone-b>
+Availability Zone: <zone-b>
 IPv4 CIDR block: 10.0.2.0/24
 ```
 
@@ -116,8 +125,8 @@ IPv4 CIDR block: 10.0.2.0/24
 
 ```text
 VPC: <select the vpc you created>
-Subnet Name: Temenos RHPAM Private Subnet **<zone c>**
-Availability Zone: <zone**c**>
+Subnet Name: Temenos RHPAM Private Subnet <zone-c>
+Availability Zone: <zone-c>
 IPv4 CIDR block: 10.0.3.0/24
 ```
 
@@ -128,31 +137,32 @@ Create a *NAT Gateway* with the following characteristics:
 
 ```text
 Name: Temenos RHPAM NAT Gateway
-Subnet: <select the public subnet you created>
+Subnet: <select the public designated subnet you created>
 Elastic IP allocation ID: <select the elastic ip you created>
 
 ```
 
 ### Create an Internet Gateway
 
-The *Internet Gateway* will allow us to make our *RHPAM* instance over the internet. Subnets
-attached to this gateway, are implicitly public.</br>
+The *Internet Gateway* will allow us to make our *RHPAM* instance accessible over the internet.</br>
+Subnets attached to this gateway, are implicitly public.</br>
 Create an *Internet Gateway* with the following characteristics:
 
 ```text
 Name: Temenos RHPAM Internet Gateway
 ```
 
-Select the new gateway and press *Actions* -> *Attach*.</br>
-Attach the gateway to the vpc you created.
+Select the new gateway and press *Actions* -> *Attach*,</br>
+and attach the gateway to the vpc you created.
 
 ### Create the Route Table
 
 For this runbook, we need to create **two** *Route Tables*.</br>
-The first one will be attached to the *NAT Gateway* you created earlier in this document, it will
-also, act as our **main** *Route Table* and will be adhered to by all the subnets.</br>
-The second one will be attached to the *Internet Gateway* you created earlier in this document, it
-will be explicitly set to the *Subnet* you designated as a public one.
+The first one will be attached to the *NAT Gateway* we created earlier in this document,</br>
+it will act as our **main** *Route Table* and will be adhered to by all the subnets.
+
+The second one will be attached to the *Internet Gateway* you created earlier in this document,</br>
+it will be explicitly set to the *Subnet* we designated as a public one.
 
 Create a *Route Table* with the following characteristics:
 
@@ -162,16 +172,18 @@ VPC: <select the vpc you created>
 Tags: Name=Temenos RHPAM NAT Route Table
 ```
 
-Press *Edit Routes* -> *Add Route* and a route with the following characteristics:
+Press *Edit Routes* -> *Add Route*,</br>
+and add a route with the following characteristics:
 
 ```text
 Destination: 0.0.0.0/0
 Target: <select the nat gateway you created>
 ```
 
-Press *Actions* -> *Set main route table* to make the *NAT* table as the **main** table.</br>
-While you are at it, feel free to delete the table that was marked as main for your *VPC* before the new
-one, it was created by default, it has no more usage.
+Press *Actions* -> *Set main route table*,</br>
+to make the *NAT* table as the **main** table.</br>
+While you're at it, feel free to delete the table that was marked as main for your *VPC* before the
+new one, it was created by default, it has no more usage.
 
 Create another *Route Table* with the following characteristics:
 
@@ -181,22 +193,23 @@ VPC: <select the vpc you created>
 Tags: Name=Temenos RHPAM Internet Route Table
 ```
 
-Press *Edit Routes* -> *Add Route* and a route with the following characteristics:
+Press *Edit Routes* -> *Add Route*,</br>
+and add a route with the following characteristics:
 
 ```text
 Destination: 0.0.0.0/0
 Target: <select the internet gateway you created>
 ```
 
-Inside the route table, go to the *Subnet Association* tab, and associate this table to the public
-designated *Subnet* you created.
+Inside the route table, go to the *Subnet Association* tab,</br>
+and associate this table to the public designated *Subnet* you created.
 
 ### Create the Security Groups
 
 The security groups will set the network rules for our instances.</br>
 Create **two** Security Groups with the following characteristics:
 
-One group designated to use with by the *RHPAM* frontend instance:
+One group designated to be used by the *RHPAM* frontend instance:
 
 ```text
 Name: rhpam-jboss-front
@@ -220,7 +233,7 @@ Add the following Tag to the frontend group:
 Name=Temenos RHPAM JBoss Front Security Group
 ```
 
-The second group is designated to be used by the *MySQL* backend:
+The second group is designated to be used by the *MySQL* backend instance:
 
 ```text
 Name: rhpam-mysql-back
@@ -231,8 +244,8 @@ VPC: <select the vpc you created>
 And add the following Inbound Rules to the backend group:
 
 ```text
-Type: MYSQL/Aurora -> Source: Anywhere-IPv4 (0.0.0.0/0) -> Description: Connection MySQL
-Type: SSH -> Source: Anywhere-IPv4 (0.0.0.0/0) -> Description: SSH Connection
+Type: MYSQL/Aurora -> Source: <select the frontend security group> -> Description: Connection MySQL
+Type: SSH -> Source: <select the frontend security group> -> Description: SSH Connection
 ```
 
 Add the following Tag to the backend group:
@@ -244,12 +257,14 @@ Tags: Temenos RHPAM MySQL Back Security Group
 ### Create the RDS DB Subnet Group
 
 ---
-If you prefer an unamaged *MySQL EC2 Instance*, you can reffer to [manuals/unmanaged-mysql-rhel8.md](manuals/unmanaged-mysql-rhel8.md).</br>
-Once you're done, you can skip this step and go directly to the [Populate the Database](#populate-the-database) section.
+If you prefer an unamaged *MySQL EC2 Instance*, you can reffer to
+[manuals/unmanaged-mysql-rhel8.md](manuals/unmanaged-mysql-rhel8.md).</br>
+Once you're done, you can skip this step and go directly to the
+[Create an EC2 Instance for RHPAM](#create-an-ec2-nstance-for-rhpam) section.
 
 ---
 
-For gathering the allowed availability zones for the DB instance, a minimum of two different AZs is required.</br>
+Please select your [availability zones][11] you created the private designated subnets with.</br>
 Create a *DB Subnet Group* with the following characteristics:
 
 ```text
@@ -257,19 +272,17 @@ Name: rhpam-mysql-subnet-group
 Description: Temenos RHPAM MySQL Subnet Group
 VPC: <select the vpc you created>
 Availability Zones: <select the availability zones you created the private subnets with>
-Subnets: <select the designated private subnets you created>
+Subnets: <select the private designated subnets you created>
 Tags: Name=Temenos RHPAM MySQL Subnet Group
 ```
 
 ### Create a MySQL DB Managed RDS Instance
 
----
-If you prefer an unamaged *MySQL EC2 Instance*, you can reffer to [manuals/unmanaged-mysql-rhel8.md](manuals/unmanaged-mysql-rhel8.md).</br>
-Once you're done, you can skip this step and go directly to the [Populate the Database](#populate-the-database) section.
+> This step is not required if you're running an unmanaged *MySQL* instance.
 
----
-
-Create a *Database Instance* with the following characteristics:
+Please chose a *db instance class* [here][19].
+Create a *Database Instance* with the following characteristics (note and change the username and
+password):
 
 ```text
 Creation method: Standard create
@@ -278,7 +291,7 @@ Version: 8.0.25
 Instance Identifier: rhpam-mysql-db
 Master username: rhadmin
 Master password: redhat123#
-DB instance class: <select from here https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html>
+DB instance class: <your chosen instance type>
 Virtual private cloud: <select the vpc you created>
 Subnet group: <select the subnet group you created>
 VPC security group: <select the rhpam-mysql-subnet-group you created>
@@ -289,9 +302,11 @@ Enable auto minor version upgrade: unchecked
 
 ### Create an EC2 Instance for RHPAM
 
-Create an *EC2 Instance* from the base **AMI for Red Hat Enterprise Linux 8**.</br>
-Use the unsubscribed *Red Hat Enterprise Linux 8* bare installation from the *EC2 AMI* list in the wizard.</br>
-For searching refference, or if you're using the *cli*, the *AMI* id for a 64x86 *AMI* is `ami-0b0af3577fe5e3532`.
+Create an *EC2 Instance* from the base *AMI for Red Hat Enterprise Linux 8*.</br>
+Use the unsubscribed *Red Hat Enterprise Linux 8* bare installation from the *EC2 AMI* list in the
+wizard.</br>
+For searching reference, or if you're using the *cli*, the *AMI* id for a 64x86 *AMI* is
+`ami-0b0af3577fe5e3532`.
 
 > Note that you will need to select an [EC2 Instance Type][14] for your instance.</br>
 > The minimum requirements are **2CPUs and 2GiB memory**.
@@ -314,7 +329,7 @@ Key-Pair: <the name of the key-pair you created/imported>
 
 #### Grab IP Addresses
 
-Once the *EC2 Instance* is up and available, grab it public IP or DNS name from the GUI</br>
+Once the *EC2 Instance* is up and available, grab its public IP or DNS name from the console</br>
 Or if you're a *cli* user:
 
 ```shell
@@ -326,7 +341,7 @@ aws ec2 describe-instances \
 > If you're running an unmanaged instance of the database,
 > you can skip the part about obtaining the endpoint address, you already have the IP address.
 
-Obtain the endpoint address of the DB instance from the GUI.</br>
+Once the *RDS Instance* is up and available, grab its endpoint address from the console.</br>
 Or if you're a *cli* user:
 
 ```shell
@@ -383,7 +398,7 @@ unzip ~/rhpam-7.9.0-add-ons.zip -d ~/rhpam-7.9.0-add-ons
 cd ~/rhpam-7.9.0-add-ons
 unzip rhpam-7.9.0-migration-tool.zip
 cd rhpam-7.9.0-migration-tool/ddl-scripts/mysql5
-# runs scripts using mysql client on remote instance, requires mysql client
+# run scripts using mysql client on remote instance, requires mysql client
 mysql -h mysql_dns_address -u your_user -p jbpm < mysql-jbpm-amend-auto-increment-procedure.sql
 mysql -h mysql_dns_address -u your_user -p jbpm < mysql5-jbpm-schema.sql
 mysql -h mysql_dns_address -u your_user -p jbpm < quartz_tables_mysql.sql
@@ -405,7 +420,8 @@ sudo dnf install java-1.8.0-openjdk-devel.x86_64 -y
 #### Install Maven
 
 ```shell
-curl https://dlcdn.apache.org/maven/maven-3/3.8.3/binaries/apache-maven-3.8.3-bin.tar.gz -o apache-maven-3.8.3-bin.tar.gz
+curl https://dlcdn.apache.org/maven/maven-3/3.8.3/binaries/apache-maven-3.8.3-bin.tar.gz \
+    -o apache-maven-3.8.3-bin.tar.gz
 sudo tar xzvf apache-maven-3.8.3-bin.tar.gz -C /opt
 rm apache-maven-3.8.3-bin.tar.gz
 sudo ln -s /opt/apache-maven-3.8.3/bin/mvn /usr/local/bin/mvn
@@ -428,7 +444,7 @@ If you want to verify *JBoss* installation, run it as a standalone *JBoss* serve
 /home/ec2-user/EAP-7.3.0/bin/standalone.sh -b 0.0.0.0
 ```
 
-open browser from local station (note rhpam_public_ip):</br>
+and open browser from your local station (note rhpam_public_ip):</br>
 `http://rhpam_public_ip:8080/`.
 
 Control+c to end the standalone server.
@@ -462,10 +478,6 @@ mkdir -p mysql/main
 cd mysql/main
 # copy module
 cp ~/mysql-connector-java-8.0.25/mysql-connector-java-8.0.25.jar .
-# cleanups (optional)
-cd ~
-rm -r ~/mysql-connector-java-8.0.25
-rm ~/mysql-connector-java-8.0.25.zip
 ```
 
 Create the module file:
@@ -484,6 +496,14 @@ cat << EOF > module.xml
 EOF
 ```
 
+Cleanup:
+
+```shell
+cd ~
+rm -r ~/mysql-connector-java-8.0.25
+rm ~/mysql-connector-java-8.0.25.zip
+```
+
 Run *JBoss* standalone server:
 
 ```shell
@@ -491,8 +511,8 @@ Run *JBoss* standalone server:
 ```
 
 Open another cli and connect using ssh to the instance from another session.</br>
-Once connected to the instance, run the following commands to connect to *JBoss* and install *MySQL*
-conenctor dependencies:
+Once connected to the instance, run the following commands to connect to the running *JBoss* and
+instruct it to install the *MySQL* connector's dependencies:
 
 ```shell
 # connect to JBoss
@@ -530,8 +550,8 @@ under `<datasources><drivers>` add the folowwing node (watch identation):
                     <driver name="mysql" module="com.mysql"/>
 ```
 
-under `<datasources>` add the following node, please note the *mysql_instance_name*, and the
-**database**'s *user-name* and *password* (watch the identation):
+under `<datasources>` add the following node, please note the *mysql_instance_name*,</br>
+and the **database**'s *user-name* and *password* (watch the identation):
 
 ```xml
                 <datasource jndi-name="java:/jbpmDS" pool-name="jbpmDS">
@@ -607,3 +627,4 @@ Under construction.
 [16]: https://developers.redhat.com/content-gateway/file/jboss-eap-7.3.3-installer.jar
 [17]: https://downloads.mysql.com/archives/get/p/3/file/mysql-connector-java-8.0.25.zip
 [18]: https://access.redhat.com/articles/3405381
+[19]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html

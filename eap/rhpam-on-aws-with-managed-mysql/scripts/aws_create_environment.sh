@@ -509,7 +509,7 @@ fi
 
 echo "created ec2 instance $ec2_id."
 echo ""
-echo "** tip, run the following command to get the ec2 instace public name/ip once it's up:"
+echo "** tip: run the following command to get the ec2 instace public name/ip once it's up:"
 echo "** aws ec2 describe-instances --instance-ids $ec2_id --query Reservations[].Instances[].[PublicDnsName,PublicIpAddress]"
 
 echo ""
