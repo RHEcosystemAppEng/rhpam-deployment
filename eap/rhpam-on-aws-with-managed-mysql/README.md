@@ -26,26 +26,16 @@ Once done, we'll create a custom [Amazon Machine Image (AMI)][6], which will be 
 
 You can use [AWS Console][1] to access all the services required for this document.
 
----
-If you're an [AWS CLI][2] user, you can use
-[scripts/aws_create_environment.sh](scripts/aws_create_environment.sh) and skip to the
-[Prepare EC2 Instance](#prepare-ec2-instance) section.</br>
-
-You can also use [scripts/aws_create_import_keypair.sh](scripts/aws_create_import_keypair.sh) to
-create/import your ssh key-pair.</br>
-
-If you decide to opt for the manual setup,</br>
-please note that you can probably use the *VPC Wizard* and save a couple of steps described in
-this document.</br>
-You can follow [this tutorial][13] which achieves a similar setup to what we're going for here.
-
----
-
 ### Prerequisite: Create or import a Key-Pair
 
-The key pair allows you to connect remotely via ssh to instances.
+You'll use the key-pair to connect to instances remotely via ssh.
 You can use the same key for multiple instances/projects,</br>
 so I wouldn't name it anything obligating.
+
+If you're a [AWS CLI][2] user you can use
+[scripts/aws_create_import_keypair.sh](scripts/aws_create_import_keypair.sh) to create/import your
+ssh key-pair.</br>
+Otherwise, it can be done via the *EC2* console.
 
 If you create a new *Key-Pair*,</br>
 once created, you will be able to download the private key to your local station.
@@ -65,6 +55,18 @@ From your local station download the following files:
 - [MySQL connector for Java zip archive][17]
 
 > Please take a look at [this matrix][18] before attempting to download other versions.
+
+---
+If you're an [AWS CLI][2] user, you can use
+[scripts/aws_create_environment.sh](scripts/aws_create_environment.sh) and skip ahead to the
+[Prepare EC2 Instance](#prepare-ec2-instance) section.
+
+If you decide to opt for the manual setup,</br>
+please note that you can probably use the *VPC Wizard* and save a couple of steps described in
+this document.</br>
+You can follow [this tutorial][13] which achieves a similar setup to what we're going for here.
+
+---
 
 ### Create an Elastic IP
 
@@ -330,7 +332,7 @@ Key-Pair: <the name of the key-pair you created/imported>
 #### Grab IP Addresses
 
 Once the *EC2 Instance* is up and available, grab its public IP or DNS name from the console</br>
-Or if you're a *cli* user:
+Or if you're a [AWS CLI][2] user:
 
 ```shell
 aws ec2 describe-instances \
@@ -342,7 +344,7 @@ aws ec2 describe-instances \
 > you can skip the part about obtaining the endpoint address, you already have the IP address.
 
 Once the *RDS Instance* is up and available, grab its endpoint address from the console.</br>
-Or if you're a *cli* user:
+Or if you're a [AWS CLI][2] user:
 
 ```shell
 aws rds describe-db-instances \
