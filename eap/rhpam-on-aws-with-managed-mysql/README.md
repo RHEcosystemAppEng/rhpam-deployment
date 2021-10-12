@@ -388,7 +388,7 @@ ssh -i /path/to/private.pem ec2-user@ec2_instance_public
 ```shell
 sudo dnf upgrade -y
 sudo rpm -Uvh https://repo.mysql.com/mysql80-community-release-el8-1.noarch.rpm
-sudo dnf install mysql.x86_64 unzip java-1.8.0-openjdk-devel.x86_64 -y
+sudo dnf install mysql.x86_64 unzip java-1.8.0-openjdk-devel.x86_64 policycoreutils-python-utils -y
 ```
 
 #### Install Maven
@@ -430,8 +430,9 @@ mysql -h mysql_dns_address -u your_user -p jbpm -e "show tables"
 
 The following installation will prompt you for configuring *JBoss* installation. i.e. *user name*,
 *password*.</br>
-It's all pretty basic, just note the installation folder, i.e. */home/ec2-user/EAP-7.3.0*, we'll
-need it later on.
+It's all pretty basic, just note one **very important part**:</br>
+the installation folder default will be */home/ec2-user/EAP-7.3.0*,</br>
+set it to */opt/EAP-7.3.0*.
 
 ```shell
 java -jar ~/jboss-eap-7.3.0-installer.jar -console
@@ -440,7 +441,7 @@ java -jar ~/jboss-eap-7.3.0-installer.jar -console
 If you want to verify *JBoss* installation, run it as a standalone *JBoss* server:
 
 ```shell
-/home/ec2-user/EAP-7.3.0/bin/standalone.sh -b 0.0.0.0
+/opt/EAP-7.3.0/bin/standalone.sh -b 0.0.0.0
 ```
 
 and open browser from your local station (note rhpam_public_ip):</br>
@@ -472,8 +473,8 @@ Extract the downloaded *MySQL* connector and add it as a *JBoss* module:
 # extract the connector
 unzip ~/mysql-connector-java-8.0.25.zip -d ~
 # create module path
-mkdir -p /home/ec2-user/EAP-7.3.0/modules/system/layers/base/com/mysql/main
-cd /home/ec2-user/EAP-7.3.0/modules/system/layers/base/com/mysql/main
+mkdir -p /opt/EAP-7.3.0/modules/system/layers/base/com/mysql/main
+cd /opt/EAP-7.3.0/modules/system/layers/base/com/mysql/main
 # copy module
 cp ~/mysql-connector-java-8.0.25/mysql-connector-java-8.0.25.jar .
 ```
@@ -505,7 +506,7 @@ rm ~/mysql-connector-java-8.0.25.zip
 Run *JBoss* standalone server:
 
 ```shell
-/home/ec2-user/EAP-7.3.0/bin/standalone.sh -b 0.0.0.0
+/opt/EAP-7.3.0/bin/standalone.sh -b 0.0.0.0
 ```
 
 Open another cli and connect using ssh to the instance from another session.</br>
@@ -514,10 +515,10 @@ instruct it to install the *MySQL* connector's dependencies:
 
 ```shell
 # connect to JBoss
-/home/ec2-user/EAP-7.3.0/bin/jboss-cli.sh --connect
+/opt/EAP-7.3.0/bin/jboss-cli.sh --connect
 # install dependencies
 module add --name=com.mysql \
-    --resources=/home/ec2-user/EAP-7.3.0/modules/system/layers/base/com/mysql/main/mysql-connector-java-8.0.25.jar \
+    --resources=/opt/EAP-7.3.0/modules/system/layers/base/com/mysql/main/mysql-connector-java-8.0.25.jar \
     --dependencies=javax.api,javax.transaction.api
 # leave cli
 exit
@@ -529,7 +530,7 @@ exit
 Update the configuration file to use the *MySQL* connector:
 
 ```shell
-cd /home/ec2-user/EAP-7.3.0/standalone/configuration
+cd /opt/EAP-7.3.0/standalone/configuration
 cp standalone-full.xml standalone-full.xml.bak
 vi standalone-full.xml
 ```
@@ -590,7 +591,7 @@ Get back home and run the server:
 
 ```shell
 cd ~
-/home/ec2-user/EAP-7.3.0/bin/standalone.sh -c standalone-full.xml -b 0.0.0.0
+/opt/EAP-7.3.0/bin/standalone.sh -c standalone-full.xml -b 0.0.0.0
 ```
 
 To verify RHPAM Installation, from your local browser (note ec2_instance_public):</br>
@@ -600,10 +601,22 @@ Use the user name and password you created while installing *RHPAM*.
 
 #### Start RHPAM at startup
 
----
-Under construction
+```shell
+sudo -i
+cat << EOF > /etc/systemd/system/jbosseap.service
+[Unit]
+Description=JBoss EAP Service
 
----
+[Service]
+ExecStart=/opt/EAP-7.3.0/bin/standalone.sh -c standalone-full.xml -b 0.0.0.0
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+exit
+sudo systemctl enable jbosseap.service
+```
 
 #### Build and Deploy Temenos projects
 
@@ -612,7 +625,7 @@ Under construction
 ```shell
 unzip ~/Origination_PAM_v202104.01.zip -d ~/origination
 cd origination/Binaries
-cp GetTasksCustomAPI-1.0.jar /home/ec2-user/EAP-7.3.0/standalone/deployments/kie-server.war/WEB-INF/lib
+cp GetTasksCustomAPI-1.0.jar /opt/EAP-7.3.0/standalone/deployments/kie-server.war/WEB-INF/lib
 # cleanup (optional)
 cd ~
 sudo rm -r origination
@@ -622,7 +635,7 @@ rm Origination_PAM_v202104.01.zip
 Start or restart the server:
 
 ```shell
-/home/ec2-user/EAP-7.3.0/bin/standalone.sh -c standalone-full.xml -b 0.0.0.0
+/opt/EAP-7.3.0/bin/standalone.sh -c standalone-full.xml -b 0.0.0.0
 ```
 
 ##### Build and Upload artifact OriginationWorkItem
