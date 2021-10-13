@@ -669,7 +669,7 @@ rm -r ~/BPM
 ##### Import and Deploy Origination project
 
 Extract your local copy of the *Origination* project.</br>
-You'll need to modify the sources and create a git repository for the deployment proccess.
+You'll need to modify the sources and create a git repository for the deployment process.
 
 > Please note that you'll need to push the project to a remote repository that is accessible over
 > the internet. A private one is preferable.</br>
@@ -715,10 +715,38 @@ sudo rm -r ~/origination/
 
 ### Create an RHPAM AMI
 
----
-TBD
+After creating your *EC2* instance and installing/configuring *JBoss* and *RHPAM*,</br>
+you should create an *Amazon Machine Image (AMI)* which is, as the suggests and image of your
+machine, meaning your instance.</br>
+Creating the *AMI* serves two purposes, not only will it save you the trouble of reinstalling, but
+it'll also play a major part when it comes to autoscaling.</br>
+*AMI*s are all around us, if you remember, we also started our *EC2* instance from an
+*AMI for Red Hat Enterprise Linux 8*, aka `ami-0b0af3577fe5e3532`.</br>
+Each *AMI* has its unique id, and can be used privately or deployed to [Amazon's Marketplace][20].
 
----
+Creating an *AMI* is pretty straight-forward, from the *Instances* dashboard in the *EC2* console,</br>
+select your instance, click *Actions* -> *Image and templates* -> *Create image*.
+
+Create an *AMI* with the following characteristics:
+
+```text
+Image name: temenos-rhpam-mysql-ami
+Image description: Temenos RHPAM 7.9.0 based on JBoss 7.3.0 backed by RDS MySQL
+Tags: Name=Temenos RHPAM 7.9 with MySQL
+```
+
+The *AMI* takes some time to spin up, but once it becomes available, you can use it to
+create *EC2* instances with your pre-configured *RHPAM*.
+
+And of course, if you're a [AWS CLI][2] user:
+
+```shell
+aws ec2 create-image \
+    --instance-id <the-id-of-the-ec2-instance-created> \
+    --name temenos-rhpam-mysql-ami \
+    --description "Temenos RHPAM 7.9.0 based on JBoss 7.3.0 backed by RDS MySQL" \
+    --tag-specifications "ResourceType=image, Tags=[{Key=Name, Value=Temenos RHPAM 7.9 with MySQL}]"
+```
 
 ### Auto Scaling
 
@@ -748,3 +776,4 @@ TBD
 [17]: https://downloads.mysql.com/archives/get/p/3/file/mysql-connector-java-8.0.25.zip
 [18]: https://access.redhat.com/articles/3405381
 [19]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html
+[20]: https://aws.amazon.com/marketplace
