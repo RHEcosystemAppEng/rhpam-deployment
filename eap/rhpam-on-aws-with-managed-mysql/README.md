@@ -356,7 +356,7 @@ Or if you're a [AWS CLI][2] user:
 ```shell
 aws rds describe-db-instances \
     --db-instance-identifier rhpam-mysql-db \
-    --query DBInstances[].Endpoint.Address --output text
+    --query DBInstances[].Endpoint.Address
 ```
 
 #### Copy files
@@ -387,8 +387,8 @@ ssh -i /path/to/private.pem ec2-user@ec2_instance_public
 
 ```shell
 sudo dnf upgrade -y
-sudo rpm -Uvh https://repo.mysql.com/mysql80-community-release-el8-1.noarch.rpm
-sudo dnf install mysql.x86_64 unzip java-1.8.0-openjdk-devel.x86_64 policycoreutils-python-utils -y
+sudo rpm -U https://repo.mysql.com/mysql80-community-release-el8-1.noarch.rpm
+sudo dnf install mysql unzip java-1.8.0-openjdk-devel -y
 ```
 
 #### Install Maven
@@ -431,17 +431,16 @@ mysql -h mysql_dns_address -u your_user -p jbpm -e "show tables"
 The following installation will prompt you for configuring *JBoss* installation. i.e. *user name*,
 *password*.</br>
 It's all pretty basic, just note one **very important part**:</br>
-the installation folder default will be */home/ec2-user/EAP-7.3.0*,</br>
-set it to */opt/EAP-7.3.0*.
+the installation folder default will be `/root/EAP-7.3.0`, set it to `/opt/EAP-7.3.0`.
 
 ```shell
-java -jar ~/jboss-eap-7.3.0-installer.jar -console
+sudo java -jar ~/jboss-eap-7.3.0-installer.jar -console
 ```
 
 If you want to verify *JBoss* installation, run it as a standalone *JBoss* server:
 
 ```shell
-/opt/EAP-7.3.0/bin/standalone.sh -b 0.0.0.0
+sudo /opt/EAP-7.3.0/bin/standalone.sh -b 0.0.0.0
 ```
 
 and open browser from your local station (note rhpam_public_ip):</br>
@@ -457,10 +456,10 @@ rm ~/jboss-eap-7.3.0-installer.jar
 #### Install RHPAM
 
 The following installation will ask you where do you have *JBoss* installed,</br>
-use the installation folder you noted when installing *JBoss*.
+use the installation folder you selected when installing *JBoss*, `/opt/EAP-7.3.0`.
 
 ```shell
-java -jar ~/rhpam-installer-7.9.0.jar -console
+sudo java -jar ~/rhpam-installer-7.9.0.jar -console
 # cleanups (optional)
 rm ~/rhpam-installer-7.9.0.jar
 ```
@@ -473,16 +472,16 @@ Extract the downloaded *MySQL* connector and add it as a *JBoss* module:
 # extract the connector
 unzip ~/mysql-connector-java-8.0.25.zip -d ~
 # create module path
-mkdir -p /opt/EAP-7.3.0/modules/system/layers/base/com/mysql/main
+sudo mkdir -p /opt/EAP-7.3.0/modules/system/layers/base/com/mysql/main
 cd /opt/EAP-7.3.0/modules/system/layers/base/com/mysql/main
 # copy module
-cp ~/mysql-connector-java-8.0.25/mysql-connector-java-8.0.25.jar .
+sudo cp ~/mysql-connector-java-8.0.25/mysql-connector-java-8.0.25.jar .
 ```
 
 Create the module file:
 
 ```shell
-cat << EOF > module.xml
+sudo bash -c 'cat << EOF > module.xml
 <module xmlns="urn:jboss:module:1.5" name="com.mysql">
     <resources>
         <resource-root path="mysql-connector-java-8.0.25.jar"/>
@@ -492,7 +491,7 @@ cat << EOF > module.xml
         <module name="javax.transaction.api"/>
     </dependencies>
 </module>
-EOF
+EOF'
 ```
 
 Cleanup:
@@ -506,7 +505,7 @@ rm ~/mysql-connector-java-8.0.25.zip
 Run *JBoss* standalone server:
 
 ```shell
-/opt/EAP-7.3.0/bin/standalone.sh -b 0.0.0.0
+sudo /opt/EAP-7.3.0/bin/standalone.sh -b 0.0.0.0
 ```
 
 Open another cli and connect using ssh to the instance from another session.</br>
@@ -515,7 +514,7 @@ instruct it to install the *MySQL* connector's dependencies:
 
 ```shell
 # connect to JBoss
-/opt/EAP-7.3.0/bin/jboss-cli.sh --connect
+sudo /opt/EAP-7.3.0/bin/jboss-cli.sh --connect
 # install dependencies
 module add --name=com.mysql \
     --resources=/opt/EAP-7.3.0/modules/system/layers/base/com/mysql/main/mysql-connector-java-8.0.25.jar \
@@ -524,15 +523,15 @@ module add --name=com.mysql \
 exit
 ```
 
-> You can close the second session and press Control+C in the first session to stop *JBoss*
+> You can close the second session and press Control+c in the first session to stop *JBoss*
 > standalone server.
 
 Update the configuration file to use the *MySQL* connector:
 
 ```shell
 cd /opt/EAP-7.3.0/standalone/configuration
-cp standalone-full.xml standalone-full.xml.bak
-vi standalone-full.xml
+sudo cp standalone-full.xml standalone-full.xml.bak
+sudo vi standalone-full.xml
 ```
 
 Search string (using /) for `urn:jboss:domain:datasources`.</br>
@@ -577,6 +576,7 @@ and the **database**'s *user-name* and *password* (watch the identation):
 
 Press `esc` to get back to *visual mode*.</br>
 Search string (using /) for `<system-properties>`.</br>
+type `i` to enter into *insert mode*,</br>
 add the following property nodes (watch the identation):
 
 ```xml
@@ -587,23 +587,10 @@ add the following property nodes (watch the identation):
 Press `esc` to get back to *visual mode*.</br>
 Type `:wq` (and press enter) to *write and quit*.
 
-Get back home and run the server:
-
-```shell
-cd ~
-/opt/EAP-7.3.0/bin/standalone.sh -c standalone-full.xml -b 0.0.0.0
-```
-
-To verify RHPAM Installation, from your local browser (note ec2_instance_public):</br>
-`http://ec2_instance_public:8080/business-central`
-
-Use the user name and password you created while installing *RHPAM*.
-
 #### Start RHPAM at startup
 
 ```shell
-sudo -i
-cat << EOF > /etc/systemd/system/jbosseap.service
+sudo bash -c 'cat << EOF > /etc/systemd/system/jbosseap.service
 [Unit]
 Description=JBoss EAP Service
 
@@ -613,10 +600,16 @@ Restart=always
 
 [Install]
 WantedBy=multi-user.target
-EOF
-exit
+EOF'
+sudo systemctl start jbosseap.service
 sudo systemctl enable jbosseap.service
 ```
+
+Give it a couple of minutes to start up and verify RHPAM,</br>
+from your local browser (note ec2_instance_public):</br>
+`http://ec2_instance_public:8080/business-central`
+
+Use the user name and password you created while installing *RHPAM*0
 
 #### Build and Deploy Temenos projects
 
@@ -625,20 +618,23 @@ sudo systemctl enable jbosseap.service
 ```shell
 unzip ~/Origination_PAM_v202104.01.zip -d ~/origination
 cd origination/Binaries
-cp GetTasksCustomAPI-1.0.jar /opt/EAP-7.3.0/standalone/deployments/kie-server.war/WEB-INF/lib
+sudo cp GetTasksCustomAPI-1.0.jar /opt/EAP-7.3.0/standalone/deployments/kie-server.war/WEB-INF/lib
 # cleanup (optional)
 cd ~
-sudo rm -r origination
+rm -r origination
 rm Origination_PAM_v202104.01.zip
 ```
 
-Start or restart the server:
+Restart the server and exit the ssh connection:
 
 ```shell
-/opt/EAP-7.3.0/bin/standalone.sh -c standalone-full.xml -b 0.0.0.0
+sudo systemctl restart jbosseap.service
+exit
 ```
 
 ##### Build and Upload artifact OriginationWorkItem
+
+> This step is to be performed on your local station.
 
 First, prepare the project for build and deployment.
 
@@ -663,7 +659,7 @@ Now you need to upload the artifact.
   and click *Upload*.
 - Scroll down and look for the added task *OriginationServiceTask*, turn it on.
 
-Cleanup (optional):
+Get back to your shell for cleanup (optional):
 
 ```shell
 cd ~
@@ -673,10 +669,11 @@ rm -r ~/BPM
 ##### Import and Deploy Origination project
 
 Extract your local copy of the *Origination* project.</br>
-You'll need to modify the sources and create a git repository for the deployment.
+You'll need to modify the sources and create a git repository for the deployment proccess.
 
 > Please note that you'll need to push the project to a remote repository that is accessible over
 > the internet. A private one is preferable.</br>
+> Also note that the master branch needs to be named *master*.
 > You can, and should, delete the remote repository after importing.
 
 First, prepare the project for build and push it.
@@ -687,21 +684,21 @@ cd ~/origination/
 unzip Origination_PAM_Source_v202104.01.zip -d sources
 cd sources
 sed -i 's/http:\/\//https:\/\//g' pom.xml
-git init -b main
+git init -b master
 git add .
 git commit -m "Onboarding"
 git remote add origin <your-repo-goes-here>
-git push -u origin main
+git push -u origin master
 ```
 
 Now, you need to import the project:
 
 - From your local browser get back to (note ec2_instance_public):
   `http://ec2_instance_public:8080/business-central`.
-- Click *Project* in the bottom part of the *Design* tile.
+- From the main page, click *Projects* in the bottom part of the *Design* tile and select *MySpace*.
 - Click *Import Project* and paste in the *Git* repo for your modified version of the *Origination*
   project.
-- Select and import the *Origination* project.
+- Select the *Origination* project and press *Ok*.
 - Enter the *Settings* tab in the project, and click the *Custom Tasks* menu on the left.
 - Look for the task *OriginationServiceTask*, install it.
 - You can verify the action by clicking the *Deployments* menu on the left, and then the
@@ -709,24 +706,24 @@ Now, you need to import the project:
   *com.temenos.infinity.OriginationWorkItemHandler*.
 - Click *Deploy* at the upper right corner to deploy the project.
 
-Cleanup (optional):
+Get back to your shell for cleanup (optional):
 
 ```shell
 cd ~
-rm -r ~/origination/
+sudo rm -r ~/origination/
 ```
 
 ### Create an RHPAM AMI
 
 ---
-Under construction
+TBD
 
 ---
 
 ### Auto Scaling
 
 ---
-Under construction
+TBD
 
 ---
 

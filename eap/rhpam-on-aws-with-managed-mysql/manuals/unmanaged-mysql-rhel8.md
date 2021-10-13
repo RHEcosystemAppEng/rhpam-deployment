@@ -194,7 +194,7 @@ sudo mount -a
 
 ```shell
 sudo dnf update -y
-sudo dnf install podman -y
+sudo dnf install podman policycoreutils-python-utils -y
 ```
 
 ### Set SELinux context
