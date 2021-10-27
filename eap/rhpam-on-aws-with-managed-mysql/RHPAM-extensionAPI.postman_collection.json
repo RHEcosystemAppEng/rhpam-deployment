@@ -1,0 +1,555 @@
+{
+	"info": {
+		"_postman_id": "6d5026dc-ca02-476d-bc6f-bad924f7b62f",
+		"name": "[SR] RHPAM-extension API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Smart Router-List",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{scheme}}://{{smart-router-url}}/mgmt/list",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{smart-router-url}}"
+					],
+					"path": [
+						"mgmt",
+						"list"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "[KS] Delete container",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_containerId = jsonData.result['kie-containers']['kie-container'][0]['container-id'];",
+							"pm.collectionVariables.set(\"containerId\", current_containerId);",
+							"",
+							"console.log('current_containerId is', current_containerId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/server/containers/CustomProject_1.0.0",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{kieserver-url}}"
+					],
+					"path": [
+						"services",
+						"rest",
+						"server",
+						"containers",
+						"CustomProject_1.0.0"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "[KS] Create container",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_containerId = jsonData.result['kie-containers']['kie-container'][0]['container-id'];",
+							"pm.collectionVariables.set(\"containerId\", current_containerId);",
+							"",
+							"console.log('current_containerId is', current_containerId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"container-id\" : \"CustomProject_1.0.0\",\n    \"release-id\" : {\n        \"group-id\" : \"com.testspace\",\n        \"artifact-id\" : \"CustomProject\",\n        \"version\" : \"1.0.0\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/server/containers/CustomProject_1.0.0",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{kieserver-url}}"
+					],
+					"path": [
+						"services",
+						"rest",
+						"server",
+						"containers",
+						"CustomProject_1.0.0"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get containers",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_containerId = jsonData.result['kie-containers']['kie-container'][0]['container-id'];",
+							"pm.collectionVariables.set(\"containerId\", current_containerId);",
+							"",
+							"console.log('current_containerId is', current_containerId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{scheme}}://{{smart-router-url}}/containers",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{smart-router-url}}"
+					],
+					"path": [
+						"containers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Start container",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_taskInstanceId = jsonData['active-user-tasks']['task-summary'][0]['task-id'];",
+							"pm.collectionVariables.set(\"taskInstanceId\", current_taskInstanceId);",
+							"",
+							"console.log('current_taskInstanceId is', current_taskInstanceId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{scheme}}://{{smart-router-url}}/containers/{{containerId}}/status/activated",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{smart-router-url}}"
+					],
+					"path": [
+						"containers",
+						"{{containerId}}",
+						"status",
+						"activated"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create instance",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_containerId = jsonData.result['kie-containers']['kie-container'][0]['container-id'];",
+							"pm.collectionVariables.set(\"containerId\", current_containerId);",
+							"",
+							"console.log('current_containerId is', current_containerId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"aName\":\"joe\",\n    \"aNumber\": 12345\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{scheme}}://{{smart-router-url}}/containers/{{containerId}}/processes/custom.process/instances",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{smart-router-url}}"
+					],
+					"path": [
+						"containers",
+						"{{containerId}}",
+						"processes",
+						"custom.process",
+						"instances"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get process instances",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_processInstanceId = jsonData['process-instance'][0]['process-instance-id'];",
+							"pm.collectionVariables.set(\"processInstanceId\", current_processInstanceId);",
+							"",
+							"console.log('current_processInstanceId is', current_processInstanceId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{scheme}}://{{smart-router-url}}/containers/{{containerId}}/processes/instances",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{smart-router-url}}"
+					],
+					"path": [
+						"containers",
+						"{{containerId}}",
+						"processes",
+						"instances"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get instance details",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_taskInstanceId = jsonData['active-user-tasks']['task-summary'][0]['task-id'];",
+							"pm.collectionVariables.set(\"taskInstanceId\", current_taskInstanceId);",
+							"",
+							"console.log('current_taskInstanceId is', current_taskInstanceId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{scheme}}://{{smart-router-url}}/containers/{{containerId}}/processes/instances/{{processInstanceId}}",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{smart-router-url}}"
+					],
+					"path": [
+						"containers",
+						"{{containerId}}",
+						"processes",
+						"instances",
+						"{{processInstanceId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "[KS] Custom getTask",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/extension/custom-api/{{containerId}}/{{taskInstanceId}}",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{kieserver-url}}"
+					],
+					"path": [
+						"services",
+						"rest",
+						"extension",
+						"custom-api",
+						"{{containerId}}",
+						"{{taskInstanceId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "[KS] Custom skip",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/extension/custom-api/{{containerId}}/{{taskInstanceId}}/skip?user=rhpamAdmin",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{kieserver-url}}"
+					],
+					"path": [
+						"services",
+						"rest",
+						"extension",
+						"custom-api",
+						"{{containerId}}",
+						"{{taskInstanceId}}",
+						"skip"
+					],
+					"query": [
+						{
+							"key": "user",
+							"value": "rhpamAdmin"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Skip",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "{{scheme}}://{{smart-router-url}}/containers/{{containerId}}/tasks/{{taskInstanceId}}/states/skipped?user=rhpamAdmin",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{smart-router-url}}"
+					],
+					"path": [
+						"containers",
+						"{{containerId}}",
+						"tasks",
+						"{{taskInstanceId}}",
+						"states",
+						"skipped"
+					],
+					"query": [
+						{
+							"key": "user",
+							"value": "rhpamAdmin"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Stop container",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_taskInstanceId = jsonData['active-user-tasks']['task-summary'][0]['task-id'];",
+							"pm.collectionVariables.set(\"taskInstanceId\", current_taskInstanceId);",
+							"",
+							"console.log('current_taskInstanceId is', current_taskInstanceId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{scheme}}://{{smart-router-url}}/containers/{{containerId}}/status/deactivated",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{smart-router-url}}"
+					],
+					"path": [
+						"containers",
+						"{{containerId}}",
+						"status",
+						"deactivated"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ2WWN1Q1hCa0VWMFljZHVZX051QXRnUk53WGVDTUYxSHlLTURJYzFWdTg0In0.eyJleHAiOjE2MzUzNjgyOTYsImlhdCI6MTYzNTMzMjI5NiwianRpIjoiNzgwOGMxYjgtMTQ0My00MTI5LWE0ZWMtNGM2ZDgyMTNjMWM2IiwiaXNzIjoiaHR0cDovL3JocGFtLXJoc3NvLWxvYWQtYmFsYW5jZXItZTY3ZWM2YTdhYmJkNjdiNi5lbGIudXMtZWFzdC0xLmFtYXpvbmF3cy5jb206ODA4MC9hdXRoL3JlYWxtcy9UZW1lbm9zIiwiYXVkIjpbInJlYWxtLW1hbmFnZW1lbnQiLCJhY2NvdW50Il0sInN1YiI6IjlhNmQ3YzhkLTBlNzEtNDU1NS05ODdjLTljOGRlYjE1MmUzZSIsInR5cCI6IkJlYXJlciIsImF6cCI6ImtpZS1yZW1vdGUiLCJzZXNzaW9uX3N0YXRlIjoiOGY2NjIwZDMtZGJmMi00ZjhjLWE1NzEtMjdjOGE2ZjQ1MmRkIiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsImFkbWluIiwicmVzdC1hbGwiLCJ1bWFfYXV0aG9yaXphdGlvbiIsImtpZS1zZXJ2ZXIiXX0sInJlc291cmNlX2FjY2VzcyI6eyJyZWFsbS1tYW5hZ2VtZW50Ijp7InJvbGVzIjpbInZpZXctaWRlbnRpdHktcHJvdmlkZXJzIiwidmlldy1yZWFsbSIsIm1hbmFnZS1pZGVudGl0eS1wcm92aWRlcnMiLCJpbXBlcnNvbmF0aW9uIiwicmVhbG0tYWRtaW4iLCJjcmVhdGUtY2xpZW50IiwibWFuYWdlLXVzZXJzIiwicXVlcnktcmVhbG1zIiwidmlldy1hdXRob3JpemF0aW9uIiwicXVlcnktY2xpZW50cyIsInF1ZXJ5LXVzZXJzIiwibWFuYWdlLWV2ZW50cyIsIm1hbmFnZS1yZWFsbSIsInZpZXctZXZlbnRzIiwidmlldy11c2VycyIsInZpZXctY2xpZW50cyIsIm1hbmFnZS1hdXRob3JpemF0aW9uIiwibWFuYWdlLWNsaWVudHMiLCJxdWVyeS1ncm91cHMiXX0sImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoiZW1haWwgcHJvZmlsZSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicHJlZmVycmVkX3VzZXJuYW1lIjoicmhwYW0ifQ.BFnTKrxrgGdOQpOU_53-kUa3KRnU31FtAVfzurInMTGmfWGDpdWBgswyEV4Wb7VOwZ3-eg38WCCguV1zHl3MbwCY_ZIKZqVLN_K2wSvLOXD6w206TwkhtD228hVrhsNdIcGI2Ej-BjZ_lqmVFYvw-UQKomfGR1rQH8Qu60KUuaR-pZMIIXrrQ51SCDJ2JuyiyD9rTl7T_i6mx-rTWPXLrFbmfe2P6jtZHfQ3ppNtaVIxS3GKlUwrbWYKVhz9YLx4OCjA_8rVZVxbLfNec2fJtPcWo5npvc33g8-eraarTHjA3Q-V6GtRkCMZQOkTdAXqN-M6B7tHG8zDjINhzgvbcg",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "containerId",
+			"value": ""
+		},
+		{
+			"key": "processInstanceId",
+			"value": ""
+		},
+		{
+			"key": "taskInstanceId",
+			"value": ""
+		}
+	]
+}
