@@ -67,12 +67,13 @@ public class CustomResource {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response skipTask(@Context HttpHeaders headers,
                              @PathParam("containerId") String containerId,
-                             @PathParam("taskInstanceId") Long taskInstanceId) {
+                             @PathParam("taskInstanceId") Long taskInstanceId,
+                             @QueryParam("user") String userId) {
         Variant v = getVariant(headers);
 
         try {
-            logger.info("Skipping task {} of container {}", taskInstanceId, containerId);
-            userTaskServiceBase.skip(containerId, taskInstanceId, null);
+            logger.info("Skipping task {} of container {} for user {}", taskInstanceId, containerId, userId);
+            userTaskServiceBase.skip(containerId, taskInstanceId, userId);
             logger.info("Task skipped");
             return createResponse("", v, Response.Status.CREATED);
         } catch (TaskNotFoundException e) {
