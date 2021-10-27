@@ -15,7 +15,6 @@
     * [Pushing the required images](#pushing-the-required-images)
     * [Deploying the KeiApp instance](#deploying-the-keiapp-instance)
   * [Validation procedure](#validation-procedure)
-    * [Deploy work-item-service on OCP](#deploy-work-item-service-on-ocp)
     * [Verify the custom library is installed](#verify-the-custom-library-is-installed)
     * [Verify the MS SQL driver is installed](#verify-the-ms-sql-driver-is-installed)
     * [Deploy the example Business Process](#deploy-the-example-business-process)
@@ -88,10 +87,6 @@ The following commands build all the required artifacts and deploy them on the M
 * [custom-endpoints](../custom-endpoints): the custom extension API to integrate in the KIE Server image
   * Note: this artifact is not deployed on the Maven repository
 * [custom-work-item-handler](../custom-work-item-handler): the custom `WorkItemHandler` exposing the `ItemsLoader` item
-  * Note: you have to update the URL in `ItemsLoaderWorkItemHandler.java` to point to the actual route of the
-`work-item-service` deployment
-* [work-item-service](../work-item-service): the example REST API queried by the `ItemsLoader` item
-  * Note: this artifact is not deployed on the Maven repository
 * [custom-business-project](../custom-business-project): the custom Business Process using the `Items Loader` item (this was 
 pulled from the initial [EAP deployment](../EAP_README.md) using `git clone ssh://rhpamAdmin@localhost:8001/testSpace/custom`)
 
@@ -181,7 +176,7 @@ container or as a standalone service).
 ### Generate the custom MS SQL image
 ** References**:
 * [2.6. Building a custom KIE Server extension image for an external database](https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.9/html-single/deploying_red_hat_process_automation_manager_on_red_hat_openshift_container_platform/index#externaldb-build-proc_openshift-operator)
-**Note**: this section is different from [Build the custom KIE Server extension image](../../msSqlServerDatabase/README.md#build-the-custom-kie-server-extension-image)
+**Note**: this section is different from [Build the custom KIE Server extension image](../../msSqlServerDatabase/README.md#build-and-push-the-custom-kie-server-image)
 because is targetted to version 7.9.0 of RHPAM.
 * 
 Run The following commands to setup the development environment 
@@ -248,20 +243,6 @@ The provided configuration generates an RHPAM setup with the following features:
 * No `Smart Router`
 
 ## Validation procedure
-### Deploy work-item-service on OCP
-Run the following commands to deploy the sample REST API `work-item-service` on the OCP platform:
-```shell
-cd work-item-service
-mvn quarkus:add-extension -Dextensions="openshift"
-mvn clean package -Dquarkus.kubernetes.deploy=true
-```
-
-**Note**: The following settings are required in `application.properties`:
-```properties
-quarkus.openshift.expose=true
-quarkus.kubernetes-client.trust-certs=true
-```
-
 ### Verify the custom library is installed
 The following commands verify the proper installation of the `custom-endpoints` extension API and checks there are no
 errors in the log of the Pod:

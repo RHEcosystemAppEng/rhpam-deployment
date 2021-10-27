@@ -76,6 +76,5 @@
         <module>custom-endpoints</module>
         <module>custom-work-item-handler</module>
         <module>custom-business-project</module>
-        <module>work-item-service</module>
     </modules>
 </project>

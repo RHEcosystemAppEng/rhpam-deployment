@@ -79,7 +79,7 @@ public class ItemsLoaderWorkItemHandler extends AbstractLogOrThrowWorkItemHandle
 
             // complete workitem impl...
 //            URL url = new URL("http://localhost:8888/doyourservice");
-            URL url = new URL("http://work-item-service-dmartino-immutable.apps.mw-ocp4.cloud.lab.eng.bos.redhat.com/doyourservice");
+            URL url = new URL("https://jsonplaceholder.typicode.com/photos/");
             URLConnection urlConnection = url.openConnection();
             System.out.println("Reading items from " + url);
 

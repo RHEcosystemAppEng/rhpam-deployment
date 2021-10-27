@@ -2,7 +2,6 @@
 
 * [Phase 1: deploying on JBoss EAP](#phase-1-deploying-on-jboss-eap)
   * [Deploying RHPAM](#deploying-rhpam)
-  * [Starting the `work-item-service` REST Service](#starting-the-work-item-service-rest-service)
   * [Design the `Items Loader` WorkItemHandler](#design-the-items-loader-workitemhandler)
   * [Build the `Items Loader` WorkItemHandler](#build-the-items-loader-workitemhandler)
   * [Install the `Items Loader` WorkItemHandler](#install-the-items-loader-workitemhandler)
@@ -15,8 +14,7 @@
 This picture illustrates the deployment architecture of the ibitial solution:
 * JBoss EAP hosts RHPAM version 7.9.0
 * The default KIE Server is enhanced with extended API endpoints  
-* A Quarkus application `work-item-service` is developed to expose REST API
-* An `Items Loader` implementation of the `WorkItemHandler` is developed to invoke the endpoints of `work-item-service`
+* An `Items Loader` implementation of the `WorkItemHandler` is developed to invoke the endpoint `https://jsonplaceholder.typicode.com/photos`
 * A business process is designed to include the `Items Loader` handler
 
 ![EAP Architecture](./images/jboss_immutable.png)
@@ -31,30 +29,6 @@ This picture illustrates the deployment architecture of the ibitial solution:
 <property name="kie.maven.offline.force" value="true"/>
 ```  
 * Start JBoss EAP following the instructions on the same page
-    
-## Starting the `work-item-service` REST Service
-Starting from the current folder, run these commands to start the `work-item-service` REST Service:
-
-```shell
-cd work-item-service
-mvn quarkus:dev
-```
-
-This application exposes two APIs at `localhost:8080/doyourservice`:
-* GET: returns a list of Item instances, with name and description properties
-* POST: adds a new Item to the list
-Example of response to a GET request:
-```json
-[
-  {
-    "name": "aName",
-    "description": "A service"
-  }
-]
-```
-
-**Note**: use any REST client of your choice (e.g., [Postman](https://www.postman.com/downloads/)) to populate the service 
-with some initial data.
 
 ## Design the `Items Loader` WorkItemHandler
 **References**:
