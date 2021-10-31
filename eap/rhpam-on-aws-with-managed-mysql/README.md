@@ -120,6 +120,7 @@ VPC: <select the vpc you created>
 Subnet Name: Temenos RHPAM Public Subnet <zone-a>
 Availability Zone: <zone-a>
 IPv4 CIDR block: 10.0.1.0/24
+```
 
 *private zone b*:
 
