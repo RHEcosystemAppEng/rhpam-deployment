@@ -54,7 +54,6 @@ From your local station download the following files:
 - [Red Hat Single Sign-On 7.4.9 Server Patch][27]
 - [Red Hat JBoss Enterprise Application Platform 7.3.0 Installer][28]
 - [Red Hat JBoss Enterprise Application Platform 7.3 Update 06][29]
-- [Red Hat Process Automation Manager 7.11.1 Business Central Deployable for EAP 7][30]
 - [Red Hat Process Automation Manager 7.11.1 Add-Ons][30]
 
 Extract the last downloded file `rhpam-7.11.1-add-ons` and grab the following files:
@@ -394,7 +393,7 @@ Log exports: PostgreSQL log
 Enable auto minor version upgrade: unchecked
 ```
 
-#### Set the database centralized parameters
+**Set the database centralized parameters**:
 
 From you *PostrgeSQL* instance, grab the *Endpoint* URI, it should look something like this:
 `temenos-postgresql-db.xxxxxxxxxxxx.us-east-1.rds.amazonaws.com`.
@@ -488,15 +487,19 @@ ssh -i /path/to/private.pem ec2-user@instance_public_ip_or_dns
 Once you're in, run the following commands:
 
 ```shell
+# upgrade install and configure repositories
 sudo dnf upgrade -y
 sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 sudo dnf -qy module disable postgresql
+# install various required packages
 sudo dnf -y install postgresql11-server unzip bind-utils java-11-openjdk-devel
+# install awscli
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip
 sudo ./aws/install
 rm -r ./aws
 rm awscliv2.zip
+# install the service runner script
 sudo mkdir /opt/service-runner
 sudo curl -L \
     https://github.com/RHEcosystemAppEng/temenos-infinity-cib/blob/main/eap/rhpam-on-aws-with-managed-postgresql/run-service.sh?raw=true \
@@ -504,7 +507,9 @@ sudo curl -L \
 sudo chmod a+x /opt/service-runner/run-service.sh
 ```
 
-Get back to the console, select the instance you've been working on and click:</br>
+**Create the AMI**:
+
+Get back to the *EC2* console, select the instance you've been working on and click:</br>
 `Actions` -> `Image and templates` -> `Create image`</br>:
 And create an image with the following characteristics:
 
@@ -522,7 +527,7 @@ Once it's done, you can terminate the instance you've been working on, by select
 If you want to keep it around a little bit longer, you can stop it instead of termianting it.</br>
 Note the termination of an instance is a **final action**, the termianted instance will be deletes within one hour.
 
-### Create the RHSSO instance and AMI
+### Create the RHSSO instance, AMI, ELB, and ASG
 
 click `Launch Instance`:
 
@@ -580,100 +585,401 @@ Once done, connect to the instance using *SSH*:
 ssh -i /path/to/private.pem ec2-user@instance_public_ip_or_dns
 ```
 
-Once you're in, run the following commands (note the db endpoint for twice):
+Once you're in, run the following commands:
 
 ```shell
-psql -h rhpam-postgresql-db.xxxxxxxxxxxx.us-east-1.rds.amazonaws.com -p 5432 -d jbpm -U rhadmin -W
-(password: redhat123#)
+# connect to postgresql and create the keycloak database (note the endpoint)
+psql -h temenos-postgresql-db.xxxxxxxxxxxx.us-east-1.rds.amazonaws.com -p 5432 -d jbpm -U rhadmin -W
+# (password: redhat123#)
 CREATE DATABASE keycloak;
 exit
+# install rhsso and apply patch
 sudo unzip rh-sso-7.4.0.zip /opt
+# start jboss cli in disconnected mode
 sudo /opt/rh-sso-7.4/bin/jboss-cli.sh
+# install the patch
 patch apply /home/ec2-user/rh-sso-7.4.9-patch.zip
-module add --name=org.postgresql --resources=~/postgresql-42.3.0.jar \
-    --dependencies=javax.api,javax.transaction.api \
-    /subsystem=datasources/jdbc-driver=postgres:add(driver-name="postgres",driver-module-name="org.postgresql",driver-class-name=org.postgresql.Driver)
+# add the postgresql module
+module add --name=org.postgresql --resources=~/postgresql-42.3.0.jar --dependencies=javax.api,javax.transaction.api
+# exit jboss cli
+exit
+```
+
+You now need to use the *jboss-cli* in connected mode, meaning you need to start the server:
+
+```shell
+sudo /opt/rh-sso-7.4/bin/standalone.sh -c standalone.xml
+```
+
+Connect via *SSH* from a **different termnial session** and run the following commands:
+
+```shell
+# start jboss cli in connected mode
+sudo /opt/rh-sso-7.4/bin/jboss-cli.sh --connect
+# configure the postgresql jdbc driver
+/subsystem=datasources/jdbc-driver=postgres:add(driver-name="postgres",driver-module-name="org.postgresql",driver-class-name=org.postgresql.Driver)
+# test the current h2 db setup
+/subsystem=datasources/data-source=KeycloakDS:test-connection-in-pool
+# remove the default h2 db configuration
 data-source remove --name=KeycloakDS
+# add the postgresql datasource (note the endpoint)
 data-source add --jndi-name=java:/KeycloakDS \
     --name=KeycloakDS \
-    --connection-url=jdbc:postgresql://rhpam-postgresql-db.xxxxxxxxxxxx.us-east-1.rds.amazonaws.com:5432/keycloak \
+    --connection-url=jdbc:postgresql://temenos-postgresql-db.xxxxxxxxxxxx.us-east-1.rds.amazonaws.com:5432/keycloak \
     --driver-name=postgres \
     --user-name=rhadmin \
     --password=redhat123#
+# reoload the configuration
+:reload
+# test the postgresql db setup
+/subsystem=datasources/data-source=KeycloakDS:test-connection-in-pool
+# exit jboss cli
 exit
+# add the admin user to the keycloack
+sudo /opt/rh-sso-7.4/bin/add-user-keycloak.sh --user admin
+# (password: redhat123#)
 ```
 
+Close the terminal session you've been working with, and switch back to the session running the server.</br>
+Press `Control+C`/`Command+.` to stop the server, and edit the `/opt/rh-sso-7.4/standalone/configuration/standalone.xml`:
 
+#######################################
+***************************************
+UNDER CONSTRUCTION - ADD XML DIFFS HERE
+***************************************
+#######################################
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#### Copy files
-
-Use `scp` to copy the files you downloaded at the start of this document over ssh (note
-*ec2_instance_public*):
+Create the system service for running the server:
 
 ```shell
-scp /path/to/rhpam-7.9.0-add-ons.zip ec2-user@ec2_instance_public:/home/ec2-user
-scp /path/to/jboss-eap-7.3.0-installer.jar ec2-user@ec2_instance_public:/home/ec2-user
-scp /path/to/rhpam-installer-7.9.0.jar ec2-user@ec2_instance_public:/home/ec2-user
-scp /path/to/mysql-connector-java-8.0.25.zip ec2-user@ec2_instance_public:/home/ec2-user
-scp /path/to/Origination_PAM_v202104.01.zip ec2-user@ec2_instance_public:/home/ec2-user
+sudo bash -c 'cat << EOF > /etc/systemd/system/rhsso.service
+[Unit]
+Description=RHSSO Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/opt/service-runner/run-service.sh rh-sso
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF'
 ```
 
-> Other than these five files, you also have *BPM.zip* from *Temenos*, you'll use it locally,
-> there's no need to copy it to the instance.
-
-#### Connect to the EC2 Instance
-
-Connect to the created instance using ssh (note *ec2_instance_public*):
+And run the following commands to start and enable the service:
 
 ```shell
-ssh -i /path/to/private.pem ec2-user@ec2_instance_public
+sudo systemctl start rhsso.service
+sudo systemctl enable rhsso.service
+# you can use the following journalctl command to view the server log
+sudo journalctl -u rhsso.service -f
 ```
 
-#### Install Packages
+Once done, access the server using your browser: [https://instance_public_ip_or_dns:8443/auth].</br>
+Use the instance's ip or dns name of cousre, note that *https* is mandatory, so accept the presented certificates.</br>
+Use the *admin/redhat123#* user to log in and:
+
+**Create the Realm**:
+
+Hover mouse on the current *master* realm, click `Add Realm` and name it *Temenos*.</br>
+Select the new *Temenos* realm.
+
+**Create the Roles**:
+
+In the `Configure` -> `Roles` page, click `Add Role`, and **three** roles with the following names:
+
+- *admin*
+- *kie-server*
+- *rest-all*
+
+**Create the User**:
+
+In the `Manage` -> `Users` page, click `Add User`, create a user with `Username` *rhpam*.</br>
+After saving:
+
+- Step into the `Credentials` tab, toggle off `Temporary` and set the password to *redhat*.
+- Step into the `Role Mappings` tab and assign the **three** roles created, *admin*, *kie-server*, and *rest-all*.
+- In the `Client Roles`, type *realm-management* and select it, add the *realm-admin* role.
+
+**Create the clients**:
+
+In the `Configure` -> `Clients` page, click `Create` and create **three** clients with the following characteristics,
+for each client you create, grab the `Secret` value from the `Credentials` tab, you'll need it later on:
+
+> For the *business-central* client, use the *EIP* you designated for the *Business Central* as the redirection Host.
+
+```text
+Client ID: business-central
+Client Protocol: openid-connect
+Access Type: confidential
+Valid Redirect URIs: http://<Temenos Business Central us-east-1b EIP>:8080/business-central/*
+```
+
+> For the *kie-server* and *smart-router* clients, you can keep the localhost redirection host, the clients are used for
+> client tokens retrieval only and not for authorizing users.
+
+```text
+Client ID: kie-server
+Client Protocol: openid-connect
+Access Type: confidential
+Valid Redirect URIs: http://localhost:8080/kie-server/*
+```
+
+```text
+Client ID: smart-router
+Client Protocol: openid-connect
+Access Type: confidential
+Valid Redirect URIs: http://localhost:8080/smart-router/*
+```
+
+**Create the AMI**:
+
+Get back to the *EC2* console, select the instance you've been working on and click:</br>
+`Actions` -> `Image and templates` -> `Create image`</br>:
+And create an image with the following characteristics:
+
+```text
+Image name: temenos-rhsso-ami
+Image description: RHSSO AMI configured for working with RHPAM
+Tags: Name=Temenos RHSSO AMI
+```
+
+The *AMI* might take a couple of minutes to become available, while it's being built, if you haven't closed your *SSH*
+connection, it will be terminated.
+
+Once it's done, you can terminate the instance you've been working on, by selecting it console and clicking:</br>
+`Instance state` -> `Terminate instance`</br>
+If you want to keep it around a little bit longer, you can stop it instead of termianting it.</br>
+Note the termination of an instance is a **final action**, the termianted instance will be deletes within one hour.
+
+**Create the Target Groups**:
+
+From the *EC2* console, go into `Load Balancing` -> `Target Groups`, create **two** *Target Groups*, with the following
+characteristics:
+
+> Note that you use're using the `TCP` protocol and not the more suitable `HTTPS`/`HTTPS` ones as a workaround, using
+> `HTTPS` requires a certficate to be configured within the *ASG* later on.
+
+```text
+Target type: Instances
+Target group name: temenos-rhsso-tcp-8443-tg
+Protocol: TCP
+Port: 8443
+VPC: <select Temenos VPC>
+Tags: Name=Temenos RHSSO TCP8443 Target Group
+```
+
+```text
+Target type: Instances
+Target group name: temenos-rhsso-tcp-8080-tg
+Protocol: TCP
+Port: 8080
+VPC: <select Temenos VPC>
+Tags: Name=Temenos RHSSO TCP8080 Target Group
+```
+
+**Create the Load Balancer**:
+
+From the *EC2* console, go into `Load Balancing` -> `Load Balancers`, create a load balancer with the following
+characteristics, after you create the load balancer, note the *DNS Name*, you'll use it later on:
+
+```text
+Load balancer type: Network Load Balancer
+Load balancer name: temenos-rhsso-nlb
+VPC: <select Temenos VPC>
+Mappings: <select both AZ us-east-1a and us-east-1b and use the Public subnets for each>
+Tags: Name=Temenos RHSSO Network Load Balancer
+```
+
+Before saving, add **two** *Listeners* with the following charactaristics:
+
+```text
+Protocol: TCP
+Port: 8443
+Default action: Forward to - temenos-rhsso-tcp-8443-tg
+```
+
+```text
+Protocol: TCP
+Port: 8080
+Default action: Forward to - temenos-rhsso-tcp-8080-tg
+```
+
+**Create the Launch Configuration**:
+
+From the *EC2* console go into `Auto Scaling` -> `Launch Configuration` and create a *Launch Configuration* with the
+following charactristics:
+
+> Note that you will need to select an [EC2 Instance Type][14] for your instance.</br>
+> The minimum requirements are **2CPUs and 2GiB memory**, for creating this runbook, we used `t2.medium`.
+
+```text
+Name: temenos-rhsso-launch-config
+AMI: <select temenos-rhsso-ami>
+Instance type: <your selected instance type>
+Security Groups: <select temenos-jboss-front>
+Key pair: <select your key-pair>
+```
+
+**Create the Auto Scaling Group**:
+
+From the *EC2* console go into `Auto Scaling` -> `Auto Scaling Groups` and create an *Auto Scaling Group* with the
+following charactristics (make sure to click `Switch to launch configuration`):
+
+```text
+Name: temenos-rhsso-asg
+Launch configuration: <select temenos-rhsso-launch-config>
+VPC: <select Temenos VPC>
+Availability Zones and subnets: <select both Temenos RHPAM Public Subnet east-1a and Temenos RHPAM Public Subnet east-1b>
+Load balancing: <Attach to an existing load balancer - temenos-rhsso-nlb>
+Group size: <set the group size as you want, i.e. desired=2, minimum=2,maximum=6>
+Tags: Name=Temenos RHSSO
+```
+
+**Set the RHSSO centralized parameters**:
+
+Jump over to the `System Manager` console and click [Parameter Store][36], create the following **eight** parameters:
+
+```text
+Name: /temenos/rhpam/prod/rh-sso/host
+Description: Temenos Production RHSSO Host
+Value: <type in the rhsso load balancer dns name>
+```
+
+```text
+Name: /temenos/rhpam/prod/rh-sso/password
+Description: Temenos Production RHSSO Password
+Value: redhat
+```
+
+```text
+Name: /temenos/rhpam/prod/rh-sso/port
+Description: Temenos Production RHSSO Port
+Value: 8080
+```
+
+```text
+Name: /temenos/rhpam/prod/rh-sso/realm
+Description: Temenos Production RHSSO Realm
+Value: Temenos
+```
+
+```text
+Name: /temenos/rhpam/prod/rh-sso/secrets/business-central
+Description: Temenos Production RHSSO Business Central Secret
+Value: <type in the secret for the business-central client>
+```
+
+```text
+Name: /temenos/rhpam/prod/rh-sso/secrets/kie-server
+Description: Temenos Production RHSSO KIE Server Secret
+Value: <type in the secret for the kie-server client>
+```
+
+```text
+Name: /temenos/rhpam/prod/rh-sso/secrets/smart-router
+Description: Temenos Production RHSSO Smart Router Secret
+Value: <type in the secret for the smart-router client>
+```
+
+```text
+Name: /temenos/rhpam/prod/rh-sso/username
+Description: Temenos Production RHSSO Username
+Value: rhpam
+```
+
+### Create the Business Central instance
+
+click `Launch Instance`:
+
+**Choose AMI**:
+
+Select the base image `temenos-base-ami` you created.</br>
+
+**Choose Instance Type**:
+
+Note that you will need to select an [EC2 Instance Type][14] for your instance.</br>
+The minimum requirements are **2CPUs and 2GiB memory**.
+
+**Configure Instance**:
+
+Configure the *EC2 Instance* with the following characteristics:
+
+```text
+Network: <select Temenos VPC>
+Subnet: <select Temenos Public us-east-1b Subnet>
+Auto-assign Public IP: Enable
+IAM role: <select temenos-ec2-get-parameters-role>
+```
+
+Add Tags:
+
+```text
+Tags: Name=Temenos RHPAM Business Central
+```
+
+Configure Security Groups:
+
+```text
+Security Groups: <select temenos-jboss-front>
+```
+
+Review, click `Launch` and select your `Key-Pair`.
+
+From the *EC2* console, got into the `Network & Security` -> `Elastic IPs`, select the *EIP* you desiganted for the
+*Business Central*, click `Actions` -> `Associate Elastic IP address` and select the *Business Central* instance you
+created.
+
+Once the *EC2 Instance* is up and available, use its *EIP* to copy the files needed for the insallation via *SSH* using
+your *private Key-Pair*:
 
 ```shell
-sudo dnf upgrade -y
-sudo rpm -U https://repo.mysql.com/mysql80-community-release-el8-1.noarch.rpm
-sudo dnf install mysql unzip java-1.8.0-openjdk-devel -y
+scp -i /path/to/private.pem \
+    /path/to/jboss-eap-7.3.0-installer.jar \
+    /path/to/jboss-eap-7.3.6-patch.zip \
+    /path/to/rhpam-installer-7.11.1.jar \
+    /path/to/rh-sso-7.4.0-eap7-adapter.zip \
+    ec2-user@business_central_elastic_ip:
 ```
 
-#### Install Maven
+Once done, connect to the instance using *SSH*:
 
 ```shell
-curl https://dlcdn.apache.org/maven/maven-3/3.8.3/binaries/apache-maven-3.8.3-bin.tar.gz \
-    -o apache-maven-3.8.3-bin.tar.gz
-sudo tar xzvf apache-maven-3.8.3-bin.tar.gz -C /opt
-rm apache-maven-3.8.3-bin.tar.gz
-sudo ln -s /opt/apache-maven-3.8.3/bin/mvn /usr/local/bin/mvn
+ssh -i /path/to/private.pem ec2-user@business_central_elastic_ip
 ```
+
+Once you're in, run the following commands:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #### Populate Database
 
