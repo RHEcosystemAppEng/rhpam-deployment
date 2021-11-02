@@ -1111,7 +1111,6 @@ Under the `server` configuration, remove:
 <single-sign-on/>
 ```
 
-
 Cleanup:
 
 ```shell
@@ -1433,9 +1432,106 @@ EOF'
 
 > Note that you can omit the *servers* section if the *rhpam* repository is a public one.
 
-***************************************
-UNDER CONSTRUCTION - ADD XML DIFFS HERE
-***************************************
+Backup the configuration file:
+
+```shell
+sudo cp /opt/EAP-7.3.0/standalone/configuration/standalone-full.xml /opt/EAP-7.3.0/standalone/configuration/standalone-full.xml.bak
+```
+
+Open the `/opt/EAP-7.3.0/standalone/configuration/standalone-full.xml` file and look for the system properties element:
+
+```xml
+<system-properties>
+```
+
+Modify the following properties:
+
+```xml
+<!-- Existing -->
+<property name="org.kie.server.location" value="http://localhost:8080/kie-server/services/rest/server"/>
+<!-- Replace with -->
+<property name="org.jbpm.workbench.kie_server.keycloak" value="true"/>
+<property name="org.uberfire.ext.security.management.api.userManagementServices" value="KCAdapterUserManagementService"/>
+<property name="org.uberfire.ext.security.management.keycloak.authServer" value="${rhpam.sso.auth.url}"/>
+<property name="org.kie.server.sync.deploy" value="false"/>
+<property name="org.kie.server.persistence.ds" value="java:jboss/datasources/KieServerDS"/>
+<property name="org.kie.server.persistence.dialect" value="org.hibernate.dialect.PostgreSQL82Dialect"/>
+<property name="org.kie.server.router" value="http://${smart.router.host}:${smart.router.port}"/>
+<property name="kie.maven.settings.custom" value="/opt/custom-config/settings.xml"/>
+<property name="org.kie.server.bypass.auth.user" value="true"/>
+<property name="org.kie.server.repo" value="/opt/custom-config"/>
+```
+
+Look for datasources subsystem:
+
+```xml
+<subsystem xmlns="urn:jboss:domain:datasources:5.0">
+```
+
+Under `datasources` add the following datasource element:
+
+```xml
+<datasource jndi-name="java:jboss/datasources/KieServerDS" pool-name="KieServerDS">
+    <connection-url>${rhpam.database.url}/jbpm</connection-url>
+    <driver-class>org.postgresql.Driver</driver-class>
+    <driver>postgresql</driver>
+    <security>
+        <user-name>${rhpam.database.username}</user-name>
+        <password>${rhpam.database.password}</password>
+    </security>
+    <validation>
+        <valid-connection-checker class-name="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker"/>
+        <background-validation>true</background-validation>
+        <exception-sorter class-name="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter"/>
+    </validation>
+</datasource>
+```
+
+Under `drivers` add the following driver elment:
+
+```xml
+<driver name="postgresql" module="org.postgresql">
+    <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
+</driver>
+```
+
+Look for the elytron subsystem:
+
+```xml
+<subsystem xmlns="urn:wildfly:elytron:8.0" final-providers="combined-providers" disallowed-providers="OracleUcrypto">
+```
+
+Add the following policy:
+
+```xml
+<!-- Add -->
+<policy name="jacc">
+    <jacc-policy/>
+</policy>
+```
+
+Look for the keycloak subsystem:
+
+```xml
+<subsystem xmlns="urn:jboss:domain:keycloak:1.1"/>
+```
+
+Replace it:
+
+```xml
+<!-- Existing -->
+<subsystem xmlns="urn:jboss:domain:keycloak:1.1"/>
+<!-- Replace With -->
+<subsystem xmlns="urn:jboss:domain:keycloak:1.1">
+    <secure-deployment name="kie-server.war">
+        <realm>Temenos</realm>
+        <resource>kie-server</resource>
+        <auth-server-url>${rhpam.sso.auth.url}</auth-server-url>
+        <ssl-required>NONE</ssl-required>
+        <credential name="secret">${kie.server.client.secret}</credential>
+    </secure-deployment>
+</subsystem>
+```
 
 Cleanup:
 
