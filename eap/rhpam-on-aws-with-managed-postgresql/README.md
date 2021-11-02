@@ -645,7 +645,7 @@ First, backup the file:
 sudo cp /opt/rh-sso-7.4/standalone/configuration/standalone.xml /opt/rh-sso-7.4/standalone/configuration/standalone.xml.bak
 ```
 
-Open the `standalone.xml` file and look for the datasource configuration:
+Next, open the `standalone.xml` file and look for the datasource configuration:
 
 ```xml
 <datasource jndi-name="java:/KeycloakDS" pool-name="KeycloakDS">
@@ -1033,9 +1033,84 @@ EOF'
 > *Distribution Repository* named *rhpam* it will use the above username and password. The deployed artifact's pom
 > should declare the *rhpam* repository as in the distribution management section.
 
-***************************************
-UNDER CONSTRUCTION - ADD XML DIFFS HERE
-***************************************
+Backup the configuration file:
+
+```shell
+sudo cp /opt/EAP-7.3.0/standalone/configuration/standalone-full.xml /opt/EAP-7.3.0/standalone/configuration/standalone-full.xml.bak
+```
+
+Open the `/opt/EAP-7.3.0/standalone/configuration/standalone-full.xml` file and look for the system properties element:
+
+```xml
+<system-properties>
+```
+
+Modify the following properties:
+
+```xml
+<!-- Existing -->
+<property name="org.kie.server.user" value="controllerUser"/>
+<property name="org.kie.server.pwd" value="${VAULT::vaulted::controller.password::1}"/>
+<!-- Replace with -->
+<property name="org.jbpm.workbench.kie_server.keycloak" value="true"/>
+<property name="org.uberfire.ext.security.management.api.userManagementServices" value="KCAdapterUserManagementService"/>
+<property name="org.uberfire.ext.security.management.keycloak.authServer" value="${rhpam.sso.auth.url}"/>
+<property name="org.kie.server.sync.deploy" value="false"/>
+<property name="org.kie.server.token" value="${rhpam.sso.token}"/>
+<property name="kie.maven.settings.custom" value="/opt/custom-config/settings.xml"/>
+```
+
+Look for the elytron subsystem:
+
+```xml
+<subsystem xmlns="urn:wildfly:elytron:8.0" final-providers="combined-providers" disallowed-providers="OracleUcrypto">
+```
+
+Add the following policy:
+
+```xml
+<!-- Add -->
+<policy name="jacc">
+    <jacc-policy/>
+</policy>
+```
+
+Look for the keycloak subsystem:
+
+```xml
+<subsystem xmlns="urn:jboss:domain:keycloak:1.1"/>
+```
+
+Replace it:
+
+```xml
+<!-- Existing -->
+<subsystem xmlns="urn:jboss:domain:keycloak:1.1"/>
+<!-- Replace With -->
+<subsystem xmlns="urn:jboss:domain:keycloak:1.1">
+    <secure-deployment name="business-central.war">
+        <realm>Temenos</realm>
+        <auth-server-url>${rhpam.sso.auth.url}</auth-server-url>
+        <ssl-required>NONE</ssl-required>
+        <resource>business-central</resource>
+        <credential name="secret">${business.central.client.secret}</credential>
+    </secure-deployment>
+</subsystem>
+```
+
+Look for undertow subsystem:
+
+```xml
+<subsystem xmlns="urn:jboss:domain:undertow:10.0" default-server="default-server" default-virtual-host="default-host" ... >
+```
+
+Under the `server` configuration, remove:
+
+```xml
+<!-- Remove -->
+<single-sign-on/>
+```
+
 
 Cleanup:
 
