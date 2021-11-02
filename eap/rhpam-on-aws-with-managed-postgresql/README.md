@@ -59,7 +59,7 @@ From your local station download the following files:
 Extract the last downloded file `rhpam-7.11.1-add-ons` and grab the following files:
 
 - `rhpam-7.11.1-migration-tool.zip`
-- `rhpam-7.11.1-smart-router.zip`
+- `rhpam-7.11.1-smart-router.jar`
 
 ### Prerequisite: Open URLs
 
@@ -447,8 +447,7 @@ For searching reference, the *AMI* id for a 64x86 version of *RHEL8* is `ami-0b0
 **Choose Instance Type**:
 
 Note that you will need to select an [EC2 Instance Type][14] for your instance.</br>
-The minimum requirements are **2CPUs and 2GiB memory**.
-Although it is not critical for this specific instance, as it's just for creating the base image.
+Although it's has less imporance for this specific instance, as it's just for creating the base image.
 
 **Configure Instance**:
 
@@ -538,7 +537,7 @@ Select the base image `temenos-base-ami` you created.</br>
 **Choose Instance Type**:
 
 Note that you will need to select an [EC2 Instance Type][14] for your instance.</br>
-The minimum requirements are **2CPUs and 2GiB memory**.
+Although it's has less imporance for this specific instance, as it's just for creating the rhsso image.
 
 **Configure Instance**:
 
@@ -569,7 +568,7 @@ Security Groups: <select temenos-jboss-front>
 Review, click `Launch` and select your `Key-Pair`.
 
 Once the *EC2 Instance* is up and available, grab its public IP or DNS name from the console and use it to copy the
-files needed for the insallation via *SSH* using your *private Key-Pair*:
+files needed for the installation via *SSH* using your *private Key-Pair*:
 
 ```shell
 scp -i /path/to/private.pem \
@@ -643,13 +642,17 @@ sudo /opt/rh-sso-7.4/bin/add-user-keycloak.sh --user admin
 Close the terminal session you've been working with, and switch back to the session running the server.</br>
 Press `Control+C`/`Command+.` to stop the server, and edit the `/opt/rh-sso-7.4/standalone/configuration/standalone.xml`:
 
-#######################################
 ***************************************
 UNDER CONSTRUCTION - ADD XML DIFFS HERE
 ***************************************
-#######################################
 
-Create the system service for running the server:
+Cleanup:
+
+```shell
+rm ~/postgresql-42.3.0.jar ~/rh-sso-7.4.0.zip ~/rh-sso-7.4.9-patch.zip
+```
+
+Create the system service for running the *RHSSO* server:
 
 ```shell
 sudo bash -c 'cat << EOF > /etc/systemd/system/rhsso.service
@@ -900,7 +903,7 @@ Select the base image `temenos-base-ami` you created.</br>
 **Choose Instance Type**:
 
 Note that you will need to select an [EC2 Instance Type][14] for your instance.</br>
-The minimum requirements are **2CPUs and 2GiB memory**.
+The minimum requirements are **2CPUs and 2GiB memory**, for creating this runbook, we used `t2.medium`.
 
 **Configure Instance**:
 
@@ -931,7 +934,7 @@ From the *EC2* console, got into the `Network & Security` -> `Elastic IPs`, sele
 *Business Central*, click `Actions` -> `Associate Elastic IP address` and select the *Business Central* instance you
 created.
 
-Once the *EC2 Instance* is up and available, use its *EIP* to copy the files needed for the insallation via *SSH* using
+Once the *EC2 Instance* is up and available, use its *EIP* to copy the files needed for the installation via *SSH* using
 your *private Key-Pair*:
 
 ```shell
@@ -951,389 +954,245 @@ ssh -i /path/to/private.pem ec2-user@business_central_elastic_ip
 
 Once you're in, run the following commands:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#### Populate Database
-
-Execute the following commands, note the *mysql_dns_address* and *your_user* place holders,</br>
-Note that we're making use of a file you were instructed to download at the start of this document.
-
 ```shell
-# unzip and prepare path
-mkdir ~/rhpam-7.9.0-add-ons
-unzip ~/rhpam-7.9.0-add-ons.zip -d ~/rhpam-7.9.0-add-ons
-cd ~/rhpam-7.9.0-add-ons
-unzip rhpam-7.9.0-migration-tool.zip
-cd rhpam-7.9.0-migration-tool/ddl-scripts/mysql5
-# run scripts using mysql client on remote instance, requires mysql client
-mysql -h mysql_dns_address -u your_user -p jbpm < mysql-jbpm-amend-auto-increment-procedure.sql
-mysql -h mysql_dns_address -u your_user -p jbpm < mysql5-jbpm-schema.sql
-mysql -h mysql_dns_address -u your_user -p jbpm < quartz_tables_mysql.sql
-mysql -h mysql_dns_address -u your_user -p jbpm < task_assigning_tables_mysql.sql
-# cleanups (optional)
-cd ~
-rm -r rhpam-7.9.0-add-ons
-rm ~/rhpam-7.9.0-add-ons.zip
-# verify
-mysql -h mysql_dns_address -u your_user -p jbpm -e "show tables"
+# create a folder for jboss eap
+sudo mkdir /opt/EAP-7.3.0
+# run jboss installer, use `/opt/EAP-7.3.0` for the path, use `admin` and `redhat123#` for the user and password
+sudo java -jar jboss-eap-7.3.0-installer.jar
+# start jboss cli in disconnected mode
+sudo /opt/EAP-7.3.0/bin/jboss-cli.sh
+# apply the patch
+patch apply /home/ec2-user/jboss-eap-7.3.6-patch.zip
+# exit jboss cli
+exit
+# load the sso adapter into jboss
+sudo unzip rh-sso-7.4.0-eap7-adapter.zip -d /opt/EAP-7.3.0/
+# configure standalone-full with the rhsso adapter
+sudo /opt/EAP-7.3.0/bin/jboss-cli.sh \
+    --file=/opt/EAP-7.3.0/bin/adapter-elytron-install-offline.cli \
+    -Dserver.config=standalone-full.xml
+# run rhpam installer, use `/opt/EAP-7.3.0` for the path, use `admin` and `redhat123#` for the user and password
+# when selecting components to be installed, ONLY SELECT THE BUSINESS CENTRAL
+sudo java -jar rhpam-installer-7.11.1.jar
+# remove redundant deployment
+sudo rm /opt/EAP-7.3.0/standalone/deployments/business-central.war/WEB-INF/lib/uberfire-security-management-wildfly-7.52.0.Final-redhat-00008.jar
 ```
 
-#### Install JBoss
+**Optionally set a custom maven repository**:
 
-The following installation will prompt you for configuring *JBoss* installation. i.e. *user name*,
-*password*.</br>
-It's all pretty basic, just note one **very important part**:</br>
-the installation folder default will be `/root/EAP-7.3.0`, set it to `/opt/EAP-7.3.0`.
+By default, *RHPAM* uses [Red Hat's public maven repository][37], if you intend to use your own, i.e. if you plan to run
+the [Validation Procedure](ValidationProcedure.md) at the end of this runbook, you'll need to create a maven settings
+file with authorization info for the repository.
 
-```shell
-sudo java -jar ~/jboss-eap-7.3.0-installer.jar -console
-```
+For the sake of following the [Validation Procedure](ValidationProcedure.md), use the maven repository created by
+Daniele in [repsy.io](repsy.io) for this runbook.
 
-If you want to verify *JBoss* installation, run it as a standalone *JBoss* server:
+Create the deisgnated folder for storing the configuration, and add the settings file:
 
 ```shell
-sudo /opt/EAP-7.3.0/bin/standalone.sh -b 0.0.0.0
-```
-
-and open browser from your local station (note rhpam_public_ip):</br>
-`http://rhpam_public_ip:8080/`.
-
-Control+c to end the standalone server.
-
-```shell
-# cleanups (optional)
-rm ~/jboss-eap-7.3.0-installer.jar
-```
-
-#### Install RHPAM
-
-The following installation will ask you where do you have *JBoss* installed,</br>
-use the installation folder you selected when installing *JBoss*, `/opt/EAP-7.3.0`.
-
-```shell
-sudo java -jar ~/rhpam-installer-7.9.0.jar -console
-# cleanups (optional)
-rm ~/rhpam-installer-7.9.0.jar
-```
-
-#### Configure MySQL Backend
-
-Extract the downloaded *MySQL* connector and add it as a *JBoss* module:
-
-```shell
-# extract the connector
-unzip ~/mysql-connector-java-8.0.25.zip -d ~
-# create module path
-sudo mkdir -p /opt/EAP-7.3.0/modules/system/layers/base/com/mysql/main
-cd /opt/EAP-7.3.0/modules/system/layers/base/com/mysql/main
-# copy module
-sudo cp ~/mysql-connector-java-8.0.25/mysql-connector-java-8.0.25.jar .
-```
-
-Create the module file:
-
-```shell
-sudo bash -c 'cat << EOF > module.xml
-<module xmlns="urn:jboss:module:1.5" name="com.mysql">
-    <resources>
-        <resource-root path="mysql-connector-java-8.0.25.jar"/>
-    </resources>
-    <dependencies>
-        <module name="javax.api"/>
-        <module name="javax.transaction.api"/>
-    </dependencies>
-</module>
+sudo mkdir /opt/custom-config
+sudo bash -c 'cat << EOF > /opt/custom-config/settings.xml
+<settings>
+    <servers>
+        <server>
+            <id>rhpam</id>
+            <username>dmartino</username>
+            <password>dMartino123</password>
+        </server>
+    </servers>
+</settings>
 EOF'
 ```
+
+> Note that this configuration means that when ever the Business Central need to deploy an artifact to a
+> *Distribution Repository* named *rhpam* it will use the above username and password.
+
+***************************************
+UNDER CONSTRUCTION - ADD XML DIFFS HERE
+***************************************
 
 Cleanup:
 
 ```shell
-cd ~
-rm -r ~/mysql-connector-java-8.0.25
-rm ~/mysql-connector-java-8.0.25.zip
+rm ~/jboss-eap-7.3.0-installer.jar ~/jboss-eap-7.3.6-patch.zip ~/rhpam-installer-7.11.1.jar ~/rh-sso-7.4.0-eap7-adapter.zip
 ```
 
-Run *JBoss* standalone server:
+Create the system service for running the *Business Central* server:
 
 ```shell
-sudo /opt/EAP-7.3.0/bin/standalone.sh -b 0.0.0.0
-```
-
-Open another cli and connect using ssh to the instance from another session.</br>
-Once connected to the instance, run the following commands to connect to the running *JBoss* and
-instruct it to install the *MySQL* connector's dependencies:
-
-```shell
-# connect to JBoss
-sudo /opt/EAP-7.3.0/bin/jboss-cli.sh --connect
-# install dependencies
-module add --name=com.mysql \
-    --resources=/opt/EAP-7.3.0/modules/system/layers/base/com/mysql/main/mysql-connector-java-8.0.25.jar \
-    --dependencies=javax.api,javax.transaction.api
-# leave cli
-exit
-```
-
-> You can close the second session and press Control+c in the first session to stop *JBoss*
-> standalone server.
-
-Update the configuration file to use the *MySQL* connector:
-
-```shell
-cd /opt/EAP-7.3.0/standalone/configuration
-sudo cp standalone-full.xml standalone-full.xml.bak
-sudo vi standalone-full.xml
-```
-
-Search string (using /) for `urn:jboss:domain:datasources`.</br>
-expect to find the element:
-
-```xml
-<subsystem xmlns="urn:jboss:domain:datasources:5.0">
-```
-
-type `i` to enter into *insert mode*,</br>
-under `<datasources><drivers>` add the folowwing node (watch identation):
-
-```xml
-                    <driver name="mysql" module="com.mysql"/>
-```
-
-under `<datasources>` add the following node, please note the *mysql_instance_name*,</br>
-and the **database**'s *user-name* and *password* (watch the identation):
-
-```xml
-                <datasource jndi-name="java:/jbpmDS" pool-name="jbpmDS">
-                    <connection-url>jdbc:mysql://mysql_instance_name:3306/jbpm</connection-url>
-                    <driver>mysql</driver>
-                    <pool>
-                        <max-pool-size>200</max-pool-size>
-                    </pool>
-                    <security>
-                        <user-name>rhadmin</user-name>
-                        <password>redhat123#</password>
-                    </security>
-                    <validation>
-                        <valid-connection-checker class-name="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker"/>
-                        <validate-on-match>true</validate-on-match>
-                        <background-validation>false</background-validation>
-                        <exception-sorter class-name="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter"/>
-                    </validation>
-                    <timeout>
-                        <idle-timeout-minutes>30</idle-timeout-minutes>
-                    </timeout>
-                </datasource>
-```
-
-Press `esc` to get back to *visual mode*.</br>
-Search string (using /) for `<system-properties>`.</br>
-type `i` to enter into *insert mode*,</br>
-add the following property nodes (watch the identation):
-
-```xml
-        <property name="org.kie.server.persistence.ds" value="java:/jbpmDS"/>
-        <property name="org.kie.server.persistence.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>
-```
-
-Press `esc` to get back to *visual mode*.</br>
-Type `:wq` (and press enter) to *write and quit*.
-
-#### Start RHPAM at startup
-
-```shell
-sudo bash -c 'cat << EOF > /etc/systemd/system/jbosseap.service
+sudo bash -c 'cat << EOF > /etc/systemd/system/business-central.service
 [Unit]
-Description=JBoss EAP Service
+Description=Business Central Service
+After=network-online.target
+Wants=network-online.target
 
 [Service]
-ExecStart=/opt/EAP-7.3.0/bin/standalone.sh -c standalone-full.xml -b 0.0.0.0
+ExecStart=/opt/service-runner/run-service.sh business-central
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 EOF'
-sudo systemctl start jbosseap.service
-sudo systemctl enable jbosseap.service
 ```
 
-Give it a couple of minutes to start up and verify RHPAM,</br>
-from your local browser (note ec2_instance_public):</br>
-`http://ec2_instance_public:8080/business-central`
-
-Use the user name and password you created while installing *RHPAM*0
-
-#### Build and Deploy Temenos projects
-
-##### Add lib GetTasksCustomAPI
+And run the following commands to start and enable the service:
 
 ```shell
-unzip ~/Origination_PAM_v202104.01.zip -d ~/origination
-cd origination/Binaries
-sudo cp GetTasksCustomAPI-1.0.jar /opt/EAP-7.3.0/standalone/deployments/kie-server.war/WEB-INF/lib
-# cleanup (optional)
-cd ~
-rm -r origination
-rm Origination_PAM_v202104.01.zip
+sudo systemctl start business-central.service
+sudo systemctl enable business-central.service
+# you can use the following journalctl command to view the server log
+sudo journalctl -u business-central.service -f
 ```
 
-Restart the server and exit the ssh connection:
+Once done, you should be able to access the server using your browser:
+[http://business_central_elastic_ip:8080/business-central].</br>
+Use the *Business Central EIP*, you will be directed to the *RHSSO* server for autentication, use `rhpam` and `redhat`
+as user and password, this will redirect you back to the *Business Central* session.
 
-```shell
-sudo systemctl restart jbosseap.service
-exit
-```
+**Set the Business Central centralized parameters**:
 
-##### Build and Upload artifact OriginationWorkItem
-
-> This step is to be performed on your local station.
-
-First, prepare the project for build and deployment.
-
-```shell
-unzip /path/to/BPM.zip -d ~
-cd ~/BPM/Java
-find . -name 'pom.xml' | xargs sed -i 's/http:\/\//https:\/\//g'
-sed -i -e '/<distributionManagement>/,/<\/distributionManagement>/d' pom.xml
-mvn package -DskipTests=true
-```
-
-Now you need to upload the artifact.
-
-- From your local browser login to the *Business Central* (note ec2_instance_public):
-  `http://ec2_instance_public:8080/business-central`.
-- Click the *Settings* icon and click *Artifacts*.
-- Click *Upload* and navigate to *~/BPM/Java/pom.xml* and click *Upload*.
-- Click *Upload* again and navigate to *~/BPM/Java/OriginationWorkItem/target/OriginationWorkItem-2021.01.00.jar*
-  and click *Upload*.
-- Click *Settings* again, and this time click *Custom Tasks Administration* (at the bottom).
-- Click *Add Custom Task* and navigate to *~/BPM/Java/OriginationWorkItem/target/OriginationWorkItem-2021.01.00.jar*
-  and click *Upload*.
-- Scroll down and look for the added task *OriginationServiceTask*, turn it on.
-
-Get back to your shell for cleanup (optional):
-
-```shell
-cd ~
-rm -r ~/BPM
-```
-
-##### Import and Deploy Origination project
-
-Extract your local copy of the *Origination* project.</br>
-You'll need to modify the sources and create a git repository for the deployment process.
-
-> Please note that you'll need to push the project to a remote repository that is accessible over
-> the internet. A private one is preferable.</br>
-> Also note that the master branch needs to be named *master*.
-> You can, and should, delete the remote repository after importing.
-
-First, prepare the project for build and push it.
-
-```shell
-unzip /path/to/Origination_PAM_v202104.01.zip -d ~/origination
-cd ~/origination/
-unzip Origination_PAM_Source_v202104.01.zip -d sources
-cd sources
-sed -i 's/http:\/\//https:\/\//g' pom.xml
-git init -b master
-git add .
-git commit -m "Onboarding"
-git remote add origin <your-repo-goes-here>
-git push -u origin master
-```
-
-Now, you need to import the project:
-
-- From your local browser get back to (note ec2_instance_public):
-  `http://ec2_instance_public:8080/business-central`.
-- From the main page, click *Projects* in the bottom part of the *Design* tile and select *MySpace*.
-- Click *Import Project* and paste in the *Git* repo for your modified version of the *Origination*
-  project.
-- Select the *Origination* project and press *Ok*.
-- Enter the *Settings* tab in the project, and click the *Custom Tasks* menu on the left.
-- Look for the task *OriginationServiceTask*, install it.
-- You can verify the action by clicking the *Deployments* menu on the left, and then the
-  *Work Item Handlers*, you should see a handler named *OriginationServiceTask* instantiating
-  *com.temenos.infinity.OriginationWorkItemHandler*.
-- Click *Deploy* at the upper right corner to deploy the project.
-
-Get back to your shell for cleanup (optional):
-
-```shell
-cd ~
-sudo rm -r ~/origination/
-```
-
-### Create an RHPAM AMI
-
-After creating your *EC2* instance and installing/configuring *JBoss* and *RHPAM*,</br>
-you should create an *Amazon Machine Image (AMI)* which is, as the suggests and image of your
-machine, meaning your instance.</br>
-Creating the *AMI* serves two purposes, not only will it save you the trouble of reinstalling, but
-it'll also play a major part when it comes to autoscaling.</br>
-*AMI*s are all around us, if you remember, we also started our *EC2* instance from an
-*AMI for Red Hat Enterprise Linux 8*, aka `ami-0b0af3577fe5e3532`.</br>
-Each *AMI* has its unique id, and can be used privately or deployed to [Amazon's Marketplace][20].
-
-Creating an *AMI* is pretty straight-forward, from the *Instances* dashboard in the *EC2* console,</br>
-select your instance, click *Actions* -> *Image and templates* -> *Create image*.
-
-Create an *AMI* with the following characteristics:
+Jump over to the `System Manager` console and click [Parameter Store][36], create the following **two** parameters:
 
 ```text
-Image name: temenos-rhpam-mysql-ami
-Image description: Temenos RHPAM 7.9.0 based on JBoss 7.3.0 backed by RDS MySQL
-Tags: Name=Temenos RHPAM 7.9 with MySQL
+Name: /temenos/rhpam/prod/business-central/host
+Description: Temenos Production Business Central Host
+Value: <type in public elastic ip or dns name of the business central instance>
 ```
 
-The *AMI* takes some time to spin up, but once it becomes available, you can use it to
-create *EC2* instances with your pre-configured *RHPAM*.
+```text
+Name: /temenos/rhpam/prod/business-central/port
+Description: Temenos Production Business Central Port
+Value: 8080
+```
 
-And of course, if you're a [AWS CLI][2] user:
+### Create the Smart Router instance
+
+click `Launch Instance`:
+
+**Choose AMI**:
+
+Select the base image `temenos-base-ami` you created.</br>
+
+**Choose Instance Type**:
+
+Note that you will need to select an [EC2 Instance Type][14] for your instance.</br>
+For creating this runbook, we used `t2.medium`.
+
+**Configure Instance**:
+
+Configure the *EC2 Instance* with the following characteristics:
+
+```text
+Network: <select Temenos VPC>
+Subnet: <select Temenos Public us-east-1b Subnet>
+Auto-assign Public IP: Enable
+IAM role: <select temenos-ec2-get-parameters-role>
+```
+
+Add Tags:
+
+```text
+Tags: Name=Temenos RHPAM Smart Router
+```
+
+Configure Security Groups:
+
+```text
+Security Groups: <select temenos-smart-router>
+```
+
+Review, click `Launch` and select your `Key-Pair`.
+
+From the *EC2* console, got into the `Network & Security` -> `Elastic IPs`, select the *EIP* you desiganted for the
+*Smart Router*, click `Actions` -> `Associate Elastic IP address` and select the *Smart Router* instance you created.
+
+Once the *EC2 Instance* is up and available, use its *EIP* to copy the file needed for the installation via *SSH* using
+your *private Key-Pair*:
 
 ```shell
-aws ec2 create-image \
-    --instance-id <the-id-of-the-ec2-instance-created> \
-    --name temenos-rhpam-mysql-ami \
-    --description "Temenos RHPAM 7.9.0 based on JBoss 7.3.0 backed by RDS MySQL" \
-    --tag-specifications "ResourceType=image, Tags=[{Key=Name, Value=Temenos RHPAM 7.9 with MySQL}]"
+scp -i /path/to/private.pem \
+    /path/to/rhpam-7.11.1-smart-router.jar \
+    ec2-user@smart_router_elastic_ip:
 ```
 
-### Auto Scaling
+Once done, connect to the instance using *SSH*:
 
----
-TBD
+```shell
+ssh -i /path/to/private.pem ec2-user@smart_router_elastic_ip
+```
 
----
+Once you're in, run the following commands:
+
+```shell
+# create the folders for the smart router server
+sudo mkdir -p /opt/smartrouter/repo
+# move the jar file into its new home
+sudo mv rhpam-7.11.1-smart-router.jar /opt/smartrouter/
+```
+
+Create the system service for running the *Smart Router* server:
+
+```shell
+sudo bash -c 'cat << EOF > /etc/systemd/system/smart-router.service
+[Unit]
+Description=Smart Router Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/opt/service-runner/run-service.sh smart-router
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF'
+```
+
+And run the following commands to start and enable the service:
+
+```shell
+sudo systemctl start smart-router.service
+sudo systemctl enable smart-router.service
+# you can use the following journalctl command to view the server log
+sudo journalctl -u smart-router.service -f
+```
+
+Once done, you should be able to view the router state using your browser: [http://smart_router_elastic_ip:9999/mgmt/list].
+
+**Set the Smart Router centralized parameters**:
+
+Jump over to the `System Manager` console and click [Parameter Store][36], create the following **two** parameters:
+
+```text
+Name: /temenos/rhpam/prod/smart-router/host
+Description: Temenos Production Smart Router Host
+Value: <type in public elastic ip or dns name of the smart router instance>
+```
+
+```text
+Name: /temenos/rhpam/prod/smart-router/port
+Description: Temenos Production Smart Router Port
+Value: 9999
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <!-- Links -->
 [0]: https://aws.amazon.com/
@@ -1365,3 +1224,4 @@ TBD
 [34]: https://console.aws.amazon.com/systems-manager/home
 [35]: https://console.aws.amazon.com/iamv2/home
 [36]: https://console.aws.amazon.com/systems-manager/parameters
+[37]: https://maven.repository.redhat.com/ga/
