@@ -637,11 +637,39 @@ sudo /opt/rh-sso-7.4/bin/add-user-keycloak.sh --user admin
 ```
 
 Close the terminal session you've been working with, and switch back to the session running the server.</br>
-Press `Control+C`/`Command+.` to stop the server, and edit the `/opt/rh-sso-7.4/standalone/configuration/standalone.xml`:
+Press `Control+C`/`Command+.` to stop the server, and edit the `/opt/rh-sso-7.4/standalone/configuration/standalone.xml`.
 
-***************************************
-UNDER CONSTRUCTION - ADD XML DIFFS HERE
-***************************************
+First, backup the file:
+
+```shell
+sudo cp /opt/rh-sso-7.4/standalone/configuration/standalone.xml /opt/rh-sso-7.4/standalone/configuration/standalone.xml.bak
+```
+
+Open the `standalone.xml` file and look for the datasource configuration:
+
+```xml
+<datasource jndi-name="java:/KeycloakDS" pool-name="KeycloakDS">
+```
+
+Modify the connection-url element:
+
+```xml
+<!-- Existing -->
+<connection-url>jdbc:postgresql://temenos-postgresql-db.xxxxxxxxxxxx.us-east-1.rds.amazonaws.com:5432/keycloak</connection-url>
+<!-- Modify to -->
+<connection-url>${rhpam.database.url}/keycloak</connection-url>
+```
+
+Find the relative `security` element and modify the user-name and password elements:
+
+```xml
+<!-- Existing -->
+<user-name>rhadmin</user-name>
+<password>redhat123#</password>
+<!-- Modify to -->
+<user-name>${rhpam.database.username}</user-name>
+<password>${rhpam.database.password}</password>
+```
 
 Cleanup:
 
