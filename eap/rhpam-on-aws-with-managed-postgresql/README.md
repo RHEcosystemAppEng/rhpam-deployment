@@ -22,23 +22,23 @@ Leveraging parameter centralizing, load balancing, auto-scaling, and network seg
 
 ## Regions and Availability Zones
 
-Based on [AWS Documentation][22], a `Region`, also known as a `Network Border` is a physical location around the world where *AWS*
-operates data centers.</br>
-An `Availability Zone` is a group of one or more data centers with redundant power, networking, and connectivity in a `Region`.
+Based on [AWS Documentation][22], a `Region`, also known as a `Network Border` is a physical location around the world
+where *AWS* operates data centers. An `Availability Zone` is a group of one or more data centers with redundant power,
+networking, and connectivity in a `Region`.
 
 > Each AWS Region consists of multiple, isolated, and physically separate AZs within a geographic area.
 
-The managed services of *AWS* used for this procedure, i.e. *RDS* for hosting the *PostgreSQL* database and *ELB* for load
+The managed services of *AWS* used in this procedure, i.e. *RDS* for hosting the *PostgreSQL* database and *ELB* for load
 balancing the requests for *RHSSO*, requires a minimum of **two** availability zones in the same region.</br>
 For this procedure, you'll be using `us-east-1` as the region, and `us-east-1a` and `us-east-1b` as the availability zones.
 
 ## Instance Types and Classes
 
-For the manages *PostgreSQL RDS Instance*, you can use one of the instance classes listed [here][19], `db.t2.micro` was
-used for this runbook creation.
+For the managed *PostgreSQL RDS Instance*, you can use one of the instance classes listed [here][19],</br>
+`db.t2.micro` was used for this runbook creation.
 
-For the various *EC2 Instances*, you can use one of the instance types listed [here][14], `t2.medium` was used for this
-runbook creation.
+For the various *EC2 Instances*, you can use one of the instance types listed [here][14],</br>
+`t2.medium` was used for this runbook creation.
 
 > Please note that *JBoss* requires a minimum of 2 vCPUs and 2 GiB memory.
 
@@ -46,7 +46,7 @@ runbook creation.
 
 ### Prerequisite: Prepare installers
 
-From your local station download the following files:
+From your local station download the following:
 
 - [PostgreSQL connector 42.3.0][25]
 - [Red Hat Single Sign-On 7.4.0 Server][26]
@@ -56,40 +56,42 @@ From your local station download the following files:
 - [Red Hat JBoss Enterprise Application Platform 7.3 Update 06][29]
 - [Red Hat Process Automation Manager 7.11.1 Add-Ons][30]
 
-Extract the last downloaded file `rhpam-7.11.1-add-ons` and grab the following files:
+Extract the last downloaded file `rhpam-7.11.1-add-ons.zip` and grab the following files:
 
 - `rhpam-7.11.1-migration-tool.zip`
 - `rhpam-7.11.1-smart-router.jar`
 
 ### Prerequisite: Open URLs
 
-Although you can reach everything from the console[1],
+Although you can reach everything from the [console][1],</br>
 Here are the links for the services and components you'll work with:
 
 - [AWS VPC][31] - *Virtual Private Cloud*, *Subnets*, *Route Tables*, *Internet Gateway*, and *NAT Gateway*.
 - [AWS RDS][32] - *Database Instance* and *Subnet Groups*.
-- [AWS EC2][33] - *EC2 Instances*, *Amazon Machine Images*, *Security Groups*, *Elastic IPs*, *Key Pairs*, *Load Balancer*,
+- [AWS EC2][33] - *EC2 Instances*, *Amazon Machine Images*, *Security Groups*, *Elastic IPs*, *Key Pairs*, *Load Balancers*,
   *Target Groups*, *Launch Configurations*, and *Auto Scaling Groups*.
 - [AWS System Manager][34] - *Parameters Store*
 - [AWS IAM][35] - *Roles* and *Policies*
 
-### Prerequisite: Prepare a Key-Pair
+## Create the environment
 
-You'll use *SSH* to connect to the various *EC2* instances, you can create a new *Key-Pair* or import your own [here][23].</br>
+### Create or import a Key-Pair
+
+You'll use *SSH* to connect to the various *EC2* instances, for accomplishing that you'll need a public-private
+*Key-Pair*.</br>
+From the *EC2* console, go to `Network & Security` -> `Key Pairs` and create or import your key.</br>
 You can use the same key for multiple instances.
 
-If you create a new *Key-Pair*,</br>
-once created, you will be able to download the private key to your local station.</br>
+If you create a new *Key-Pair*, you will be able to download the private key to your local station.</br>
 you might need to set `chmod 400` to the downloaded file.
 
-If you import an existing key,</br>
-make sure to paste in the **public** key content and not the private one.
-
-## Create the environment
+If you import an existing *Key-Pair*, make sure to paste in the **public** key content and not the private one.
 
 ### Create the Elastic IPs
 
-Create **three** *Elastic IP's* with the following characteristics:
+For this configuration, the *NAT Gateway*, *Business Central*, and *Smart Router* requires static IPs.</rb>
+From the *EC2* console, go to `Network & Security` -> `Elastic IPs` and create **three** *Elastic IP's* with the
+following characteristics:
 
 ```text
 Network Border: us-east-1
@@ -106,13 +108,14 @@ Network Border: us-east-1
 Tags: Name=Temenos Smart Router us-east-1b EIP
 ```
 
-> Note that the *NAT-GW* is planned to be created on the *us-east-1a AZ*, while the *Business Central* and
-> *Smart Router* will be on the *use-east-1b AZ*.</br>
+> Note that the *NAT-GW* is planned to be created on the *us-east-1a AZ*,</br>
+> while the *Business Central* and *Smart Router* will be on the *use-east-1b AZ*.</br>
 > There's no particular reason for that, mainly, you have only one of each, so a load splitting seems like a good idea.
 
 ### Create the Policy
 
-Create a policy for allowing read access to the `Parameter Store`,</br>
+From the *IAM* console, go to `Access management` -> `Policies` and create a policy for allowing read access to the
+*Parameter Store*.</br>
 Add the following `JSON` as the policy configuration, and set the name as `temenos-get-parameters-policy`:
 
 ```json
@@ -134,21 +137,22 @@ Add the following `JSON` as the policy configuration, and set the name as `temen
 
 ### Create the Role
 
-Create a Role with a `AWS Service Type` for *EC2* use cases.</br>
+From the *IAM* console, go to `Access management` -> `Roles` and create a Role with a `AWS Service Type` for *EC2* use
+cases.</br>
 Attach the `temenos-get-parameters-policy` you created, and set the name as `temenos-ec2-get-parameters-role`.
 
 ### Create the VPC
 
-The *Virtual Private Cloud* will be the base of our isolated cloud environment</br>
-Create a *VPC* with the following characteristics:
+The *VPC* will be the base of our isolated cloud environment.</br>
+From the *VPC* console go to `Virtual Private Cloud` -> `Your VPC's`, click `Create VPC` and create a *VPC* with the
+following characteristics:
 
 ```text
 Name: Temenos VPC
 IPv4: 10.0.0.0/16
 ```
 
-After creating the *VPC*, select it and click:</br>
-`Actions` -> `Edit DNS hostnames`</br>
+After creating the *VPC*, select it and click `Actions` -> `Edit DNS hostnames`.</br>
 Check the `DNS hostnames` option and click `Save`.
 
 ### Create the Subnets
@@ -158,7 +162,8 @@ One *Subnet* from each *AZ* will be attached later on the *Internet Gateway* to 
 The other *Subnet* in each *AZ* will **not be** attached to *Internet Gateway* and therefore will not be accessible
 over the internet.</br>
 
-Create **four** *Subnets*, with the following characteristics:
+From the *VPC* console go to `Virtual Private Cloud` -> `Subnet`, and create **four** *Subnets*, with the following
+characteristics:
 
 ```text
 VPC: <select Temenos VPC>
@@ -188,14 +193,15 @@ Availability Zone: us-east-1b
 IPv4 CIDR block: 10.0.4.0/24
 ```
 
-After creating the *Subnets*, select **each of the two Public ones** and click:</br>
-`Actions` -> `Modify auto-assign IP settings`</br>
+After creating the *Subnets*, select **each of the two Public ones** and click `Actions` ->
+`Modify auto-assign IP settings`</br>
 Check the `Enable auto-assign public IPv4 address` option and click `Save`.
 
 ### Create the NAT Gateway
 
 The *NAT Gateway* will allow the instances to access the internet.</br>
-Create a *NAT Gateway* with the following characteristics:
+From the *VPC* console go to `Virtual Private Cloud` -> `NAT Gateways` and create a *NAT Gateway* with the following
+characteristics:
 
 ```text
 Name: Temenos NAT Gateway
@@ -205,44 +211,43 @@ Elastic IP allocation ID: <select Temenos NAT-GW us-east-1a EIP>
 
 ### Create the Internet Gateway
 
-The *Internet Gateway* will allow the instance to be accessible over the internet.</br>
-Subnets attached to this gateway, are implicitly public.</br>
-Create an *Internet Gateway* with the following characteristics:
+The *Internet Gateway* will allow the instance to be accessible over the internet, *Subnets* attached to this gateway,
+are implicitly public.</br>
+From the *VPC* console go to `Virtual Private Cloud` -> `Internet Gateways` and create an *Internet Gateway* with the
+following characteristics:
 
 ```text
 Name: Temenos Internet Gateway
 ```
 
-Select the new gateway and click:</br>
-*Actions* -> *Attach*</br>
-Attach the gateway to the Temenos VPC.
+Select the new gateway and click `Actions` -> `Attach` and attach the gateway to the Temenos VPC.
 
 ### Create the Route Tables
 
-For this runbook, you need to create **two** *Route Tables*.</br>
-The first one will be attached to the *NAT Gateway*,</br>
-it will act as our **main** *Route Table* and will be adhered to by all of the *Subnets*.
+For this runbook, you need to create **two** *Route Tables*.
+
+The first one will be attached to the *NAT Gateway*, it will act as the **main** *Route Table* for you're *VPC* and will
+be adhered to by all of the *Subnets*.
 
 The second one will be attached to the *Internet Gateway*,</br>
 it will be explicitly set to the *Subnets* you designated as public ones.
 
-Create a *Route Table* with the following characteristics:
+From the *VPC* console go to `Virtual Private Cloud` -> `Route Tables` and create a *Route Table* with the following
+characteristics:
 
 ```text
 Name: Temenos NAT Route Table
 VPC: <select Temenos VPC>
 ```
 
-Click *Edit Routes* -> *Add Route*,</br>
-and add a route with the following characteristics:
+Click `Edit Routes` -> `Add Route` and add a route with the following characteristics:
 
 ```text
 Destination: 0.0.0.0/0
 Target: <select Temenos NAT Gateway>
 ```
 
-Click *Actions* -> *Set main route table*,</br>
-to make the *NAT* table as the **main** table.</br>
+Click `Actions` -> `Set main route table` to make the *NAT* table as the **main** table.</br>
 While you're at it, feel free to delete the table that was marked as main for your *VPC* prior, it was created by
 default, it has no more usage.
 
@@ -253,22 +258,21 @@ Name: Temenos Internet Route Table
 VPC: <select Temenos VPC>
 ```
 
-Click *Edit Routes* -> *Add Route*,</br>
-and add a route with the following characteristics:
+Click `Edit Routes` -> `Add Route` and add a route with the following characteristics:
 
 ```text
 Destination: 0.0.0.0/0
 Target: <select Temenos Internet Gateway>
 ```
 
-Inside the route table, go to the *Subnet Association* tab,</br>
-and associate this table to **both public designated Subnets**, *Temenos Public us-east-1a Subnet*
-and *Temenos Public us-east-1b Subnet*.
+Inside the route table, go to the `Subnet Association` tab, and associate **both public designated Subnets**,
+*Temenos Public us-east-1a Subnet* and *Temenos Public us-east-1b Subnet*.
 
 ### Create the Security Groups
 
 The security groups encapsulate the network rules.</br>
-Create **three** Security Groups with the following characteristics.
+From the *EC2* console, go to `Network & Security` -> `Security Groups` and create **three** Security Groups
+with the following characteristics.
 
 The first group is designated to be used by the JBoss frontend, meaning the *RHSSO*, *Business Central*, and
 *KIE Server* instances:
@@ -339,7 +343,8 @@ Name=Temenos Smart Router Security Group
 
 ### Create the Subnet Group
 
-Create a *Subnet Group* with the following characteristics:
+The *Subnet Group* is used to group *Subnets* for use with *RDS* instances.</br>
+From the *RDS* console, go to `Subnet Groups` and create a *Subnet Group* with the following characteristics:
 
 ```text
 Name: temenos-postgresql-subnet-group
@@ -356,7 +361,7 @@ Tags: Name=Temenos PostgreSQL Subnet Group
 
 > Make sure you've selected a *db instance class* [here][19] before proceeding.
 
-Create a *Database Instance* with the following characteristics:
+From the *RDS* console, go to `Databases` and create a *Database Instance* with the following characteristics:
 
 Engine Options:
 
@@ -394,10 +399,10 @@ Enable auto minor version upgrade: unchecked
 
 **Set the database centralized parameters**:
 
-From your *PostgreSQL* instance, grab the *Endpoint* URI, it should look something like this:
+From your *PostgreSQL* instance, grab the *Endpoint* URI, it should look something like this:</br>
 `temenos-postgresql-db.xxxxxxxxxxxx.us-east-1.rds.amazonaws.com`.
 
-Jump over to the `System Manager` console and click [Parameter Store][36], create the following **four** parameters:
+From the `System Manager` console go to `Application Management` -> `Parameter Store` and create the following **four** parameters:
 
 ```text
 Name: /temenos/rhpam/prod/database/host
@@ -433,9 +438,10 @@ Eventually, you'll need to create **four** *EC2* instances, for the following co
 - *KIE Server*, which will be used as an *AMI* for auto-scaling and will be accessed via the *Smart Router* and the
   *Business Central*.
 
-But as these four instances have a lot in common in regards to installed packages and tools, you'll create five instances. The first one will be the source of a base *AMI* from which you'll create the other four.
+But as these four instances have a lot in common in regards to installed packages and tools, so you'll create five
+instances. The first one will be the source of a base *AMI* from which you'll create the other four.
 
-Let's start, click `Launch Instance`:
+Let's start, From the *EC2* console, go to `Instances` and click `Launch Instance`:
 
 **Choose AMI**:
 
@@ -445,14 +451,15 @@ For searching reference, the *AMI* id for a 64x86 version of *RHEL8* is `ami-0b0
 **Choose Instance Type**:
 
 Note that you will need to select an [EC2 Instance Type][14] for your instance.</br>
-Although it's not that important for this specific instance, as it's just for creating the base image.
+It doesn't matter which is selected for this specific instance, as it's just for creating the base image and it will be
+terminated soon.
 
 **Configure Instance**:
 
 Configure the *EC2 Instance* with the following characteristics:
 
-> Note that for this specific base image, it doesn't matter what *Subnet*, *Security Group*  you select, as
-> long as it's a public IP with TCP22 port opened for *SSH* connection.
+> Note that for this specific base image, it doesn't matter what *Subnet*, *Security Group*  you select,</br>
+> as long as it's a public IP with TCP22 port opened for *SSH* connection.
 
 ```text
 Network: <select Temenos VPC>
@@ -474,8 +481,8 @@ Security Groups: <select temenos-jboss-front>
 
 Review, click `Launch`, and select your `Key-Pair`.
 
-Once the *EC2 Instance* is up and available, grab its public IP or DNS name from the console and use it to connect via
-*SSH* using your *private Key-Pair*:
+Once the *EC2 Instance* is up and available,</br>
+grab its public IP or DNS name from the console and use it to connect via *SSH* using your *private Key-Pair*:
 
 ```shell
 ssh -i /path/to/private.pem ec2-user@instance_public_ip_or_dns
@@ -506,9 +513,9 @@ sudo chmod a+x /opt/service-runner/run-service.sh
 
 **Create the AMI**:
 
-Get back to the *EC2* console, select the instance you've been working on and click:</br>
-`Actions` -> `Image and templates` -> `Create image`</br>:
-And create an image with the following characteristics:
+From the *EC2* console go to `Instances`, select the instance you've been working on and click
+`Actions` -> `Image and templates` -> `Create image`.</br>
+Create an image with the following characteristics:
 
 ```text
 Image name: temenos-base-ami
@@ -516,16 +523,17 @@ Image description: Base image including PostgreSQL client, unzip, bind-utils, JD
 Tags: Name=Temenos Base AMI
 ```
 
-The *AMI* might take a couple of minutes to become available, while it's being built if you haven't closed your *SSH* connection, it will be terminated.
+The *AMI* might take a couple of minutes to become available,</br>
+while it's being built if you haven't closed your *SSH* connection, it will be terminated.
 
-Once it's done, you can terminate the instance you've been working on, by selecting it console and clicking:</br>
+Once done, you can terminate the instance you've been working on, by selecting it console and clicking
 `Instance state` -> `Terminate instance`</br>
 If you want to keep it around a little bit longer, you can stop it instead of terminating it.</br>
 Note the termination of an instance is a **final action**, the terminated instance will be deleted within one hour.
 
 ### Create the RHSSO Instance, AMI, ELB, and ASG
 
-Click `Launch Instance`:
+Let's start, From the *EC2* console, go to `Instances` and click `Launch Instance`:
 
 **Choose AMI**:
 
@@ -534,14 +542,15 @@ Select the base image `temenos-base-ami` you created.</br>
 **Choose Instance Type**:
 
 Note that you will need to select an [EC2 Instance Type][14] for your instance.</br>
-Although it's not that important for this specific instance, as it's just for creating the rhsso image.
+It doesn't matter which is selected for this specific instance, as it's just for creating the rhsso image and it will be
+terminated soon.
 
 **Configure Instance**:
 
 Configure the *EC2 Instance* with the following characteristics:
 
-> Note that for this specific rhsso image, it doesn't matter what *Subnet*, you select, as long as it's a
-> public IP, the auto-scaling configuration will eventually deploy to both public subnets.
+> Note that for this specific rhsso image, it doesn't matter what *Subnet*, you select,</br>
+> as long as it's a public IP, the auto-scaling configuration will eventually deploy to both public subnets.
 
 ```text
 Network: <select Temenos VPC>
@@ -564,8 +573,9 @@ Security Groups: <select temenos-jboss-front>
 
 Review, click `Launch`, and select your `Key-Pair`.
 
-Once the *EC2 Instance* is up and available, grab its public IP or DNS name from the console and use it to copy the
-files needed for the installation via *SSH* using your *private Key-Pair*:
+Once the *EC2 Instance* is up and available,</br>
+grab its public IP or DNS name from the console and use it to copy the files needed for the installation via *SSH*
+using your *private Key-Pair*:
 
 ```shell
 scp -i /path/to/private.pem \
@@ -607,7 +617,7 @@ You now need to use the *jboss-cli* in connected mode, meaning you need to start
 sudo /opt/rh-sso-7.4/bin/standalone.sh -c standalone.xml
 ```
 
-Connect via *SSH* from a **different terminal session** and run the following commands:
+And connect via *SSH* from a **different terminal session** and run the following commands:
 
 ```shell
 # start jboss cli in connected mode
@@ -642,7 +652,8 @@ Press `Control+C`/`Command+.` to stop the server, and edit the `/opt/rh-sso-7.4/
 First, backup the file:
 
 ```shell
-sudo cp /opt/rh-sso-7.4/standalone/configuration/standalone.xml /opt/rh-sso-7.4/standalone/configuration/standalone.xml.bak
+sudo cp /opt/rh-sso-7.4/standalone/configuration/standalone.xml \
+    /opt/rh-sso-7.4/standalone/configuration/standalone.xml.bak
 ```
 
 Next, open the `standalone.xml` file and look for the datasource configuration:
@@ -715,7 +726,7 @@ Select the new *Temenos* realm.
 
 **Create the Roles**:
 
-In the `Configure` -> `Roles` page, click `Add Role`, and **three** roles with the following names:
+In the `Configure` -> `Roles` page, click `Add Role`, add **three** roles with the following names:
 
 - *admin*
 - *kie-server*
@@ -724,7 +735,7 @@ In the `Configure` -> `Roles` page, click `Add Role`, and **three** roles with t
 **Create the User**:
 
 In the `Manage` -> `Users` page, click `Add User`, create a user with `Username` *rhpam*.</br>
-After saving:
+Once the user is saved:
 
 - Step into the `Credentials` tab, toggle off `Temporary`, and set the password to *redhat*.
 - Step into the `Role Mappings` tab and assign the **three** roles created, *admin*, *kie-server*, and *rest-all*.
@@ -732,7 +743,7 @@ After saving:
 
 **Create the clients**:
 
-In the `Configure` -> `Clients` page, click `Create` and create **three** clients with the following characteristics,
+In the `Configure` -> `Clients` page, click `Create` and create **three** clients with the following characteristics,</br>
 for each client you create, grab the `Secret` value from the `Credentials` tab, you'll need it later on:
 
 > For the *business-central* client, use the *EIP* you designated for the *Business Central* as the redirection Host.
@@ -744,8 +755,8 @@ Access Type: confidential
 Valid Redirect URIs: http://<Temenos Business Central us-east-1b EIP>:8080/business-central/*
 ```
 
-> For the *kie-server* and *smart-router* clients, you can keep the localhost redirection host, the clients are used for
-> client tokens retrieval only and not for authenticating users.
+> For the *kie-server* and *smart-router* clients, you can keep the localhost redirection host,</br>
+> the clients are used for client tokens retrieval only and not for authenticating users.
 
 ```text
 Client ID: kie-server
@@ -763,8 +774,8 @@ Valid Redirect URIs: http://localhost:8080/smart-router/*
 
 **Create the AMI**:
 
-Get back to the *EC2* console, select the instance you've been working on and click:</br>
-`Actions` -> `Image and templates` -> `Create image`</br>:
+Get back to the *EC2* console, select the instance you've been working on and click
+`Actions` -> `Image and templates` -> `Create image`.</br>
 And create an image with the following characteristics:
 
 ```text
@@ -773,21 +784,21 @@ Image description: RHSSO AMI configured for working with RHPAM
 Tags: Name=Temenos RHSSO AMI
 ```
 
-The *AMI* might take a couple of minutes to become available, while it's being built if you haven't closed your *SSH*
-connection, it will be terminated.
+The *AMI* might take a couple of minutes to become available,</br>
+while it's being built if you haven't closed your *SSH* connection, it will be terminated.
 
-Once it's done, you can terminate the instance you've been working on, by selecting it console and clicking:</br>
+Once done, you can terminate the instance you've been working on, by selecting it console and clicking
 `Instance state` -> `Terminate instance`</br>
 If you want to keep it around a little bit longer, you can stop it instead of terminating it.</br>
 Note the termination of an instance is a **final action**, the terminated instance will be deleted within one hour.
 
 **Create the Target Groups**:
 
-From the *EC2* console, go into `Load Balancing` -> `Target Groups`, create **two** *Target Groups*, with the following
+From the *EC2* console, go to `Load Balancing` -> `Target Groups` and create **two** *Target Groups*, with the following
 characteristics:
 
-> Note that you're using the `TCP` protocol and not the more suitable `HTTPS`/`HTTPS` ones as a workaround, using
-> `HTTPS` requires a certificate to be configured within the *ASG* later on.
+> Note that you're using the `TCP` protocol and not the more suitable `HTTPS`/`HTTPS` ones as a workaround,</br>
+> using `HTTPS` requires a certificate to be configured within the *ASG* later on.
 
 ```text
 Target type: Instances
@@ -809,8 +820,9 @@ Tags: Name=Temenos RHSSO TCP8080 Target Group
 
 **Create the Load Balancer**:
 
-From the *EC2* console, go into `Load Balancing` -> `Load Balancers`, create a load balancer with the following
-characteristics, after you create the load balancer, note the *DNS Name*, you'll use it later on:
+From the *EC2* console, go into `Load Balancing` -> `Load Balancers` and create a load balancer with the following
+characteristics,</br>
+after you create the load balancer, note the *DNS Name*, you'll use it later on:
 
 ```text
 Load balancer type: Network Load Balancer
@@ -853,7 +865,8 @@ Key pair: <select your key-pair>
 **Create the Auto Scaling Group**:
 
 From the *EC2* console go into `Auto Scaling` -> `Auto Scaling Groups` and create an *Auto Scaling Group* with the
-following characteristics (make sure to click `Switch to launch configuration`):
+following characteristics,</br>
+make sure to click `Switch to launch configuration`:
 
 ```text
 Name: temenos-rhsso-asg
@@ -867,7 +880,7 @@ Tags: Name=Temenos RHSSO
 
 **Set the RHSSO centralized parameters**:
 
-Jump over to the `System Manager` console and click [Parameter Store][36], create the following **eight** parameters:
+From the `System Manager` console go to `Application Management` -> `Parameter Store` and create the following **eight** parameters:
 
 ```text
 Name: /temenos/rhpam/prod/rh-sso/host
@@ -919,7 +932,7 @@ Value: rhpam
 
 ### Create the Business Central instance
 
-Click `Launch Instance`:
+From the *EC2* console, go to `Instances` and click `Launch Instance`:
 
 **Choose AMI**:
 
@@ -956,8 +969,8 @@ Security Groups: <select temenos-jboss-front>
 Review, click `Launch`, and select your `Key-Pair`.
 
 From the *EC2* console, got into the `Network & Security` -> `Elastic IPs`, select the *EIP* you desiganted for the
-*Business Central*, click `Actions` -> `Associate Elastic IP address` and select the *Business Central* instance you
-created.
+*Business Central*,</br>
+click `Actions` -> `Associate Elastic IP address` and select the *Business Central* instance you created.
 
 Once the *EC2 Instance* is up and available, use its *EIP* to copy the files needed for the installation via *SSH* using
 your *private Key-Pair*:
@@ -1005,9 +1018,9 @@ sudo rm /opt/EAP-7.3.0/standalone/deployments/business-central.war/WEB-INF/lib/u
 
 **Optionally set a custom Maven repository**:
 
-By default, *RHPAM* uses [Red Hat's public maven repository][37], if you intend to use your own, i.e. if you plan to run
-the [Validation Procedure](ValidationProcedure.md) at the end of this runbook, you'll need to create a maven settings
-file with authorization info for the repository.
+By default, *RHPAM* uses [Red Hat's public maven repository][37], if you intend to use your own,</br>
+i.e. if you plan to run the [Validation Procedure](ValidationProcedure.md) at the end of this runbook,</br>
+you'll need to create a maven settings file with authentication info for the repository.
 
 For the sake of following the [Validation Procedure](ValidationProcedure.md), use the maven repository created by
 Daniele in [repsy.io](repsy.io) for this runbook.
@@ -1029,14 +1042,15 @@ sudo bash -c 'cat << EOF > /opt/custom-config/settings.xml
 EOF'
 ```
 
-> Note that this configuration means that whenever the Business Central need to deploy an artifact to a
-> *Distribution Repository* named *rhpam* it will use the above username and password. The deployed artifact's pom
-> should declare the *rhpam* repository as in the distribution management section.
+> Note that this configuration means that whenever the Business Central needs to deploy an artifact to a
+> *Distribution Repository* named *rhpam* it will use the above username and password.</br>
+> The deployed artifact's pom should declare the *rhpam* repository as in the distribution management section.
 
 Backup the configuration file:
 
 ```shell
-sudo cp /opt/EAP-7.3.0/standalone/configuration/standalone-full.xml /opt/EAP-7.3.0/standalone/configuration/standalone-full.xml.bak
+sudo cp /opt/EAP-7.3.0/standalone/configuration/standalone-full.xml \
+    /opt/EAP-7.3.0/standalone/configuration/standalone-full.xml.bak
 ```
 
 Open the `/opt/EAP-7.3.0/standalone/configuration/standalone-full.xml` file and look for the system properties element:
@@ -1146,12 +1160,12 @@ sudo journalctl -u business-central.service -f
 
 Once done, you should be able to access the server using your browser:
 [http://business_central_elastic_ip:8080/business-central].</br>
-Use the *Business Central EIP*, you will be directed to the *RHSSO* server for authentication, use `rhpam` and `redhat`
-as user and password, this will redirect you back to the *Business Central* session.
+Use the *Business Central EIP*, you will be directed to the *RHSSO* server for authentication,</br>
+use `rhpam` and `redhat` as user and password, this will redirect you back to the *Business Central* session.
 
 **Set the Business Central centralized parameters**:
 
-Jump over to the `System Manager` console and click [Parameter Store][36], create the following **two** parameters:
+From the `System Manager` console go to `Application Management` -> `Parameter Store` and create the following **two** parameters:
 
 ```text
 Name: /temenos/rhpam/prod/business-central/host
@@ -1167,7 +1181,7 @@ Value: 8080
 
 ### Create the Smart Router instance
 
-Click `Launch Instance`:
+From the *EC2* console, go to `Instances` and click `Launch Instance`:
 
 **Choose AMI**:
 
@@ -1204,7 +1218,8 @@ Security Groups: <select temenos-smart-router>
 Review, click `Launch`, and select your `Key-Pair`.
 
 From the *EC2* console, get into the `Network & Security` -> `Elastic IPs`, select the *EIP* you designated for the
-*Smart Router*, click `Actions` -> `Associate Elastic IP address` and select the *Smart Router* instance you created.
+*Smart Router*,</br>
+click `Actions` -> `Associate Elastic IP address` and select the *Smart Router* instance you created.
 
 Once the *EC2 Instance* is up and available, use its *EIP* to copy the file needed for the installation via *SSH* using
 your *private Key-Pair*:
@@ -1261,7 +1276,7 @@ Once done, you should be able to view the router state using your browser: [http
 
 **Set the Smart Router centralized parameters**:
 
-Jump over to the `System Manager` console and click [Parameter Store][36], create the following **two** parameters:
+From the `System Manager` console go to `Application Management` -> `Parameter Store` and create the following **two** parameters:
 
 ```text
 Name: /temenos/rhpam/prod/smart-router/host
@@ -1277,7 +1292,7 @@ Value: 9999
 
 ### Create the KIE Server Instance, AMI, and ASG
 
-Click `Launch Instance`:
+From the *EC2* console, go to `Instances` and click `Launch Instance`:
 
 **Choose AMI**:
 
@@ -1286,14 +1301,15 @@ Select the base image `temenos-base-ami` you created.</br>
 **Choose Instance Type**:
 
 Note that you will need to select an [EC2 Instance Type][14] for your instance.</br>
-Although it's not that important for this specific instance, as it's just for creating the kie server image.
+It doesn't matter which is selected for this specific instance, as it's just for creating the kie server image, and it
+will be terminated soon.
 
 **Configure Instance**:
 
 Configure the *EC2 Instance* with the following characteristics:
 
-> Note that for this specific kie server image, it doesn't matter what *Subnet*, you select, as long as it's a
-> public IP, the auto-scaling configuration will eventually deploy to both public subnets.
+> Note that for this specific kie server image, it doesn't matter what *Subnet* you select,</br>
+> as long as it's a public IP, the auto-scaling configuration will eventually deploy to both public subnets.
 
 ```text
 Network: <select Temenos VPC>
@@ -1316,8 +1332,9 @@ Security Groups: <select temenos-jboss-front>
 
 Review, click `Launch`, and select your `Key-Pair`.
 
-Once the *EC2 Instance* is up and available, grab its public IP or DNS name from the console and use it to copy the
-files needed for the installation via *SSH* using your *private Key-Pair*:
+Once the *EC2 Instance* is up and available,</br>
+grab its public IP or DNS name from the console and use it to copy the files needed for the installation via *SSH*
+using your *private Key-Pair*:
 
 ```shell
 scp -i /path/to/private.pem \
@@ -1392,9 +1409,9 @@ sudo java -jar rhpam-installer-7.11.1.jar
 
 **Optionally set a custom Maven repository**:
 
-By default, *RHPAM* uses [Red Hat's public maven repository][37], if you intend to use your own, i.e. if you plan to run
-the [Validation Procedure](ValidationProcedure.md) at the end of this runbook, you'll need to create a maven settings
-file with authorization info for the repository.
+By default, *RHPAM* uses [Red Hat's public maven repository][37], if you intend to use your own,</br>
+i.e. if you plan to run the [Validation Procedure](ValidationProcedure.md) at the end of this runbook,</br>
+you'll need to create a maven settings file with authentication info for the repository.
 
 For the sake of following the [Validation Procedure](ValidationProcedure.md), use the maven repository created by
 Daniele in [repsy.io](repsy.io) for this runbook.
@@ -1435,10 +1452,12 @@ EOF'
 Backup the configuration file:
 
 ```shell
-sudo cp /opt/EAP-7.3.0/standalone/configuration/standalone-full.xml /opt/EAP-7.3.0/standalone/configuration/standalone-full.xml.bak
+sudo cp /opt/EAP-7.3.0/standalone/configuration/standalone-full.xml \
+    /opt/EAP-7.3.0/standalone/configuration/standalone-full.xml.bak
 ```
 
-Open the `/opt/EAP-7.3.0/standalone/configuration/standalone-full.xml` file and look for the system properties element:
+Open the `/opt/EAP-7.3.0/standalone/configuration/standalone-full.xml` file,</br>
+look for the system properties element:
 
 ```xml
 <system-properties>
@@ -1487,7 +1506,7 @@ Under `datasources` add the following datasource element:
 </datasource>
 ```
 
-Under `drivers` add the following driver elment:
+Under `drivers` add the following driver element:
 
 ```xml
 <driver name="postgresql" module="org.postgresql">
@@ -1574,9 +1593,9 @@ sudo journalctl -u kie-server.service -f
 
 **Create the AMI**:
 
-Get back to the *EC2* console, select the instance you've been working on and click:</br>
-`Actions` -> `Image and templates` -> `Create image`</br>:
-And create an image with the following characteristics:
+Get back to the *EC2* console, select the instance you've been working on and click
+`Actions` -> `Image and templates` -> `Create image`.</br>
+Create an image with the following characteristics:
 
 ```text
 Image name: temenos-kie-server-ami
@@ -1584,11 +1603,11 @@ Image description: RHPAM KIE Server AMI
 Tags: Name=Temenos KIE Server AMI
 ```
 
-The *AMI* might take a couple of minutes to become available, while it's being built if you haven't closed your *SSH*
-connection, it will be terminated.
+The *AMI* might take a couple of minutes to become available,</br>
+while it's being built if you haven't closed your *SSH* connection, it will be terminated.
 
-Once it's done, you can terminate the instance you've been working on, by selecting it console and clicking:</br>
-`Instance state` -> `Terminate instance`</br>
+Once done, you can terminate the instance you've been working on, by selecting it console and clicking
+`Instance state` -> `Terminate instance`.</br>
 If you want to keep it around a little bit longer, you can stop it instead of terminating it.</br>
 Note the termination of an instance is a **final action**, the terminated instance will be deleted within one hour.
 
@@ -1611,7 +1630,8 @@ Key pair: <select your key-pair>
 **Create the Auto Scaling Group**:
 
 From the *EC2* console go into `Auto Scaling` -> `Auto Scaling Groups` and create an *Auto Scaling Group* with the
-following characteristics (make sure to click `Switch to launch configuration`):
+following characteristics,</br>
+make sure to click `Switch to launch configuration`:
 
 ```text
 Name: temenos-kie-server-asg
@@ -1636,7 +1656,6 @@ Run the [Validation Procedure](ValidationProcedure.md), Good luck!
 [19]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html
 [21]: https://access.redhat.com/products/red-hat-single-sign-on
 [22]: https://aws.amazon.com/about-aws/global-infrastructure/regions_az/
-[23]: https://console.aws.amazon.com/ec2/v2/home#KeyPairs
 [24]: https://app.asana.com/0/1200498898048415/1201006547552961/f
 [25]: https://jdbc.postgresql.org/download.html
 [26]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=core.service.rhsso&version=7.4
@@ -1649,5 +1668,4 @@ Run the [Validation Procedure](ValidationProcedure.md), Good luck!
 [33]: https://console.aws.amazon.com/ec2/v2/home
 [34]: https://console.aws.amazon.com/systems-manager/home
 [35]: https://console.aws.amazon.com/iamv2/home
-[36]: https://console.aws.amazon.com/systems-manager/parameters
 [37]: https://maven.repository.redhat.com/ga/
