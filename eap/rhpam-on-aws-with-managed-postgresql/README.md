@@ -2,7 +2,7 @@
 
 ## Document goal
 
-Walkthrough the installation and deployment of [RHPAM][8] running on [JBoss EAP][9] with a `Smart Router` and  RHSSO[21] on [AWS][0].
+Walkthrough the installation and deployment of [RHPAM][8] running on [JBoss EAP][9] with a `Smart Router` and  [RHSSO][21] on [AWS][0].
 Leveraging parameter centralizing, load balancing, auto-scaling, and network segmentation.</br>
 
 [Asana task][24]
