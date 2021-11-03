@@ -42,6 +42,10 @@ For the various *EC2 Instances*, you can use one of the instance types listed [h
 
 > Please note that *JBoss* requires a minimum of 2 vCPUs and 2 GiB memory.
 
+## Network diagram
+
+[![Diagram](./Temenos-RHPAM-PostgreSQL-AWS-Diagram.jpeg)](./Temenos-RHPAM-PostgreSQL-AWS-Diagram.jpeg)
+
 ## Prerequisites
 
 ### Prerequisite: Prepare installers
