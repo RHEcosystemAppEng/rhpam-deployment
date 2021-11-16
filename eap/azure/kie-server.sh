@@ -4,12 +4,12 @@ source ./deployment.properties
 
 function execute() {
   cmd=$1
-  ssh -i temenos-lb-validation_key.pem azureuser@$KIE_SERVER_IP "${cmd}"
+  ssh -i ${SSH_PEM_FILE} azureuser@$KIE_SERVER_IP "${cmd}"
 }
 
 function copyResources(){
 #  scp -i ${SSH_PEM_FILE} ./resources/* azureuser@$KIE_SERVER_IP:/tmp
-  scp -i ${SSH_PEM_FILE} temenos-lb-validation_key.pem azureuser@$KIE_SERVER_IP:/tmp
+  scp -i ${SSH_PEM_FILE} ${SSH_PEM_FILE} azureuser@$KIE_SERVER_IP:/tmp
   scp -i ${SSH_PEM_FILE} ./ks/* azureuser@$KIE_SERVER_IP:/tmp
 
   sed 's@${EAP_HOME}@'$EAP_HOME'@' ./resources/eap-auto.xml > resources/eap-auto-updated.xml
@@ -55,6 +55,7 @@ function stopFirewallService(){
 
 function configureAndStartServices(){
   echo "configureAndStartServices"
+  execute "sudo systemctl stop ks.service;sudo systemctl disable ks.service;sudo rm /etc/systemd/system/ks.service;sudo systemctl daemon-reload;sudo systemctl reset-failed"
   execute "sudo mv /tmp/deployment.properties /opt/custom-config"
   execute "sudo mv /tmp/ks-service.sh /opt/custom-config"
   execute "sudo mv /tmp/ks.service /etc/systemd/system"
