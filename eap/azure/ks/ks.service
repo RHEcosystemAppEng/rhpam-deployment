@@ -1,0 +1,8 @@
+[Unit]
+Description=RHPAM KIE Server service
+
+[Service]
+ExecStart=/bin/bash /opt/custom-config/ks-service.sh
+
+[Install]
+WantedBy=multi-user.target
