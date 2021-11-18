@@ -35,30 +35,30 @@ Validation steps:
 # Command references   
 ## Deploy
 ```shell
-curl -X PUT "http://52.152.178.161:8080/kie-server/services/rest/server/containers/test_1.0.1-SNAPSHOT" \
+curl -X PUT "http://20.124.19.182:8080/kie-server/services/rest/server/containers/test_1.0.1-SNAPSHOT" \
   -H "accept: application/json" -H "content-type: application/json" -d \
   "{ \"container-id\" : \"test_1.0.1-SNAPSHOT\", \"release-id\" : { \"group-id\" : \"com.myspace\", \"artifact-id\" : \"test\", \"version\" : \"1.0.1-SNAPSHOT\" } }"
 ```
 ## Get containers
 ```shell
-curl --user rhpamAdmin:redhat123# -X GET "http://52.152.178.161:8080/kie-server/services/rest/server/containers" -H "accept: application/json"
+curl --user rhpamAdmin:redhat123# -X GET "http://20.124.19.182:8080/kie-server/services/rest/server/containers" -H "accept: application/json"
 ```
 ## Create process
 ```shell
   curl --user rhpamAdmin:redhat123# -X POST \
-    "http://52.152.178.161:8080/kie-server/services/rest/server/containers/test_1.0.1-SNAPSHOT/processes/test.test/instances" \
+    "http://20.124.19.182:8080/kie-server/services/rest/server/containers/test_1.0.1-SNAPSHOT/processes/test.test/instances" \
     -H "accept: application/json" -H "content-type: application/json" -d "{}"
 ```
 ## Get process instances
 Simple:
 ```shell
   curl -s --user rhpamAdmin:redhat123# -X GET \
-    "http://52.152.178.161:8080/kie-server/services/rest/server/containers/test_1.0.1-SNAPSHOT/processes/instances?pageSize=1000" \
+    "http://20.124.19.182:8080/kie-server/services/rest/server/containers/test_1.0.1-SNAPSHOT/processes/instances?pageSize=1000" \
     -H "accept: application/json"
 ```
 With extraction of `process-instance-id`:
 ```shell
   curl -s --user rhpamAdmin:redhat123# -X GET \
-    "http://52.152.178.161:8080/kie-server/services/rest/server/containers/test_1.0.1-SNAPSHOT/processes/instances?pageSize=1000" \
+    "http://20.124.19.182:8080/kie-server/services/rest/server/containers/test_1.0.1-SNAPSHOT/processes/instances?pageSize=1000" \
     -H "accept: application/json" | jq -c -r '."process-instance"[] | ."process-instance-id" | @sh'
 ```

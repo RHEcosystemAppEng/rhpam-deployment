@@ -8,7 +8,7 @@ function execute() {
 }
 
 function copyResources(){
-#  scp -i ${SSH_PEM_FILE} ./resources/* azureuser@$KIE_SERVER_IP:/tmp
+  scp -i ${SSH_PEM_FILE} ./resources/* azureuser@$KIE_SERVER_IP:/tmp
   scp -i ${SSH_PEM_FILE} ${SSH_PEM_FILE} azureuser@$KIE_SERVER_IP:/tmp
   scp -i ${SSH_PEM_FILE} ./ks/* azureuser@$KIE_SERVER_IP:/tmp
 
