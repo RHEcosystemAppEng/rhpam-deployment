@@ -1,6 +1,8 @@
 #!/bin/bash
 
-source ./deployment.properties
+install_type=$1
+
+source deployment.properties
 
 function execute() {
   cmd=$1
@@ -8,12 +10,12 @@ function execute() {
 }
 
 function copyResources(){
-  scp -i ${SSH_PEM_FILE} ./resources/* azureuser@$KIE_SERVER_IP:/tmp
+  scp -i ${SSH_PEM_FILE} ./resources/ks/* azureuser@$KIE_SERVER_IP:/tmp
   scp -i ${SSH_PEM_FILE} ${SSH_PEM_FILE} azureuser@$KIE_SERVER_IP:/tmp
   scp -i ${SSH_PEM_FILE} ./ks/* azureuser@$KIE_SERVER_IP:/tmp
 
-  sed 's@${EAP_HOME}@'$EAP_HOME'@' ./resources/eap-auto.xml > resources/eap-auto-updated.xml
-  scp -i ${SSH_PEM_FILE} resources/eap-auto-updated.xml azureuser@$KIE_SERVER_IP:/tmp/eap-auto.xml
+  sed 's@${EAP_HOME}@'$EAP_HOME'@' ./resources/ks/eap-auto.xml > resources/ks/eap-auto-updated.xml
+  scp -i ${SSH_PEM_FILE} resources/ks/eap-auto-updated.xml azureuser@$KIE_SERVER_IP:/tmp/eap-auto.xml
   sed 's@${EAP_HOME}@'$EAP_HOME'@' ./ks/ks-auto.xml > ks/ks-auto-updated.xml
   scp -i ${SSH_PEM_FILE} ks/ks-auto-updated.xml azureuser@$KIE_SERVER_IP:/tmp/ks-auto.xml
 
@@ -21,13 +23,19 @@ function copyResources(){
   scp -i ${SSH_PEM_FILE} ks/settings-updated.xml azureuser@$KIE_SERVER_IP:/tmp/settings.xml
 
   scp -i ${SSH_PEM_FILE} deployment.properties azureuser@$KIE_SERVER_IP:/tmp
+  if [ $install_type == UNMANAGED_WITH_SMARTROUTER ]
+  then
+    scp -i ${SSH_PEM_FILE} ./ks_unmgd_with_sr/* azureuser@$KIE_SERVER_IP:/tmp
+  else
+    echo 'default install - no override needed'
+  fi
 }
 
 function installEapAndServer(){
   echo "installEapAndServer"
   execute "sudo rm -rf ${EAP_HOME}; sudo mkdir ${EAP_HOME}"
   execute "cd /tmp; sudo java -jar /tmp/jboss-eap-7.3.0-installer.jar /tmp/eap-auto.xml"
-  execute "cd /tmp; sudo java -jar rhpam-installer-7.9.0.zip /tmp/ks-auto.xml"
+  execute "cd /tmp; sudo java -jar rhpam-installer-7.9.0.jar /tmp/ks-auto.xml"
 }
 
 function configureDS(){

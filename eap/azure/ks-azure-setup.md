@@ -2,6 +2,8 @@
 **Prerequisites**: power down the KIE Server VM first
 
 Customize the following instructions with your actual parameters before running them:
+Gallery creation for resource group (command 2) can be skipped if exists
+
 ```shell
 az login
 

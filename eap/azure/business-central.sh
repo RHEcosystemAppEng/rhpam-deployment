@@ -1,15 +1,19 @@
+#!/bin/bash
+
+source deployment.properties
+
 function execute() {
   cmd=$1
   ssh -i ${SSH_PEM_FILE} azureuser@$BUSINESS_CENTRAL_IP "${cmd}"
 }
 
 function copyResources(){
-#  scp -i ${SSH_PEM_FILE} ./resources/* azureuser@$BUSINESS_CENTRAL_IP:/tmp
+  scp -i ${SSH_PEM_FILE} ./resources/bc/* azureuser@$BUSINESS_CENTRAL_IP:/tmp
   scp -i ${SSH_PEM_FILE} ${SSH_PEM_FILE} azureuser@$BUSINESS_CENTRAL_IP:/tmp
   scp -i ${SSH_PEM_FILE} ./bc/* azureuser@$BUSINESS_CENTRAL_IP:/tmp
 
-  sed 's@${EAP_HOME}@'$EAP_HOME'@' ./resources/eap-auto.xml > resources/eap-auto-updated.xml
-  scp -i ${SSH_PEM_FILE} resources/eap-auto-updated.xml azureuser@$BUSINESS_CENTRAL_IP:/tmp/eap-auto.xml
+  sed 's@${EAP_HOME}@'$EAP_HOME'@' ./resources/bc/eap-auto.xml > resources/bc/eap-auto-updated.xml
+  scp -i ${SSH_PEM_FILE} resources/bc/eap-auto-updated.xml azureuser@$BUSINESS_CENTRAL_IP:/tmp/eap-auto.xml
   sed 's@${EAP_HOME}@'$EAP_HOME'@' ./bc/bc-auto.xml > bc/bc-auto-updated.xml
   scp -i ${SSH_PEM_FILE} bc/bc-auto-updated.xml azureuser@$BUSINESS_CENTRAL_IP:/tmp/bc-auto.xml
 
@@ -23,7 +27,7 @@ function installEapAndServer(){
   echo "installEapAndServer"
   execute "sudo rm -rf ${EAP_HOME}; sudo mkdir ${EAP_HOME}"
   execute "cd /tmp; sudo java -jar /tmp/jboss-eap-7.3.0-installer.jar /tmp/eap-auto.xml"
-  execute "cd /tmp; sudo java -jar rhpam-installer-7.9.0.zip /tmp/bc-auto.xml"
+  execute "cd /tmp; sudo java -jar rhpam-installer-7.9.0.jar /tmp/bc-auto.xml"
 }
 
 function configureBusinessCentral() {

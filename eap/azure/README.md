@@ -27,20 +27,36 @@ Target version is `RHPAM 7.9.0`
 * An external MySql DB, accessible by the KIE Server VM and initialized with the `jbpm` DB schema
   * The [ks/standalone-full.xml](./ks/standalone-full.xml) must be updated with specific configuration of the JDBC 
   data source (look for `java:/jbpmDS` in the xml file)
-* Populate the `resources` folder with all the required binaries from the [Software Downloads][1] page:
+* Populate the `resources/ks` and `resources/bc` folders with all the required binaries from the [Software Downloads][1] page:
     * `jboss-eap-7.3.0-installer.jar`
     * `rhpam-installer-7.9.0.zip`
 
 ## Configure the deployment properties
 Update the template [deployment.properties](./deployment.properties) with actual values for:
+#### Jboss/RHPAM home
+* EAP_HOME: root installation folder of RHPAM on the VM e.g. /opt/EAP-7.3.0
+#### external repo settings
 * MAVEN_REPO_USERNAME: username to access the Maven repository
 * MAVEN_REPO_PASSWORD: password to access the Maven repository
 * MAVEN_REPO_URL: URL of the Maven repository
-* BUSINESS_CENTRAL_HOSTNAME: public IP or hostname of the Business Central VM [only for design time deployment]
-* EAP_HOME: root installation folder of RHPAM on the VM
-* KIE_SERVER_IP: public IP of the KIE Server VM
-* BUSINESS_CENTRAL_IP: public IP of the Business Central VM [only for design time deployment]
-* SSH_PEM_FILE: private key to access the Azure cloud via SSH 
+#### for kie servers to connect to business central (only for managed kie servers)
+* BUSINESS_CENTRAL_HOSTNAME: public IP?? or hostname of the Business Central VM [only for design time deployment] e.g. fsi-business-central
+* BUSINESS_CENTRAL_PORT: business central port e.g. 8080
+* KIE_SERVER_PORT: kie server port e.g. 8080
+#### for kie servers to connect to smart router (set KIE_SERVER_CONTROLLER_XXX properties only for managed smart router)
+* SMART_ROUTER_HOME=root installation folder for smart router e.g. /opt/smart-router
+* SMART_ROUTER_HOST: hostname of the Smart Router VM e.g. fsi-smart-router
+* SMART_ROUTER_PORT: smart router port e.g. 9000
+* SMART_ROUTER_SERVER_PRIVATE_IP=the smart router private ip - will always be overridden
+  on startup of service by `hostname`
+* KIE_SERVER_CONTROLLER_URL=
+* KIE_SERVER_CONTROLLER_USER=
+* KIE_SERVER_CONTROLLER_PWD=
+#### to connect to servers from installing machine
+* SSH_PEM_FILE=private key to access the Azure cloud via SSH (.pem file)
+* KIE_SERVER_IP=public IP of the KIE Server VM
+* BUSINESS_CENTRAL_IP=public IP of the Business Central VM [only for design time deployment]
+* SMART_ROUTER_SERVER_IP=public IP of the Smart Router VM
 
 ## Deploy and configure the KIE Server
 The following command will deploy on the KIE Server VM all the required software and then install and configure both 
@@ -50,11 +66,9 @@ The following command will deploy on the KIE Server VM all the required software
 ```
 
 **Notes**: by default, the above command will deploy a managed server. If you want to just deploy an unmanaged (but with no
-default containers deployed) you have to comment or delete the following properties in [ks/standalone-full.xml](./ks/standalone-full.xml)
-* org.kie.server.controller
-* org.kie.server.controller.user
-* org.kie.server.controller.pwd
-* org.kie.server.location
+default containers deployed) use parameter UNMANAGED_WITH_SMARTROUTER
+
+[comment]: <> (* org.kie.server.location)
 
 The deployment also defines a `ks.service` service which is automatically started and enabled at next server restarts. 
 

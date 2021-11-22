@@ -1,0 +1,8 @@
+[Unit]
+Description=RHPAM Smart Router service
+
+[Service]
+ExecStart=/bin/bash /opt/custom-config/sr-service.sh
+
+[Install]
+WantedBy=multi-user.target

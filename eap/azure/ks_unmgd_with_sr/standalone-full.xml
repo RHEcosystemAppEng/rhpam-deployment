@@ -42,19 +42,16 @@
         <extension module="org.wildfly.iiop-openjdk"/>
     </extensions>
     <system-properties>
-    <property name="org.kie.server.persistence.ds" value="java:/jbpmDS"/>
-     <property name="org.kie.server.persistence.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>    
-
-        <property name="org.kie.server.controller" value="http://${business.central.host}:${business.central.port}/business-central/rest/controller"/>
-        <property name="org.kie.server.controller.user" value="controllerUser"/>
-        <property name="org.kie.server.controller.pwd" value="controllerUser1234"/>
+        <property name="org.kie.server.persistence.ds" value="java:/jbpmDS"/>
+        <property name="org.kie.server.persistence.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>
+        <property name="org.kie.server.router" value="http://${smart.router.host}:${smart.router.port}"/>
+        <property name="org.kie.server.location" value="http://${kie.server.host}:${kie.server.port}/kie-server/services/rest/server"/>
+        <property name="org.kie.server.id" value="default-kieserver"/>
         <property name="kie.maven.settings.custom" value="/opt/custom-config/settings.xml"/>
         <property name="org.kie.server.repo" value="/opt/custom-config"/>
         <property name="org.kie.example" value="true"/>
         <property name="org.jbpm.designer.perspective" value="full"/>
         <property name="designerdataobjects" value="false"/>
-        <property name="org.kie.server.location" value="http://${kie.server.host}:${kie.server.port}/kie-server/services/rest/server"/>
-        <property name="org.kie.server.id" value="default-kieserver"/>
         <property name="org.drools.server.ext.disabled" value="false"/>
         <property name="org.jbpm.server.ext.disabled" value="false"/>
         <property name="org.jbpm.ui.server.ext.disabled" value="false"/>
