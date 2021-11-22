@@ -26,3 +26,8 @@ hs_err_pid*
 .idea
 .vagrant
 *.iml
+/eap/azure/private.txt
+/eap/azure/sr-vm-config
+/eap/azure/deployment-sr-local.properties
+/eap/azure/deployment-local.properties
+/eap/azure/ks_unmgd_with_sr/create-container.xml
