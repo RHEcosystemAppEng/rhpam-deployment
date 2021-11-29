@@ -1,5 +1,7 @@
 [Unit]
 Description=RHPAM Smart Router service
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 ExecStart=/bin/bash /opt/custom-config/sr-service.sh

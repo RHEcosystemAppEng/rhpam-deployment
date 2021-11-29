@@ -56,6 +56,8 @@ Apart from that the installation is the same described here [Deploy and configur
 * to identify a kie server on the router uniquely, the kie server url is built using each servers
 private ip and not it's `hostname`. The KIE_SERVER_ID will be the same for all created servers, since it
 is used for the configuration file name which must be saved inside the kie server image to create an immutable server.
+A predefined kie server id file with the requested containers will be used. Any `<configuration/>` content
+will be overwritten on start up of the ks.service by the VM's and deployment parameter values.
 
 ## Setup validation
 ```
@@ -129,8 +131,6 @@ Seems to happen when container is created on the kie server and the kie server i
 
 ## Setup Validation cleanup
 * remove `<SMART_ROUTER_HOME>/repo/kie-server-router.json`
-* remove `<configuration>..` content from kie server id file - leave only an empty `<configuration/>`; 
-the kie server will fill in the configuration part on the next restart of service/spin up of VM
 
 ## Create Smart Router and KIE Server images
 See instructions at [sr-azure-setup.md](./sr-azure-setup.md) and [ks-azure-setup.md](./ks-azure-setup.md)
@@ -140,19 +140,3 @@ For kie server only do the commands under `Create the KIE Server image`. No Scal
 Create 1 Smart Router VM from the smart router image and 2 Kie server VMs from the immutable, unmanaged kie server image.
 Create a couple of process instances and check System.out on both servers to find the expected script message "counter:x" per instance
 
-## VM from image Troubleshooting
-### The kie server does not register with the router
-When the kie server starts up for the first time on creation of the VM, the id file is configured
-but the `org.kie.server.location` value is missing the host part (supposed to be the private ip of the VM
-sent on start up of service, same like the port, as -D parameter to the standalone.sh)  
-**Reason:** unknown  
-**Fix:** restart the ks.service on the kie server VM with `sudo systemctl restart ks.service`
-This will update the kie server id file (takes some time) - once the file is updated, the kie server can be
-observed under the smart router
-```
- <config-item>
-      <name>org.kie.server.location</name>
-      <value>http://:8080/kie-server/services/rest/server</value>
-      <type>java.lang.String</type>
- </config-item>
-```

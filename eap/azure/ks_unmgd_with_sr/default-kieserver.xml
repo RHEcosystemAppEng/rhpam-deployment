@@ -1,0 +1,35 @@
+<kie-server-state>
+  <controllers/>
+  <configuration>
+    <configItems>
+      <config-item>
+        <name>org.kie.server.location</name>
+        <value>http://localhost:8080/kie-server/services/rest/server</value>
+        <type>java.lang.String</type>
+      </config-item>
+      <config-item>
+        <name>org.kie.server.router</name>
+        <value>http://localhost:9000</value>
+        <type>java.lang.String</type>
+      </config-item>
+      <config-item>
+        <name>org.kie.server.id</name>
+        <value>default-kieserver</value>
+        <type>java.lang.String</type>
+      </config-item>
+    </configItems>
+  </configuration>
+  <containers>
+    <container>
+      <containerId>com.myspace:simplebc:1.0.1-SNAPSHOT</containerId>
+      <releaseId>
+        <groupId>com.myspace</groupId>
+        <artifactId>simplebc</artifactId>
+        <version>1.0.1-SNAPSHOT</version>
+      </releaseId>
+      <status>STARTED</status>
+      <configItems/>
+      <messages/>
+    </container>
+  </containers>
+</kie-server-state>
