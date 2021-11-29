@@ -46,7 +46,7 @@
         <property name="org.kie.server.persistence.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>
         <property name="org.kie.server.router" value="http://${smart.router.host}:${smart.router.port}"/>
         <property name="org.kie.server.location" value="http://${kie.server.host}:${kie.server.port}/kie-server/services/rest/server"/>
-        <property name="org.kie.server.id" value="default-kieserver"/>
+        <property name="org.kie.server.id" value="${kie.server.id}"/>
         <property name="kie.maven.settings.custom" value="/opt/custom-config/settings.xml"/>
         <property name="org.kie.server.repo" value="/opt/custom-config"/>
         <property name="org.kie.example" value="true"/>

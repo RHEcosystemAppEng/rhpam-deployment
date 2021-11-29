@@ -22,8 +22,8 @@ function copyResources(){
   sed 's@${MAVEN_REPO_USERNAME}@'$MAVEN_REPO_USERNAME'@g ; s@${MAVEN_REPO_PASSWORD}@'$MAVEN_REPO_PASSWORD'@g ; s@${MAVEN_REPO_URL}@'$MAVEN_REPO_URL'@' ./ks/settings.xml > ks/settings-updated.xml
   scp -i ${SSH_PEM_FILE} ks/settings-updated.xml azureuser@$KIE_SERVER_IP:/tmp/settings.xml
 
-  scp -i ${SSH_PEM_FILE} deployment.properties azureuser@$KIE_SERVER_IP:/tmp
-  if [ $install_type == UNMANAGED_WITH_SMARTROUTER ]
+  scp -i ${SSH_PEM_FILE} deployment.properties azureuser@$KIE_SERVER_IP:/tmp/deployment.properties
+  if [ "$install_type" == UNMANAGED_WITH_SMARTROUTER ]
   then
     scp -i ${SSH_PEM_FILE} ./ks_unmgd_with_sr/* azureuser@$KIE_SERVER_IP:/tmp
   else
@@ -49,7 +49,7 @@ function configureDS(){
 
 function configureKieServer() {
   echo "configureKieServer"
-  execute "sudo mkdir -p /opt/custom-config"
+  execute "sudo rm -rf /opt/custom-config; sudo mkdir -p /opt/custom-config"
   execute "sudo mv /tmp/settings.xml /opt/custom-config"
   execute "sudo mv ${EAP_HOME}/standalone/configuration/standalone-full.xml ${EAP_HOME}/standalone/configuration/standalone-full.xml.bak"
   execute "sudo mv /tmp/standalone-full.xml ${EAP_HOME}/standalone/configuration/standalone-full.xml"
@@ -70,6 +70,16 @@ function configureAndStartServices(){
   execute "sudo systemctl start ks.service;sudo systemctl enable ks.service"
 }
 
+function addKieServerContainers(){
+   echo "addKieServerContainers - need to wait for kie server to have started up - sleep 100 seconds"
+   sleep 100
+   echo "trying to add container now"
+   execute "sudo mv /tmp/create-container.xml /opt/custom-config"
+   execute "cd /opt/custom-config; curl -v -X POST -H 'Content-type: application/xml' -H 'X-KIE-Content-Type: xstream' -d @create-container.xml \
+   -u rhpamAdmin:redhat123# http://${KIE_SERVER_IP}:${KIE_SERVER_PORT}/kie-server/services/rest/server/config/"
+   execute "sudo systemctl restart ks.service"
+}
+
 function logStartup(){
   execute "sudo journalctl -u ks.service -f"
 }
@@ -81,5 +91,11 @@ installEapAndServer
 configureDS
 configureKieServer
 configureAndStartServices
+if [ "$install_type" == UNMANAGED_WITH_SMARTROUTER ]
+then
+  addKieServerContainers
+else
+  echo 'default install - no immutable kie server'
+fi
 stopFirewallService
 logStartup
