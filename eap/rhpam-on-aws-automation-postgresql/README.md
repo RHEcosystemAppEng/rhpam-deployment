@@ -42,6 +42,13 @@ and run it:
 ./kie-server.sh
 ```
 
+## Install Business Central Instance
+fill in the automation properties with all necessary values in  [business-central.properties](./business-central.properties) 
+and run the the following bash script to initiate business central automation::
+```shell
+./business-central.sh
+```
+
 ## Open points
 ### Unique server ID
 This `bash` function returns the local host name of the current AWS EC2 VM, purged of the suffix `.ec2.internal`:

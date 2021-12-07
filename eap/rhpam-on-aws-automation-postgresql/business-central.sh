@@ -70,6 +70,7 @@ function configureAndStartServices(){
 }
 
 function logStartup(){
+  echo "Finish"
   execute "sudo journalctl -u bc.service -f"
 }
 
