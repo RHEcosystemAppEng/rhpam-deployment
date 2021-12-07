@@ -44,7 +44,7 @@ and run it:
 
 ## Install Business Central Instance
 fill in the automation properties with all necessary values in  [business-central.properties](./business-central.properties) 
-and run the the following bash script to initiate business central automation::
+and run the the following bash script to initiate business central automated installation:
 ```shell
 ./business-central.sh
 ```
