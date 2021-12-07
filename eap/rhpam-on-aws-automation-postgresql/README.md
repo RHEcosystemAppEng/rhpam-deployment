@@ -36,15 +36,16 @@ Place the required sofware artifacts under the `resources` folder, in the expect
 * Business Central user: `rhpam/admin`
 
 ## Install KIE Server
-Update the environment properties in [kie-server.sh](./kie-server.sh) and the runtime properties in [runtime.properties](./resources/kie-server/runtime.properties) 
+Update the environment properties in [kie-server.sh](./kie-server.sh) and the runtime properties in [runtime.properties](./resources/kie-server/runtime.properties)
 and run it:
 ```shell
 ./kie-server.sh
 ```
 
 ## Install Business Central Instance
-fill in the automation properties with all necessary values in  [business-central.properties](./business-central.properties) 
-and run the the following bash script to initiate business central automated installation:
+fill in the automation properties with all necessary values in  [business-central.properties](./business-central.properties) ,
+then create and populate ./binaries directory with all installations files downloaded from [Software Inventory Section](https://github.com/RHEcosystemAppEng/rhpam-deployment/tree/main/eap/rhpam-on-aws-automation-postgresql#software-inventory)
+, and run the the following bash script to initiate business central automated installation:
 ```shell
 ./business-central.sh
 ```
