@@ -20,7 +20,7 @@ function copyResources(){
   scp -i ${SSH_PEM_FILE} ./bc/eap-auto-updated.xml $SSH_USER_ID@$BUSINESS_CENTRAL_IP:/tmp/eap-auto.xml
   sed 's@${EAP_HOME}@'$EAP_HOME'@' ./bc/bc-auto.xml > bc/bc-auto-updated.xml
   scp -i ${SSH_PEM_FILE} bc/bc-auto-updated.xml $SSH_USER_ID@$BUSINESS_CENTRAL_IP:/tmp/bc-auto.xml
-  sed 's@${rhpam.sso.auth.url}@'$SSO_AUTH_URL'@' ./bc/standalone-full.xml | sed 's@${rhpam.sso.token}@'$SSO_BC_SECRET'@' > ./bc/standalone-full-updated.xml
+  sed 's@${rhpam.sso.auth.url}@'$SSO_AUTH_URL'@' ./bc/standalone-full.xml | sed 's@${rhpam.sso.token}@'$SSO_BC_SECRET'@' | sed 's@${business.central.client.secret}@'$SSO_BC_SECRET'@' > ./bc/standalone-full-updated.xml
   scp -i ${SSH_PEM_FILE} bc/standalone-full-updated.xml $SSH_USER_ID@$BUSINESS_CENTRAL_IP:/tmp/standalone-full.xml
   sed 's@${MAVEN_REPO_USERNAME}@'$MAVEN_REPO_USERNAME'@g ; s@${MAVEN_REPO_PASSWORD}@'$MAVEN_REPO_PASSWORD'@g' ./bc/settings.xml > bc/settings-updated.xml
   scp -i ${SSH_PEM_FILE} bc/settings-updated.xml $SSH_USER_ID@$BUSINESS_CENTRAL_IP:/tmp/settings.xml

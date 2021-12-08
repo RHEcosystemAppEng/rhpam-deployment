@@ -50,7 +50,7 @@
         <property name="org.uberfire.ext.security.management.api.userManagementServices" value="KCAdapterUserManagementService"/>
         <property name="org.uberfire.ext.security.management.keycloak.authServer" value="${rhpam.sso.auth.url}"/>
         <property name="org.kie.server.sync.deploy" value="false"/>
-        <!-- <property name="org.kie.server.token" value="${rhpam.sso.token}"/> -->
+        <property name="org.kie.server.token" value="${rhpam.sso.token}"/>
         <property name="kie.maven.settings.custom" value="/opt/custom-config/settings.xml"/>
         <property name="org.kie.server.user" value="${org.kie.server.user}"/>
         <property name="org.kie.server.pwd" value="/opt/custom-config/settings.xml"/>
@@ -527,6 +527,7 @@
         <subsystem xmlns="urn:jboss:domain:resource-adapters:5.0"/>
         <subsystem xmlns="urn:jboss:domain:sar:1.0"/>
         <subsystem xmlns="urn:jboss:domain:security:2.0">
+            <security-management initialize-jacc="false"/>        
             <security-domains>
                 <security-domain name="other" cache-type="default">
                     <authentication>

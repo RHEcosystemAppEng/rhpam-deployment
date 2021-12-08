@@ -50,7 +50,7 @@
         <property name="org.uberfire.ext.security.management.api.userManagementServices" value="KCAdapterUserManagementService"/>
         <property name="org.uberfire.ext.security.management.keycloak.authServer" value="http://54.165.13.3:8080/auth"/>
         <property name="org.kie.server.sync.deploy" value="false"/>
-        <!-- <property name="org.kie.server.token" value="99f79c02-c790-4b7a-b752-fd3406a2f04d"/> -->
+        <property name="org.kie.server.token" value="99f79c02-c790-4b7a-b752-fd3406a2f04d"/>
         <property name="kie.maven.settings.custom" value="/opt/custom-config/settings.xml"/>
         <property name="org.kie.server.user" value="${org.kie.server.user}"/>
         <property name="org.kie.server.pwd" value="/opt/custom-config/settings.xml"/>
@@ -474,7 +474,7 @@
                 <enable-basic-auth>true</enable-basic-auth>
                 <ssl-required>NONE</ssl-required>
                 <resource>business-central</resource>
-                <credential name="secret">${business.central.client.secret}</credential>
+                <credential name="secret">99f79c02-c790-4b7a-b752-fd3406a2f04d</credential>
             </secure-deployment>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:mail:3.0">
@@ -527,6 +527,7 @@
         <subsystem xmlns="urn:jboss:domain:resource-adapters:5.0"/>
         <subsystem xmlns="urn:jboss:domain:sar:1.0"/>
         <subsystem xmlns="urn:jboss:domain:security:2.0">
+            <security-management initialize-jacc="false"/>        
             <security-domains>
                 <security-domain name="other" cache-type="default">
                     <authentication>
