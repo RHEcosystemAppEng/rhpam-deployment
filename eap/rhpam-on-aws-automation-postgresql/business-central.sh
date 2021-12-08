@@ -13,8 +13,8 @@ function copyResources(){
   scp -i ${SSH_PEM_FILE} ${SSH_PEM_FILE} $SSH_USER_ID@$BUSINESS_CENTRAL_IP:/tmp
   
   #Transfer installations required for automation
-  # scp -i ${SSH_PEM_FILE} ./binaries*.jar $SSH_USER_ID@$BUSINESS_CENTRAL_IP:/tmp
-  # scp -i ${SSH_PEM_FILE} ./binaries/*.zip $SSH_USER_ID@$BUSINESS_CENTRAL_IP:/tmp  
+  scp -i ${SSH_PEM_FILE} ./binaries/*.jar $SSH_USER_ID@$BUSINESS_CENTRAL_IP:/tmp
+  scp -i ${SSH_PEM_FILE} ./binaries/*.zip $SSH_USER_ID@$BUSINESS_CENTRAL_IP:/tmp  
   
   sed 's@${EAP_HOME}@'$EAP_HOME'@' ./bc/eap-auto.xml > ./bc/eap-auto-updated.xml
   scp -i ${SSH_PEM_FILE} ./bc/eap-auto-updated.xml $SSH_USER_ID@$BUSINESS_CENTRAL_IP:/tmp/eap-auto.xml
@@ -38,7 +38,7 @@ function installEapAndServer(){
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --command=\"patch apply /tmp/jboss-eap-7.3.6-patch.zip\""
 
 #extract rhsso-adapter files into temp directory;
-  execute "cd /tmp; sudo mkdir rh-sso;  sudo unzip rh-sso-7.4.9-eap7-adapter-dist.zip -d ${EAP_HOME}"
+  execute "cd /tmp; sudo unzip rh-sso-7.4.9-eap7-adapter-dist.zip -d ${EAP_HOME}"
   echo "Load the SSO adapter into JBOSS..."
  execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=${EAP_HOME}/bin/adapter-elytron-install-offline.cli -Dserver.config=standalone-full.xml"  
    echo "installing RHPAM..."

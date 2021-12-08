@@ -43,9 +43,12 @@ and run it:
 ```
 
 ## Install Business Central Instance
-fill in the automation properties with all necessary values in  [business-central.properties](./business-central.properties) ,
-then create and populate ./binaries directory with all installations files downloaded from [Software Inventory Section](https://github.com/RHEcosystemAppEng/rhpam-deployment/tree/main/eap/rhpam-on-aws-automation-postgresql#software-inventory)
-, and run the the following bash script to initiate business central automated installation:
+* fill in the automation properties with all necessary values in  [business-central.properties](./business-central.properties) 
+
+* then create and populate ./binaries directory with all installations files downloaded from [Software Inventory Section](https://github.com/RHEcosystemAppEng/rhpam-deployment/tree/main/eap/rhpam-on-aws-automation-postgresql#software-inventory)
+except 'boss-eap-7.3.9-patch.zip', you should download 'boss-eap-7.3.6-patch.zip' instead. 
+
+*  run the the following bash script to initiate business central automated installation:
 ```shell
 ./business-central.sh
 ```

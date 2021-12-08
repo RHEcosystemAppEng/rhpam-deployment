@@ -48,7 +48,7 @@
         <property name="designerdataobjects" value="false"/>
         <property name="org.jbpm.workbench.kie_server.keycloak" value="true"/>
         <property name="org.uberfire.ext.security.management.api.userManagementServices" value="KCAdapterUserManagementService"/>
-        <property name="org.uberfire.ext.security.management.keycloak.authServer" value="http://3.90.1.244:8080/auth"/>
+        <property name="org.uberfire.ext.security.management.keycloak.authServer" value="http://54.165.13.3:8080/auth"/>
         <property name="org.kie.server.sync.deploy" value="false"/>
         <!-- <property name="org.kie.server.token" value="99f79c02-c790-4b7a-b752-fd3406a2f04d"/> -->
         <property name="kie.maven.settings.custom" value="/opt/custom-config/settings.xml"/>
@@ -470,7 +470,7 @@
         <subsystem xmlns="urn:jboss:domain:keycloak:1.1">
             <secure-deployment name="business-central.war">
                 <realm>Temenos</realm>
-                <auth-server-url>http://3.90.1.244:8080/auth</auth-server-url>
+                <auth-server-url>http://54.165.13.3:8080/auth</auth-server-url>
                 <enable-basic-auth>true</enable-basic-auth>
                 <ssl-required>NONE</ssl-required>
                 <resource>business-central</resource>
