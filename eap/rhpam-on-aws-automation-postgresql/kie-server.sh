@@ -1,18 +1,23 @@
 #!/bin/bash
 
-source kie-server.properties
+source $(dirname "$0")/kie-server.properties
+source $(dirname "$0")/lib/rhpam-common.sh
 
 function execute() {
   cmd=$1
   echo "=== $cmd ==="
-  ssh -i ${SSH_PEM_FILE} ec2-user@$KIE_SERVER_IP "${cmd}"
+  ssh -i ${SSH_PEM_FILE} ${SSH_USER_ID}@$KIE_SERVER_IP "${cmd}"
 }
 
 function copyResources(){
-  scp -i ${SSH_PEM_FILE} ./resources/jboss-eap/* ec2-user@$KIE_SERVER_IP:/tmp
-  scp -i ${SSH_PEM_FILE} ./resources/rhpam/* ec2-user@$KIE_SERVER_IP:/tmp
-  scp -i ${SSH_PEM_FILE} ./resources/kie-server/* ec2-user@$KIE_SERVER_IP:/tmp
+#  scp -i ${SSH_PEM_FILE} ./resources/jboss-eap/* ${SSH_USER_ID}@$KIE_SERVER_IP:/tmp
+#  scp -i ${SSH_PEM_FILE} ./resources/rhpam/* ${SSH_USER_ID}@$KIE_SERVER_IP:/tmp
+  scp -i ${SSH_PEM_FILE} ./resources/kie-server/* ${SSH_USER_ID}@$KIE_SERVER_IP:/tmp
 
+  sed 's@${EAP_HOME}@'$EAP_HOME'@' ./resources/jboss-eap/eap-auto.xml > ./resources/jboss-eap/eap-auto-updated.xml
+  scp -i ${SSH_PEM_FILE} ./resources/jboss-eap/eap-auto-updated.xml ${SSH_USER_ID}@$KIE_SERVER_IP:/tmp/eap-auto.xml
+  sed 's@${EAP_HOME}@'$EAP_HOME'@' ./resources/kie-server/ks-auto.xml > resources/kie-server/ks-auto-updated.xml
+  scp -i ${SSH_PEM_FILE} resources/kie-server/ks-auto-updated.xml ${SSH_USER_ID}@$KIE_SERVER_IP:/tmp/ks-auto.xml
   execute "echo \"\" >> /tmp/runtime.properties"
   execute "echo \"EAP_HOME=${EAP_HOME}\" >> /tmp/runtime.properties"
 }
@@ -30,8 +35,8 @@ function installEap(){
   echo "installEap"
   stopServer
   execute "sudo rm -rf ${EAP_HOME}; sudo mkdir ${EAP_HOME}"
-  execute "cd /tmp; sudo java -jar /tmp/jboss-eap-7.3.0-installer.jar /tmp/eap-auto.xml"
-  execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --command='patch apply /tmp/jboss-eap-7.3.9-patch.zip'"
+  execute "cd /tmp; sudo java -jar /tmp/${EAP_INSTALLER} /tmp/eap-auto.xml"
+  execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --command='patch apply /tmp/${EAP_PATCH}'"
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --command='patch history'"
 }
 
@@ -45,7 +50,7 @@ function stopServer(){
 }
 
 function installSsoAdapter(){
-  execute "sudo unzip /tmp/rh-sso-7.4.9-eap7-adapter-dist.zip -d ${EAP_HOME}"
+  execute "sudo unzip /tmp/${EAP_SSO_ADAPTER} -d ${EAP_HOME}"
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=${EAP_HOME}/bin/adapter-elytron-install-offline.cli -Dserver.config=standalone-full.xml"
 
   startServer
@@ -57,13 +62,13 @@ function installSsoAdapter(){
 
 function installKieServer(){
   echo "installKieServer"
-  execute "cd /tmp; sudo java -jar rhpam-installer-7.11.1.jar /tmp/ks-auto.xml"
+  execute "cd /tmp; sudo java -jar ${RHPAM_INSTALLER} /tmp/ks-auto.xml"
   execute "sudo cp ${EAP_HOME}/standalone/configuration/standalone-full.xml ${EAP_HOME}/standalone/configuration/standalone-full.xml.bak"
 }
 
 function configureDS(){
   echo "configureDS"
-  execute "curl https://jdbc.postgresql.org/download/postgresql-42.3.1.jar --output /tmp/postgresql-42.3.1.jar"
+  execute "curl ${POSTGRESQL_DOWNLOAD_URL} --output /tmp/${POSTGRESQL_DRIVER}"
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/postgres-module.cli"
 
   startServer
@@ -71,13 +76,6 @@ function configureDS(){
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --properties=/tmp/runtime.properties --file=/tmp/postgres-datasource.cli"
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh  --timeout=60000 --file=/tmp/delete-h2.cli"
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --connect --timeout=60000 --command='/subsystem=datasources/data-source=KieServerDS:test-connection-in-pool'"
-}
-
-function configureUsers(){
-  echo "configureUsers"
-  execute "echo \"\" >> /tmp/runtime.properties"
-  execute "echo \"rhpamController_username=${CONTROLLER_USERNAME}\" >> /tmp/runtime.properties"
-  execute "echo \"rhpamController_password=${CONTROLLER_PASSWORD}\" >> /tmp/runtime.properties"
 }
 
 function configureController() {
@@ -97,6 +95,5 @@ installSsoAdapter
 installKieServer
 configureDS
 configureMavenRepository
-configureUsers
 configureController
 stopServer

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <AutomatedInstallation langpack="eng">
     <productName>RHPAM</productName>
-    <productVersion>7.11.1</productVersion>
+    <productVersion>7.9.1</productVersion>
     <com.izforge.izpack.panels.HTMLLicencePanel id="HTMLLicencePanel"/>
     <com.izforge.izpack.panels.TargetPanel id="DirectoryPanel">
         <installpath>${EAP_HOME}</installpath>
