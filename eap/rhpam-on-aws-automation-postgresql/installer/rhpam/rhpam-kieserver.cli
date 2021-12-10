@@ -1,0 +1,5 @@
+connect
+/system-property=org.kie.server.user:remove
+/system-property=org.kie.server.pwd:remove
+/system-property=org.kie.server.user:add(value=${org.kie.server.user:})
+/system-property=org.kie.server.pwd:add(value=${org.kie.server.pwd:})

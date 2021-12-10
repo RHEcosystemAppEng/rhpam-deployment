@@ -3,7 +3,8 @@
 source /tmp/runtime.properties
 
 function updateMavenSettings(){
-  sed 's@${MAVEN_REPO_USERNAME}@'$MAVEN_REPO_USERNAME'@g ; s@${MAVEN_REPO_PASSWORD}@'$MAVEN_REPO_PASSWORD'@g ; s@${MAVEN_REPO_URL}@'$MAVEN_REPO_URL'@' /tmp/settings.xml > /opt/custom-config/settings.xml
+  sed 's@${MAVEN_REPO_USERNAME}@'$MAVEN_REPO_USERNAME'@g ; s@${MAVEN_REPO_PASSWORD}@'$MAVEN_REPO_PASSWORD'@g ; s@${MAVEN_REPO_URL}@'$MAVEN_REPO_URL'@' \
+    /opt/custom-config/settings.xml.template > /opt/custom-config/settings.xml
 }
 
 function get_private_ip() {
@@ -27,7 +28,8 @@ echo "#######################################################################"
 /opt/EAP-7.3.0/bin/standalone.sh -c standalone-full.xml -b 0.0.0.0 \
   -Ddatabase_host=${database_host} -Ddatabase_port=${database_port} -Ddatabase_schema=${database_schema}\
   -Ddatabase_credential_username=${database_credential_username} -Ddatabase_credential_password=${database_credential_password}\
-  -DkeycloakSso_authUrl=${keycloakSso_authUrl} -DkeycloakSso_realm_name=${keycloakSso_realm_name}\
-  -DkeycloakSso_realm_ksClient_name=${keycloakSso_realm_ksClient_name} -DkeycloakSso_realm_ksClient_secret=${keycloakSso_realm_ksClient_secret} \
+  -DkeycloakSso_authUrl=${keycloakSso_authUrl} -DkeycloakSso_realm_name=${keycloakSso_realm_name} \
+  -DkeycloakSso_deployment=kie-server.war \
+  -DkeycloakSso_realm_client_name=${keycloakSso_realm_client_name} -DkeycloakSso_realm_client_secret=${keycloakSso_realm_client_secret} \
   -Dkieserver_privateIp=${kieserver_privateIp} -Dkieserver_hostname=${kieserver_hostname} \
   -DbusinessCentral_host=${businessCentral_host} -DrhpamController_username=${rhpamController_username} -DrhpamController_password=${rhpamController_password}

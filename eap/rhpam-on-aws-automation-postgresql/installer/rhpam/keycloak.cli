@@ -1,0 +1,19 @@
+connect
+/system-property=org.jbpm.workbench.kie_server.keycloak:add(value=true)
+/system-property=org.kie.server.bypass.auth.user:add(value=true)
+/system-property=org.uberfire.ext.security.management.api.userManagementServices:add(value=KCAdapterUserManagementService)
+/system-property=org.uberfire.ext.security.management.keycloak.authServer:add(value="${keycloakSso_authUrl:}")
+/system-property=org.kie.server.sync.deploy:add(value=false)
+
+if (outcome == success) of /system-property=org.kie.server.id:read-resource
+    /subsystem=keycloak/secure-deployment=kie-server.war:add(realm=${keycloakSso_realm_name:},resource=${keycloakSso_realm_client_name:},auth-server-url=${keycloakSso_authUrl:},ssl-required=NONE,enable-basic-auth=true)
+    /subsystem=keycloak/secure-deployment=kie-server.war/credential=secret:add(value=${keycloakSso_realm_client_secret:})
+else
+    /subsystem=keycloak/secure-deployment=business-central.war:add(realm=${keycloakSso_realm_name:},resource=${keycloakSso_realm_client_name:},auth-server-url=${keycloakSso_authUrl:},ssl-required=NONE,enable-basic-auth=true)
+    /subsystem=keycloak/secure-deployment=business-central.war/credential=secret:add(value=${keycloakSso_realm_client_secret:})
+end-if
+
+if (outcome == success) of /subsystem=undertow/server=default-server/host=default-host/setting=single-sign-on:read-resource
+    /subsystem=undertow/server=default-server/host=default-host/setting=single-sign-on:remove
+    reload
+end-if
