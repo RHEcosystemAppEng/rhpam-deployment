@@ -29,15 +29,6 @@ function configureKieServer() {
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/rhpam-kieserver.cli"
 }
 
-function configureAndStartServices(){
-  echo "configureAndStartServices"
-  execute "sudo systemctl stop bc.service;sudo systemctl disable bc.service;sudo rm /etc/systemd/system/bc.service;sudo systemctl daemon-reload;sudo systemctl reset-failed"
-  execute "sudo mv /tmp/runtime.properties /opt/custom-config"
-  execute "sudo mv /tmp/bc-service.sh /opt/custom-config"
-  execute "sudo mv /tmp/bc.service /etc/systemd/system"
-  execute "sudo systemctl start bc.service;sudo systemctl enable bc.service"
-}
-
 echo "Installing Business Central to ${BUSINESS_CENTRAL_IP}"
 copyResources
 installDependencies
@@ -51,5 +42,5 @@ configureMavenRepository
 configureKieServer
 stopServer
 
-configureAndStartServices
+configureAndStartService "bc.service" "bc-service.sh"
 logService "bc.service"

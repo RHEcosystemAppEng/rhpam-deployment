@@ -1,0 +1,10 @@
+[Unit]
+Description=RHPAM Kie Server service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/bin/bash /opt/custom-config/ks-service.sh
+
+[Install]
+WantedBy=multi-user.target

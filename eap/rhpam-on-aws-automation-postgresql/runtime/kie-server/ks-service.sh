@@ -1,10 +1,10 @@
 #!/bin/bash
 
-source /tmp/runtime.properties
+source $(dirname "$0")/runtime.properties
 
 function updateMavenSettings(){
   sed 's@${MAVEN_REPO_USERNAME}@'$MAVEN_REPO_USERNAME'@g ; s@${MAVEN_REPO_PASSWORD}@'$MAVEN_REPO_PASSWORD'@g ; s@${MAVEN_REPO_URL}@'$MAVEN_REPO_URL'@' \
-    /opt/custom-config/settings.xml.template > /opt/custom-config/settings.xml
+    $(dirname "$0")/settings.xml.template > /opt/custom-config/settings.xml
 }
 
 function get_private_ip() {

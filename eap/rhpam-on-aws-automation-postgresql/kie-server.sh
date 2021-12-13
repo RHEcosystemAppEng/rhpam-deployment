@@ -56,3 +56,6 @@ configureDS
 configureMavenRepository
 configureController
 stopServer
+
+configureAndStartService "ks.service" "ks-service.sh"
+logService "ks.service"

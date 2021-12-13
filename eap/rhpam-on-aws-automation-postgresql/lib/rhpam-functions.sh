@@ -29,3 +29,15 @@ function configureMavenRepository(){
   execute "sudo mv /tmp/settings.xml /opt/custom-config/settings.xml.template"
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/maven-repo.cli"
 }
+
+function configureAndStartService(){
+  service=$1
+  launcher=$2
+  echo "configureAndStartService ${service} as ${launcher}"
+  execute "sudo systemctl stop ${service};sudo systemctl disable ${service};sudo rm /etc/systemd/system/${service};sudo systemctl daemon-reload;sudo systemctl reset-failed"
+  execute "sudo mv /tmp/runtime.properties /opt/custom-config"
+  execute "sudo mv /tmp/${launcher} /opt/custom-config"
+  execute "sudo mv /tmp/${service} /etc/systemd/system"
+  execute "sudo systemctl start ${service};sudo systemctl enable ${service}"
+}
+
