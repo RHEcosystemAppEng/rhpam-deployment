@@ -12,6 +12,7 @@ if (outcome == success) of /system-property=org.kie.server.id:read-resource
 else
     /subsystem=keycloak/secure-deployment=business-central.war:add(realm=${keycloakSso_realm_name:},resource=${keycloakSso_realm_client_name:},auth-server-url=${keycloakSso_authUrl:},ssl-required=NONE,enable-basic-auth=true)
     /subsystem=keycloak/secure-deployment=business-central.war/credential=secret:add(value=${keycloakSso_realm_client_secret:})
+    /subsystem=keycloak/secure-deployment=business-central.war:write-attribute(name=principal-attribute,value=preferred_username)
 end-if
 
 if (outcome == success) of /subsystem=undertow/server=default-server/host=default-host/setting=single-sign-on:read-resource
