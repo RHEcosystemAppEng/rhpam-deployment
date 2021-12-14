@@ -1,26 +1,37 @@
 #!/bin/bash
 
+function log() {
+  echo $1
+  echo "$1" >> $(dirname $0)/installer.log
+}
+
 function execute() {
   cmd=$1
   echo "=== $cmd ==="
-  ssh -i ${SSH_PEM_FILE} ${SSH_USER_ID}@$RHPAM_SERVER_IP "${cmd}"
+  if [[ "${DRY_RUN_ONLY}" != "yes" ]]; then
+    ssh -i ${SSH_PEM_FILE} ${SSH_USER_ID}@$RHPAM_SERVER_IP "${cmd}"
+  else
+    log "${cmd}"
+  fi
 }
 
 function copyFolder() {
   echo "copyFolder $1"
-  folder=$1
-  for f in $(ls ${folder})
-  do
-    if [[ $f == *.jar  || $f == *.zip ]]; then
-      if ssh -i ${SSH_PEM_FILE} ${SSH_USER_ID}@${RHPAM_SERVER_IP} "test -e /tmp/${f}"; then
-        echo "Skipping ${f}"
+  if [[ "${DRY_RUN_ONLY}" != "yes" ]]; then
+    folder=$1
+    for f in $(ls ${folder})
+    do
+      if [[ $f == *.jar  || $f == *.zip ]]; then
+        if ssh -i ${SSH_PEM_FILE} ${SSH_USER_ID}@${RHPAM_SERVER_IP} "test -e /tmp/${f}"; then
+          echo "Skipping ${f}"
+        else
+          scp -i ${SSH_PEM_FILE} ${folder}/${f} ${SSH_USER_ID}@${RHPAM_SERVER_IP}:/tmp
+        fi
       else
         scp -i ${SSH_PEM_FILE} ${folder}/${f} ${SSH_USER_ID}@${RHPAM_SERVER_IP}:/tmp
       fi
-    else
-        scp -i ${SSH_PEM_FILE} ${folder}/${f} ${SSH_USER_ID}@${RHPAM_SERVER_IP}:/tmp
-    fi
-  done
+    done
+  fi
 }
 
 function stopFirewallService(){
@@ -35,16 +46,18 @@ function installDependencies(){
 
 function waitForServer() {
   echo "$(date) waitForServer http://${RHPAM_SERVER_IP}:8080"
-  until $(curl --output /dev/null --silent --head --fail http://${RHPAM_SERVER_IP}:8080); do
-      printf '.'
-      sleep 5
-  done
+  if [[ "${DRY_RUN_ONLY}" != "yes" ]]; then
+    until $(curl --output /dev/null --silent --head --fail http://${RHPAM_SERVER_IP}:8080); do
+        printf '.'
+        sleep 5
+    done
+  fi
   echo "$(date) Server is up"
 }
 
 function startServer(){
-  echo "startServer $LAUNCHER"
-  execute "cd /tmp; sh -c 'sudo /tmp/${LAUNCHER} > /dev/null 2>&1 &'"
+  echo "startServer ${SERVICE_LAUNCHER}"
+  execute "cd /tmp; sh -c 'sudo /tmp/${SERVICE_LAUNCHER} > /dev/null 2>&1 &'"
   waitForServer
 }
 
