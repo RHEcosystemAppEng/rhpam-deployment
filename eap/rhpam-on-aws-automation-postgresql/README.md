@@ -14,13 +14,16 @@ Place the required sofware artifacts under the `installer` folder, in the expect
 [rh-sso-7.4.0-eap7-adapter.zip][sso-eap7-adapter]
 ### rhpam folder
 [rhpam-installer-7.9.1.jar][rhpam-installer]
+### database folder
+[rhpam-7.9.1-add-ons.zip][rhpam-add-ons]
 
 ## Configuring dependant components
 ### Configuring Keycloak
 **TBD** Add new installer
 
 ### Configuring PostgresQL
-**TBD** Add new installer
+The database is created and initialized during the creation of the KIE Server, in case it is not already there, using
+the connection properties defined in [runtime.properties](./runtime/kie-server/runtime.properties)
 
 ## Install and configure RHPAM services
 These steps are performed with the [installer.sh](./installer.sh) script that is configured with the following properties
@@ -71,3 +74,4 @@ E.g., it returns something like `ip-10-0-1-211` which is unique within the local
 [jboss-eap-patch]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?product=appplatform&downloadType=patches&version=7.3
 [sso-eap7-adapter]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?product=core.service.rhsso&downloadType=patches&version=7.4
 [rhpam-installer]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=rhpam&version=7.09.1
+[rhpam-add-ons]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=rhpam&version=7.09.1

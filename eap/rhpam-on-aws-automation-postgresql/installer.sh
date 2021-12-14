@@ -73,6 +73,19 @@ function configureKieServer() {
 }
 
 ### Kie Server functions ###
+function configurePostgresQL() {
+  echo "configurePostgresQL"
+  unzip ./installer/database/rhpam-7.9.1-add-ons.zip -d ./installer/database/ rhpam-7.9.1-migration-tool.zip
+  rm -rf installer/database/rhpam-7.9.1-migration-tool
+  unzip  ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/postgresql/postgresql-jbpm-schema.sql"
+  unzip  ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/postgresql/quartz_tables_postgres.sql"
+  unzip  ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/postgresql/task_assigning_tables_postgresql.sql"
+  cd ./installer/database/rhpam-7.9.1-migration-tool/ddl-scripts && zip -r ../../postgresql.zip  postgresql && cd -
+  copyFile ./installer/database/postgresql.zip
+
+  execute "/tmp/postgresql.sh"
+}
+
 function installJdbcDriver(){
   echo "installJdbcDriver"
   execute "curl ${POSTGRESQL_DOWNLOAD_URL} --output /tmp/${POSTGRESQL_DRIVER}"
@@ -101,6 +114,9 @@ initInstaller
 copyResources
 installDependencies
 stopFirewallService
+if [ $(isKieServer) ]; then
+  configurePostgresQL
+fi
 installEap
 installSsoAdapter
 installRhpam "${RHPAM_INSTALLER_XML}"

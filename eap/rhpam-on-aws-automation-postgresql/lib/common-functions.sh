@@ -15,6 +15,14 @@ function execute() {
   fi
 }
 
+function copyFile() {
+  echo "copyFolder $1"
+  f=$1
+  if [[ "${DRY_RUN_ONLY}" != "yes" ]]; then
+    scp -i ${SSH_PEM_FILE} ${f} ${SSH_USER_ID}@${RHPAM_SERVER_IP}:/tmp
+  fi
+}
+
 function copyFolder() {
   echo "copyFolder $1"
   if [[ "${DRY_RUN_ONLY}" != "yes" ]]; then
