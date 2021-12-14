@@ -1,4 +1,5 @@
-connect
+embed-server --server-config=${server.config:standalone-full.xml}
+
 /subsystem=datasources/jdbc-driver=postgres:add(driver-name=postgres,driver-module-name=org.postgresql,driver-xa-datasource-class-name=org.postgresql.xa.PGXADataSource)
 data-source add --jndi-name=java:jboss/datasources/KieServerDS \
     --name=KieServerDS \
@@ -12,4 +13,4 @@ data-source add --jndi-name=java:jboss/datasources/KieServerDS \
 /subsystem=ee/service=default-bindings:write-attribute(name=datasource,value=java:jboss/datasources/KieServerDS)
 /system-property=org.kie.server.persistence.ds:add(value=java:jboss/datasources/KieServerDS)
 /system-property=org.kie.server.persistence.dialect:add(value=org.hibernate.dialect.PostgreSQL82Dialect)
-reload
+# reload

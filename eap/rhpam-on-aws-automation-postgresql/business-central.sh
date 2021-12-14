@@ -19,7 +19,6 @@ function copyResources(){
   sed 's@${EAP_HOME}@'$EAP_HOME'@' ./installer/business-central/bc-auto.xml > ./tmp_installer/bc-auto.xml
   copyFolder "./tmp_installer"
   rm -rf ./tmp_installer
-
   execute "echo \"\" >> /tmp/runtime.properties"
   execute "echo \"EAP_HOME=${EAP_HOME}\" >> /tmp/runtime.properties"
 }
@@ -37,10 +36,10 @@ installEap
 installSsoAdapter
 installRhpam "bc-auto.xml"
 configureSso
-startServer
+#startServer
 configureMavenRepository
 configureKieServer
-stopServer
+#stopServer
 
 configureAndStartService "bc.service" "bc-service.sh"
 logService "bc.service"

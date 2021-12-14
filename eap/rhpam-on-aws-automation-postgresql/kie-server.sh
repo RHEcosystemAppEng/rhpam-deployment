@@ -40,7 +40,7 @@ function configureDS(){
 
 function configureController() {
   echo "configureController"
-  execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/rhpam-controller.cli"
+  execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/rhpam-managed-server.cli"
 }
 
 copyResources
@@ -51,11 +51,11 @@ installSsoAdapter
 installRhpam "ks-auto.xml"
 configureSso
 installJdbcDriver
-startServer
+#startServer
 configureDS
 configureMavenRepository
 configureController
-stopServer
+#stopServer
 
 configureAndStartService "ks.service" "ks-service.sh"
 logService "ks.service"

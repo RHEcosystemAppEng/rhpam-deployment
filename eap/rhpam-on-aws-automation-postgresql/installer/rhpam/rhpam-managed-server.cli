@@ -1,4 +1,5 @@
-connect
+embed-server --server-config=${server.config:standalone-full.xml}
+
 /system-property=org.kie.server.controller:add(value=http://${businessCentral_host:localhost}:8080/business-central/rest/controller)
 /system-property=org.kie.server.controller.user:add(value=${rhpamController_username:})
 /system-property=org.kie.server.controller.pwd:add(value=${rhpamController_password:})

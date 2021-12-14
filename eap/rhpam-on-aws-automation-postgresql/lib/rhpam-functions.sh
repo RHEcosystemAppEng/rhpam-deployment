@@ -17,10 +17,10 @@ function installRhpam(){
 }
 
 function configureSso(){
-    startServer
+#    startServer
   # No JACC
     execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/keycloak.cli"
-    stopServer
+#    stopServer
 }
 
 function configureMavenRepository(){

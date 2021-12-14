@@ -1,4 +1,5 @@
-connect
+embed-server --server-config=${server.config:standalone-full.xml}
+
 /system-property=org.jbpm.workbench.kie_server.keycloak:add(value=true)
 /system-property=org.kie.server.bypass.auth.user:add(value=true)
 /system-property=org.uberfire.ext.security.management.api.userManagementServices:add(value=KCAdapterUserManagementService)
@@ -15,5 +16,5 @@ end-if
 
 if (outcome == success) of /subsystem=undertow/server=default-server/host=default-host/setting=single-sign-on:read-resource
     /subsystem=undertow/server=default-server/host=default-host/setting=single-sign-on:remove
-    reload
+    # reload
 end-if

@@ -1,5 +1,6 @@
-connect
+embed-server --server-config=${server.config:standalone-full.xml}
+
 /subsystem=datasources/data-source=ExampleDS:remove
 reload
 /subsystem=datasources/jdbc-driver=h2:remove
-reload
+# reload

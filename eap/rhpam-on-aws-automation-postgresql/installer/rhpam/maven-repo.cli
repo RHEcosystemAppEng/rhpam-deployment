@@ -1,3 +1,4 @@
-connect
+embed-server --server-config=${server.config:standalone-full.xml}
+
 /system-property=org.kie.server.repo:add(value=/opt/custom-config)
 /system-property=kie.maven.settings.custom:add(value=/opt/custom-config/settings.xml)

@@ -1,4 +1,5 @@
-connect
+embed-server --server-config=${server.config:standalone-full.xml}
+
 /system-property=org.kie.server.user:remove
 /system-property=org.kie.server.pwd:remove
 /system-property=org.kie.server.user:add(value=${org.kie.server.user:})
