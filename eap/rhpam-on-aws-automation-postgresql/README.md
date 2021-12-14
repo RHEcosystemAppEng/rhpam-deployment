@@ -1,56 +1,57 @@
-## Deployment of infrastructrure components
-Steps accomplished from the reference page [Deploy RHPAM 7.11.1 AWS with a PostgreSQL backend][reference-procedure]
-* Create or import a Key-Pair: `rhpam.pem`
-* ~~Create the Elastic IPs~~
-* ~~Create the Policy~~
-* ~~Create the Role~~
-* Create the VPC: `RHPAM VPC`
-* Create the Subnets: only `Public us-east-1a Subnet` and `Public us-east-1b Subnet`
-* ~~Create the NAT Gateway~~
-* Create the Internet Gateway
-* Create the Route Tables
-* Create the Security Groups: only one with all needed Inbound rules and one Outbound rule for all traffic, ports, protocols and destinations
-* ~~Create the Subnet Group~~: this ws delegated to the `Create Database` wizard, instead
-* Create the PostgreSQL DB Managed RDS Instance
-* Create the base EC2 Instance and AMI: actually skipped the creation of the base image
-  * JDK + pql, no aws CLI
-* Create the RHSSO Instance, AMI, ELB, and ASG
-  * No AMI, ELB, ASG
-  * No PostgresQL driver
-  * Create DB schema
-  * No ALB, ASG
-  * Also anticipated the initialization of the `jbpm` schema from instructions in `Create the KIE Server Instance, AMI, and ASG`
-  
-## Software inventory
-Place the required sofware artifacts under the `resources` folder, in the expected sub-folders
-### jboss-eap-7.3.6 folder
-[jboss-eap-7.3.0-installer.jar][jboss-eap-installer]
-[jboss-eap-7.3.9-patch.zip][jboss-eap-patch]
-[rh-sso-7.4.9-eap7-adapter.zip][sso-eap7-adapter]
-### rhpam folder
-[rhpam-installer-7.11.1.jar][rhpam-installer]
+## Deployment of infrastructrure components 
+This procedure is defined to provide an automated installation and configuration of RHPAM services on the AWS cloud.
+Installed components include:
+* RHPAM Business Central (v. 7.9.1)
+* RHPAM Kie Server (v. 7.9.1)
+* Configuration of Keycloak (v. 10.0.1)
+* Configuration of PostgresQL
 
-## SSO Configuration
-* Controller user: `controller/controller123#` (used in KIE Server configuration)
-* KIE Server user: `kieserver/redhat123#` (used in Busioness Central configuration)
-* Business Central user: `rhpam/admin`
+## Software inventory
+Place the required sofware artifacts under the `installer` folder, in the expected sub-folders
+### jboss-eap folder
+[jboss-eap-7.3.0-installer.jar][jboss-eap-installer]
+[jboss-eap-7.3.6-patch.zip][jboss-eap-patch]
+[rh-sso-7.4.0-eap7-adapter.zip][sso-eap7-adapter]
+### rhpam folder
+[rhpam-installer-7.9.1.jar][rhpam-installer]
+
+## Configuring dependant components
+### Configuring Keycloak
+**TBD** Add new installer
+
+### Configuring PostgresQL
+**TBD** Add new installer
+
+## Install and configure RHPAM services
+These steps are performed with the [installer.sh](./installer.sh) script that is configured with the following properties
+in [installer.properties](./installer.properties): 
+*`RHPAM_SERVER_IP`: the public IP of the VM to configure
+* `SSH_PEM_FILE`: the SSH key file
+* `SSH_USER_ID`: the SSH user
+* `RHPAM_SERVER`: one of: `business-central` or `kie-server`
+* `KIE_SERVER_TYPE`: only for `RHPAM_SERVER=kie-server`, one of: `unmanaged` or `managed`
+* `EAP_HOME`: the root folder of RHPAM installation
+* `DRY_RUN_ONLY`: set to "yes" to generate only the list of commands in the `installer.log` file
 
 ## Install KIE Server
-Update the environment properties in [kie-server.sh](./kie-server.sh) and the runtime properties in [runtime.properties](./resources/kie-server/runtime.properties)
-and run it:
+Update the environment properties in [installer.properties](./installer.properties), in particular:
+* `RHPAM_SERVER`: must be `kie-server`
+* `KIE_SERVER_TYPE`: either `managed` or `unmanaged`
+
+Also update all the runtime properties in [runtime.properties](./runtime/kie-server/runtime.properties) to connect to the
+actual Keycloak and PostgresQL instances, then run it as:
 ```shell
-./kie-server.sh
+./installer.sh
 ```
 
-## Install Business Central Instance
-* fill in the automation properties with all necessary values in  [business-central.properties](./business-central.properties) 
+## Install KIE Server
+Update the environment properties in [installer.properties](./installer.properties), in particular:
+* `RHPAM_SERVER`: must be `business-central`
 
-* then create and populate ./binaries directory with all installations files downloaded from [Software Inventory Section](https://github.com/RHEcosystemAppEng/rhpam-deployment/tree/main/eap/rhpam-on-aws-automation-postgresql#software-inventory)
-except 'boss-eap-7.3.9-patch.zip', you should download 'boss-eap-7.3.6-patch.zip' instead. 
-
-*  run the [following bash script](https://github.com/RHEcosystemAppEng/rhpam-deployment/blob/main/eap/rhpam-on-aws-automation-postgresql/business-central.sh) to initiate business central automated installation:
+Also update all the runtime properties in [runtime.properties](./runtime/business-central/runtime.properties) to connect to the
+actual Keycloak instance, then run it as:
 ```shell
-./business-central.sh
+./installer.sh
 ```
 
 ## Open points
@@ -69,4 +70,4 @@ E.g., it returns something like `ip-10-0-1-211` which is unique within the local
 [jboss-eap-installer]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=appplatform&version=7.3
 [jboss-eap-patch]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?product=appplatform&downloadType=patches&version=7.3
 [sso-eap7-adapter]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?product=core.service.rhsso&downloadType=patches&version=7.4
-[rhpam-installer]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=rhpam&version=7.11.1
+[rhpam-installer]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=rhpam&version=7.09.1
