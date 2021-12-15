@@ -1,5 +1,6 @@
 def boolean deployToKieServerArtifact(String server,String userName,String password,String containerId, String groupId , String artifactId, String version )
 {
+    echo "started deployToKieServerArtifact/7"
     def contextUrl = "/kie-server/rest/server/containers/"
     def url = "http://" + server + contextUrl + containerId
     def userPass = userName + ":" + password;
