@@ -9,3 +9,6 @@ RHPAM:
       main: 7.3.0
       patch: 7.3.6
       sso-adapter: 7.4.0
+    keycloak:
+      main: 10.0.1
+      jboss-eap-adapter: 10.0.1 # not used

@@ -10,27 +10,29 @@ POSTGRESQL_DOWNLOAD_URL=https://jdbc.postgresql.org/download/postgresql-42.3.1.j
 POSTGRESQL_DRIVER=postgresql-42.3.1.jar
 
 function installRhpam(){
-  echo "installRhpam $1"
+  echo "******************** installRhpam $1 ********************"
   installerXml=$1
   execute "cd /tmp; sudo java -jar ${RHPAM_INSTALLER} /tmp/${installerXml}"
   execute "sudo cp ${EAP_HOME}/standalone/configuration/standalone-full.xml ${EAP_HOME}/standalone/configuration/standalone-full.xml.bak"
 }
 
 function configureSso(){
-#    startServer
-  # No JACC
-    execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/keycloak.cli"
-#    stopServer
+  echo "******************** configureSso ********************"
+#  startServer
+# No JACC
+  execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/keycloak.cli"
+#  stopServer
 }
 
 function configureMavenRepository(){
-  echo "configureMavenRepository"
-  execute "sudo mkdir -p /opt/custom-config"
-  execute "sudo mv /tmp/settings.xml /opt/custom-config/settings.xml.template"
+  echo "******************** configureMavenRepository ********************"
+  execute "sudo mkdir -p ${RHPAM_DATA_DIR}"
+  execute "sudo mv /tmp/settings.xml ${RHPAM_DATA_DIR}/settings.xml.template"
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/maven-repo.cli"
 }
 
 function configureAndStartService(){
+  echo "******************** configureAndStartService ********************"
   service=$1
   launcher=$2
   echo "configureAndStartService ${service} as ${launcher}"
@@ -40,4 +42,3 @@ function configureAndStartService(){
   execute "sudo mv /tmp/${service} /etc/systemd/system"
   execute "sudo systemctl start ${service};sudo systemctl enable ${service}"
 }
-
