@@ -8,7 +8,7 @@ def call(String server,String userName,String password,String containerId, Strin
     def userPass = userName + ":" + password;
     def basicAuthBase64 = sh(script: "echo $userPass | base64",returnStdout: true ).trim()
 //    echo "result is ${basicAuthBase64}"
-    def result = sh(script: "curl -s  --location --request PUT ${url} \
+    def result = sh(script: "curl --location --request PUT ${url} \
             --header 'Accept: application/json' \
             --header 'Content-Type: application/json' \
             --header '${basicAuthBase64}' \
