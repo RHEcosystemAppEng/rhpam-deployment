@@ -1,3 +1,5 @@
+package org.demo
+
 def call(String server,String userName,String password,String containerId, String groupId , String artifactId, String version )
 {
     echo "started deployToKieServerArtifact/7"
@@ -16,4 +18,3 @@ def call(String server,String userName,String password,String containerId, Strin
     return result
 }
 
-retrun this
