@@ -7,11 +7,12 @@ def call(String server,String userName,String password,String containerId, Strin
     def url = "http://" + server + contextUrl + containerId
     def userPass = userName + ":" + password;
     def basicAuthBase64 = sh(script: "echo $userPass | base64",returnStdout: true ).trim()
+    def authHeader = "Authorization: Basic " + basicAuthBase64 
 //    echo "result is ${basicAuthBase64}"
     def result = sh(script: "curl --location --request PUT ${url} \
             --header 'Accept: application/json' \
             --header 'Content-Type: application/json' \
-            --header '${basicAuthBase64}' \
+            --header '${authHeader}' \
              --data '{\"container-id\" : \"${containerId}\",\"release-id\" : { \"group-id\" : \"${groupId}\",\"artifact-id\" : \"${artifactId}\",\"version\" : \"${version}\" }}'",returnStdout : true)
 
     echo "result is ${result2}"
