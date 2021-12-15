@@ -1,0 +1,1 @@
+todo: define port offset to be set inside wildfly standalone.xml so that all start and stop server commands use that automatically
