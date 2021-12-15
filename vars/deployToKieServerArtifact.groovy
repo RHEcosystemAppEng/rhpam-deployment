@@ -15,7 +15,7 @@ def call(String server,String userName,String password,String containerId, Strin
             --header '${authHeader}' \
              --data '{\"container-id\" : \"${containerId}\",\"release-id\" : { \"group-id\" : \"${groupId}\",\"artifact-id\" : \"${artifactId}\",\"version\" : \"${version}\" }}'",returnStdout : true)
 
-    echo "result is ${result2}"
+    echo "result is ${result}"
     return result
 }
 
