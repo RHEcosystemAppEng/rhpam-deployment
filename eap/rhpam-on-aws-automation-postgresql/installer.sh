@@ -88,6 +88,16 @@ function copyResources(){
 }
 
 ### Business Central functions ###
+function mountGitRepository(){
+  headerLog "mountGitRepository"
+  execute "/tmp/efs.sh"
+}
+
+function configureGitRepository() {
+  headerLog "configureGitRepository"
+  execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/git.cli"
+}
+
 function configureKieServer() {
   headerLog "configureKieServer"
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/rhpam-kieserver.cli"
@@ -96,11 +106,11 @@ function configureKieServer() {
 ### Kie Server functions ###
 function configurePostgresQL() {
   headerLog "configurePostgresQL"
-  unzip ./installer/database/rhpam-7.9.1-add-ons.zip -d ./installer/database/ rhpam-7.9.1-migration-tool.zip
+  unzip -o ./installer/database/rhpam-7.9.1-add-ons.zip -d ./installer/database/ rhpam-7.9.1-migration-tool.zip
   rm -rf installer/database/rhpam-7.9.1-migration-tool
-  unzip  ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/postgresql/postgresql-jbpm-schema.sql"
-  unzip  ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/postgresql/quartz_tables_postgres.sql"
-  unzip  ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/postgresql/task_assigning_tables_postgresql.sql"
+  unzip -o ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/postgresql/postgresql-jbpm-schema.sql"
+  unzip -o ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/postgresql/quartz_tables_postgres.sql"
+  unzip -o ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/postgresql/task_assigning_tables_postgresql.sql"
   cd ./installer/database/rhpam-7.9.1-migration-tool/ddl-scripts && zip -r ../../postgresql.zip  postgresql && cd -
   copyFile "./installer/database" "postgresql.zip"
 
@@ -135,6 +145,9 @@ copyResources
 if [[ ${INSTALL_TYPE} == 'REMOTE_FULL' ]]; then
   installDependencies
   stopFirewallService
+  if [ ! $(isKieServer) ]; then
+    mountGitRepository
+  fi
 fi
 if [ $(isKieServer) ]; then
   configurePostgresQL
@@ -151,6 +164,7 @@ configureMavenRepository
 if [ $(isKieServer) ]; then
   configureController
 else
+  configureGitRepository
   configureKieServer
 fi
 if [[ ${INSTALL_TYPE} == 'REMOTE_FULL' ]]; then

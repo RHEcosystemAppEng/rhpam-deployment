@@ -15,6 +15,7 @@ ${EAP_HOME}/bin/standalone.sh -c standalone-full.xml -b 0.0.0.0 \
   -DkeycloakSso_realm_client_secret=${SSO_SECRET} \
   -Dorg.kie.server.user=${KIESERVER_USERNAME} \
   -Dorg.kie.server.pwd=${KIESERVER_PASSWORD}\
-  -Drhpam_server_data_dir=${RHPAM_DATA_DIR}
+  -Drhpam_server_data_dir=${RHPAM_DATA_DIR}\
+  -DmountedGitRoot=${GIT_HOME}
 
 #-Drhpam.sso.token=${SSO_BC_SECRET}  \

@@ -4,3 +4,4 @@ embed-server --server-config=${server.config:standalone-full.xml}
 /system-property=org.kie.server.location:add(value=http://${kieserver_privateIp:localhost}:${kieserver_port:8080}/kie-server/services/rest/server)
 /system-property=org.kie.server.id:remove
 /system-property=org.kie.server.id:add(value="${kieserver_hostname:default-kieserver}")
+/system-property=org.kie.server.mgmt.api.disabled:add(value=true)

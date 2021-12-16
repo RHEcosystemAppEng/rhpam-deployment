@@ -31,3 +31,4 @@ hs_err_pid*
 /eap/azure/deployment-sr-local.properties
 /eap/azure/deployment-local.properties
 /eap/azure/ks_unmgd_with_sr/create-container.xml
+*_REAL.properties
