@@ -10,14 +10,14 @@ POSTGRESQL_DOWNLOAD_URL=https://jdbc.postgresql.org/download/postgresql-42.3.1.j
 POSTGRESQL_DRIVER=postgresql-42.3.1.jar
 
 function installRhpam(){
-  echo "******************** installRhpam $1 ********************"
+  headerLog "installRhpam $1"
   installerXml=$1
   execute "cd /tmp; sudo java -jar ${RHPAM_INSTALLER} /tmp/${installerXml}"
   execute "sudo cp ${EAP_HOME}/standalone/configuration/standalone-full.xml ${EAP_HOME}/standalone/configuration/standalone-full.xml.bak"
 }
 
 function configureSso(){
-  echo "******************** configureSso ********************"
+  headerLog "configureSso"
 #  startServer
 # No JACC
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/keycloak.cli"
@@ -25,20 +25,21 @@ function configureSso(){
 }
 
 function configureMavenRepository(){
-  echo "******************** configureMavenRepository ********************"
-  execute "sudo mkdir -p ${RHPAM_DATA_DIR}"
+  headerLog "configureMavenRepository"
+  execute "sudo rm -rf ${RHPAM_DATA_DIR}; sudo mkdir ${RHPAM_DATA_DIR}"
+#  execute "sudo mkdir -p ${RHPAM_DATA_DIR}"
   execute "sudo mv /tmp/settings.xml ${RHPAM_DATA_DIR}/settings.xml.template"
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/maven-repo.cli"
 }
 
 function configureAndStartService(){
-  echo "******************** configureAndStartService ********************"
+  headerLog "configureAndStartService"
   service=$1
   launcher=$2
   echo "configureAndStartService ${service} as ${launcher}"
   execute "sudo systemctl stop ${service};sudo systemctl disable ${service};sudo rm /etc/systemd/system/${service};sudo systemctl daemon-reload;sudo systemctl reset-failed"
-  execute "sudo mv /tmp/runtime.properties /opt/custom-config"
-  execute "sudo mv /tmp/${launcher} /opt/custom-config"
+  execute "sudo mv /tmp/runtime.properties ${RHPAM_DATA_DIR}"
+  execute "sudo mv /tmp/${launcher} ${RHPAM_DATA_DIR}"
   execute "sudo mv /tmp/${service} /etc/systemd/system"
   execute "sudo systemctl start ${service};sudo systemctl enable ${service}"
 }

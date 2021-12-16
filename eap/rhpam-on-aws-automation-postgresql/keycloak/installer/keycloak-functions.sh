@@ -4,7 +4,7 @@ source keycloak.properties
 source common-functions.sh
 
 function installKeycloak(){
-  echo "******************** installKeycloak ********************"
+  headerLog "installKeycloak"
   execute "sudo rm -rf ${KEYCLOAK_HOME}; sudo mkdir ${KEYCLOAK_HOME}"
   execute "sudo cp /tmp/${KEYCLOAK_INSTALLER} ${KEYCLOAK_HOME}"
   execute "cd ${KEYCLOAK_HOME}"
@@ -16,7 +16,7 @@ function installKeycloak(){
 }
 
 function login(){
-  KEYCLOAK_URL_LOCAL="http://localhost:$(getPortWithOffset $KEYCLOAK_PORT_OFFSET)/auth"
+  KEYCLOAK_URL_LOCAL="http://localhost:$KEYCLOAK_SERVER_PORT/auth"
   ${KEYCLOAK_HOME}/bin/kcadm.sh config credentials --server $KEYCLOAK_URL_LOCAL --realm master --user ${KEYCLOAK_ADMIN_USER} --password ${KEYCLOAK_ADMIN_PWD}
 }
 function createRealm(){

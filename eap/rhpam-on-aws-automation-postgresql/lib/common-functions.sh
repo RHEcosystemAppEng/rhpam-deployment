@@ -9,6 +9,10 @@ function log() {
   echo $1
   echo "$1" >> $(dirname $0)/installer.log
 }
+function headerLog() {
+  echo "******************* $1 ********************"
+  echo "******************* $1 ********************" >> $(dirname $0)/installer.log
+}
 
 function execute() {
   cmd=$1
@@ -75,17 +79,17 @@ function copyFile() {
 }
 
 function stopFirewallService(){
-  echo "******************** stopFirewallService *******************"
+  headerLog "stopFirewallService"
   execute "sudo systemctl stop firewalld;sudo systemctl disable firewalld"
 }
 
 function installDependencies(){
-  echo "******************** installDependencies ********************"
+  headerLog "installDependencies"
   execute "sudo dnf -y install unzip bind-utils java-11-openjdk-devel"
 }
 
 function waitForServer() {
-  echo "******************** $(date) waitForServer http://${RHPAM_SERVER_IP}:${RHPAM_SERVER_PORT} ********************"
+  headerLog "$(date) waitForServer http://${RHPAM_SERVER_IP}:${RHPAM_SERVER_PORT}"
   if [[ "${DRY_RUN_ONLY}" != "yes" ]]; then
     until $(curl --output /dev/null --silent --head --fail http://${RHPAM_SERVER_IP}:${RHPAM_SERVER_PORT}); do
         printf '.'
@@ -96,22 +100,22 @@ function waitForServer() {
 }
 
 function startServer(){
-  echo "******************** startServer $SERVICE_LAUNCHER ********************"
+  headerLog "startServer $SERVICE_LAUNCHER"
   execute "cd /tmp; sh -c 'sudo /tmp/${SERVICE_LAUNCHER} > /dev/null 2>&1 &'"
   waitForServer
 }
 
 function stopServer(){
-  echo "******************** stopServer ********************"
+  headerLog "stopServer"
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --connect --timeout=60000 --command=shutdown"
 }
 
 function logService(){
-  echo "******************** logService $1 ********************"
+  headerLog "logService $1"
   service=$1
   execute "sudo journalctl -u ${service} -f"
 }
 
-function getPortWithOffset(){
-  echo $((8080+$1))
-}
+#function getPortWithOffset(){
+#  echo $((8080+$1))
+#}

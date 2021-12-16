@@ -4,7 +4,7 @@ source keycloak-functions.sh
 
 # to be able to reuse some common functions, instantiate variables used there
 RHPAM_SERVER_IP=$KEYCLOAK_SERVER_IP
-RHPAM_SERVER_PORT=$(getPortWithOffset $KEYCLOAK_PORT_OFFSET)
+RHPAM_SERVER_PORT=$KEYCLOAK_SERVER_PORT
 EAP_HOME=$KEYCLOAK_HOME
 
 # this script is run on the machine where we need to install keycloak => the INSTALL_LOCATION_IS_REMOTE is always false
@@ -15,15 +15,13 @@ then
   INSTALL_LOCATION_USE_SUDO=false
 fi
 
-LAUNCHER=keycloak-service.sh
+SERVICE_LAUNCHER=keycloak-service.sh
 
-if [ ${INSTALL_TYPE} == 'REMOTE_FULL' ]
-then
+if [[ ${INSTALL_TYPE} == 'REMOTE_FULL' ]]; then
   installDependencies
   stopFirewallService
 fi
-if [ ${INSTALL_TYPE} != 'REMOTE_PARTIAL' ]
-then
+if [[ ${INSTALL_TYPE} != 'REMOTE_PARTIAL' ]]; then
   installKeycloak
 fi
 startServer

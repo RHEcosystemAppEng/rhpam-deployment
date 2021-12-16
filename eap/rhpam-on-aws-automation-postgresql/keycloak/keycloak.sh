@@ -5,7 +5,7 @@ source ../lib/common-functions.sh
 
 # to be able to reuse some common functions, instantiate variables used there
 RHPAM_SERVER_IP=$KEYCLOAK_SERVER_IP
-RHPAM_SERVER_PORT=$(getPortWithOffset $KEYCLOAK_PORT_OFFSET)
+RHPAM_SERVER_PORT=$KEYCLOAK_SERVER_PORT
 EAP_HOME=$KEYCLOAK_HOME
 
 INSTALL_LOCATION_USE_SUDO=false
@@ -16,7 +16,7 @@ then
 fi
 
 function copyResources(){
-  echo "copyResources "
+  headerLog "copyResources"
   copyFolder "./installer"
   copyFile "../lib" "common-functions.sh"
 }
