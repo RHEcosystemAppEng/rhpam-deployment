@@ -55,7 +55,12 @@ CMD ["/opt/bitnami/scripts/jenkins/run.sh"]
 podman build . -t docker.io/youruser/yourrepo:tag#
 ```
 
-3. login to the registry
+3. login to the registry using your credentials:
+ ```shell
+ podman login -u username -p password docker.io
+ ```
+
+4. Push the image to your registry:
 ```shell
 podman push docker.io/youruser/yourrepo:tag#
 ```
