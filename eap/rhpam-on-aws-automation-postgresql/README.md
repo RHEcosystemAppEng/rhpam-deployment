@@ -1,4 +1,4 @@
-## Deployment of infrastructrure components 
+## Deployment of infrastructure components 
 This procedure is defined to provide an automated installation and configuration of RHPAM services on the AWS cloud.
 Installed components include:
 * RHPAM Business Central (v. 7.9.1)
@@ -7,7 +7,7 @@ Installed components include:
 * Configuration of PostgresQL
 
 ## Software inventory
-Place the required sofware artifacts under the `installer` folder, in the expected sub-folders
+Place the required software artifacts under the `installer` folder, in the expected sub-folders
 ### jboss-eap folder
 [jboss-eap-7.3.0-installer.jar][jboss-eap-installer]
 [jboss-eap-7.3.6-patch.zip][jboss-eap-patch]
