@@ -30,9 +30,8 @@ function execute() {
       echo "=== local install: $cmd ==="
       eval $cmd
     fi
-  else
-    log "${cmd}"
   fi
+  log "${cmd}"
 }
 
 function copyFolder() {
@@ -86,6 +85,11 @@ function stopFirewallService(){
 function installDependencies(){
   headerLog "installDependencies"
   execute "sudo dnf -y install unzip bind-utils java-11-openjdk-devel"
+}
+
+function mountEfsFileSystem(){
+  headerLog "mountEfsFileSystem"
+  execute "/tmp/efs.sh ${RHPAM_EFS_HOME} ${EFS_IP} ${EFS_ROOT_PATH} '${EFS_OPTIONS}'"
 }
 
 function waitForServer() {

@@ -1,6 +1,8 @@
 #!/bin/bash
 
-source $(dirname "$0")/runtime.properties
+RHPAM_EFS_HOME=$1
+echo "Starting from ${RHPAM_EFS_HOME}/runtime.properties"
+source ${RHPAM_EFS_HOME}/runtime.properties
 
 function updateMavenSettings(){
   sed 's@${MAVEN_REPO_USERNAME}@'$MAVEN_REPO_USERNAME'@g ; s@${MAVEN_REPO_PASSWORD}@'$MAVEN_REPO_PASSWORD'@g ; s@${MAVEN_REPO_URL}@'$MAVEN_REPO_URL'@' \

@@ -73,7 +73,8 @@ function copyResources(){
   sed 's@${EAP_HOME}@'$EAP_HOME'@' ./installer/jboss-eap/eap-auto.xml > ./${RHPAM_SERVER}_tmp/eap-auto.xml
   if [ $(isKieServer) ]; then
     sed 's@${EAP_HOME}@'$EAP_HOME'@' ./installer/kie-server/ks-auto.xml > ./${RHPAM_SERVER}_tmp/ks-auto.xml
-    sed 's@${RHPAM_DATA_DIR}@'$RHPAM_DATA_DIR'@' ./runtime/kie-server/ks.service > ./${RHPAM_SERVER}_tmp/ks.service
+    sed 's@${RHPAM_DATA_DIR}@'$RHPAM_DATA_DIR'@;s@${RHPAM_EFS_HOME}@'$RHPAM_EFS_HOME'@' \
+      ./runtime/kie-server/ks.service > ./${RHPAM_SERVER}_tmp/ks.service
   else
     sed 's@${EAP_HOME}@'$EAP_HOME'@' ./installer/business-central/bc-auto.xml > ./${RHPAM_SERVER}_tmp/bc-auto.xml
     sed 's@${RHPAM_DATA_DIR}@'$RHPAM_DATA_DIR'@;s@${RHPAM_EFS_HOME}@'$RHPAM_EFS_HOME'@' \
@@ -92,11 +93,6 @@ function copyResources(){
 }
 
 ### Business Central functions ###
-function mountGitRepository(){
-  headerLog "mountGitRepository"
-  execute "/tmp/efs.sh ${RHPAM_EFS_HOME} ${EFS_IP} ${EFS_ROOT_PATH} '${EFS_OPTIONS}'"
-}
-
 function configureGitRepository() {
   headerLog "configureGitRepository"
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/git.cli"
@@ -117,9 +113,11 @@ function configurePostgresQL() {
   unzip -o ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/postgresql/task_assigning_tables_postgresql.sql"
   cd ./installer/database/rhpam-7.9.1-migration-tool/ddl-scripts && zip -r ../../postgresql.zip  postgresql && cd -
   copyFile "./installer/database" "postgresql.zip"
+  rm -rf installer/database/rhpam-7.9.1-migration-tool
+  rm -f installer/database/ rhpam-7.9.1-migration-tool.zip
+  rm -f installer/database/postgresql.zip
 
-  execute "/tmp/
-  "
+  execute "/tmp/postgresql.sh"
 }
 
 function installJdbcDriver(){
@@ -150,9 +148,7 @@ copyResources
 if [[ ${INSTALL_TYPE} == 'REMOTE_FULL' ]]; then
   installDependencies
   stopFirewallService
-  if [ ! $(isKieServer) ]; then
-    mountGitRepository
-  fi
+  mountEfsFileSystem
 fi
 if [ $(isKieServer) ]; then
   configurePostgresQL

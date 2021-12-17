@@ -18,16 +18,13 @@ function installRhpam(){
 
 function configureSso(){
   headerLog "configureSso"
-#  startServer
 # No JACC
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/keycloak.cli"
-#  stopServer
 }
 
 function configureMavenRepository(){
   headerLog "configureMavenRepository"
-  execute "sudo rm -rf ${RHPAM_DATA_DIR}; sudo mkdir ${RHPAM_DATA_DIR}"
-#  execute "sudo mkdir -p ${RHPAM_DATA_DIR}"
+  execute "sudo rm -rf ${RHPAM_DATA_DIR}; sudo mkdir -p ${RHPAM_DATA_DIR}"
   execute "sudo mv /tmp/settings.xml ${RHPAM_DATA_DIR}/settings.xml.template"
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/maven-repo.cli"
 }
