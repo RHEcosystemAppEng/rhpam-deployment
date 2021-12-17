@@ -1,14 +1,17 @@
 #!/bin/bash
 
-source $(dirname "$0")/runtime.properties
+RHPAM_EFS_HOME=$1
+EFS_IP=$2
+EFS_ROOT_PATH=$3
+EFS_OPTIONS=$4
 
 function unmount(){
-    echo "Unmounting EFS from ${GIT_HOME}"
-    sudo umount ${GIT_HOME}
+    echo "Unmounting EFS from ${RHPAM_EFS_HOME}"
+    sudo umount ${RHPAM_EFS_HOME}
     # yum install -y lsof
-    #  lsof | grep '/opt/rhpam/git'
+    #  lsof | grep '/opt/rhpam/'
     # kill -9 <PID>
-    sudo sed -i "/^.*${GIT_HOME//\//\\/}.*$/d" /etc/fstab
+    sudo sed -i "/^.*${RHPAM_EFS_HOME//\//\\/}.*$/d" /etc/fstab
 }
 
 function installEfsUtils(){
@@ -28,10 +31,10 @@ function installEfsUtils(){
 }
 
 function mount(){
-  sudo mkdir -p /opt/rhpam/git
-  echo "Mounting persistent EFS to /opt/rhpam/git"
-  sudo --preserve-env=EFS_IP --preserve-env=EFS_ROOT_PATH --preserve-env=GIT_HOME --preserve-env=EFS_OPTIONS \
-    sh -c "echo '${EFS_IP}:${EFS_ROOT_PATH} ${GIT_HOME} nfs4 ${EFS_OPTIONS}' >> /etc/fstab"
+  sudo mkdir -p ${RHPAM_EFS_HOME}
+  echo "Mounting persistent EFS to ${RHPAM_EFS_HOME}"
+  sudo --preserve-env=EFS_IP --preserve-env=EFS_ROOT_PATH --preserve-env=RHPAM_EFS_HOME --preserve-env=EFS_OPTIONS \
+    sh -c "echo '${EFS_IP}:${EFS_ROOT_PATH} ${RHPAM_EFS_HOME} nfs4 ${EFS_OPTIONS}' >> /etc/fstab"
   sudo mount -av
   df -T -h
   sudo rm -rf /tmp/efs-utils

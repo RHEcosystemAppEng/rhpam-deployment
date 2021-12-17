@@ -76,7 +76,8 @@ function copyResources(){
     sed 's@${RHPAM_DATA_DIR}@'$RHPAM_DATA_DIR'@' ./runtime/kie-server/ks.service > ./${RHPAM_SERVER}_tmp/ks.service
   else
     sed 's@${EAP_HOME}@'$EAP_HOME'@' ./installer/business-central/bc-auto.xml > ./${RHPAM_SERVER}_tmp/bc-auto.xml
-    sed 's@${RHPAM_DATA_DIR}@'$RHPAM_DATA_DIR'@' ./runtime/business-central/bc.service > ./${RHPAM_SERVER}_tmp/bc.service
+    sed 's@${RHPAM_DATA_DIR}@'$RHPAM_DATA_DIR'@;s@${RHPAM_EFS_HOME}@'$RHPAM_EFS_HOME'@' \
+      ./runtime/business-central/bc.service > ./${RHPAM_SERVER}_tmp/bc.service
   fi
   copyFolder "./${RHPAM_SERVER}_tmp"
   rm -rf ./${RHPAM_SERVER}_tmp
@@ -85,12 +86,15 @@ function copyResources(){
   execute "echo \"EAP_HOME=${EAP_HOME}\" >> /tmp/runtime.properties"
   execute "echo \"RHPAM_DATA_DIR=${RHPAM_DATA_DIR}\" >> /tmp/runtime.properties"
   execute "echo \"RHPAM_SERVER_PORT=${RHPAM_SERVER_PORT}\" >> /tmp/runtime.properties"
+  if [ ! $(isKieServer) ]; then
+    execute "echo \"GIT_HOME=${RHPAM_EFS_HOME}\" >> /tmp/runtime.properties"
+  fi
 }
 
 ### Business Central functions ###
 function mountGitRepository(){
   headerLog "mountGitRepository"
-  execute "/tmp/efs.sh"
+  execute "/tmp/efs.sh ${RHPAM_EFS_HOME} ${EFS_IP} ${EFS_ROOT_PATH} '${EFS_OPTIONS}'"
 }
 
 function configureGitRepository() {
@@ -114,7 +118,8 @@ function configurePostgresQL() {
   cd ./installer/database/rhpam-7.9.1-migration-tool/ddl-scripts && zip -r ../../postgresql.zip  postgresql && cd -
   copyFile "./installer/database" "postgresql.zip"
 
-  execute "/tmp/postgresql.sh"
+  execute "/tmp/
+  "
 }
 
 function installJdbcDriver(){

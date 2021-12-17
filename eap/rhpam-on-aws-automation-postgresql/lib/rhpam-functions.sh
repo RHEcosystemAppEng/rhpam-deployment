@@ -38,7 +38,7 @@ function configureAndStartService(){
   launcher=$2
   echo "configureAndStartService ${service} as ${launcher}"
   execute "sudo systemctl stop ${service};sudo systemctl disable ${service};sudo rm /etc/systemd/system/${service};sudo systemctl daemon-reload;sudo systemctl reset-failed"
-  execute "sudo mv /tmp/runtime.properties ${RHPAM_DATA_DIR}"
+  execute "sudo mv /tmp/runtime.properties ${RHPAM_EFS_HOME}"
   execute "sudo mv /tmp/${launcher} ${RHPAM_DATA_DIR}"
   execute "sudo mv /tmp/${service} /etc/systemd/system"
   execute "sudo systemctl start ${service};sudo systemctl enable ${service}"
