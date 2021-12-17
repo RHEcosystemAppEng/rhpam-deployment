@@ -33,6 +33,7 @@ function installEfsUtils(){
 function mount(){
   sudo mkdir -p ${RHPAM_EFS_HOME}
   echo "Mounting persistent EFS to ${RHPAM_EFS_HOME}"
+  sudo cp /etc/fstab /etc/fstab.bak
   sudo --preserve-env=EFS_IP --preserve-env=EFS_ROOT_PATH --preserve-env=RHPAM_EFS_HOME --preserve-env=EFS_OPTIONS \
     sh -c "echo '${EFS_IP}:${EFS_ROOT_PATH} ${RHPAM_EFS_HOME} nfs4 ${EFS_OPTIONS}' >> /etc/fstab"
   sudo mount -av
