@@ -25,6 +25,12 @@ Place the required software artifacts under the `installer` folder, in the expec
 The database is created and initialized during the creation of the KIE Server, in case it is not already there, using
 the connection properties defined in [runtime.properties](./runtime/kie-server/runtime.properties)
 
+### Mounting EFS filesystem
+In case we need to mount an EFS filesystem, the [efs.sh](./efs/efs.sh) script is available to initialize the mount point
+on the target VM. See related [efs.properties](./efs/efs.properties) configuration properties to define the mounted path.
+**Note**: in case of mounted EFS filesystem, we will use this path to store `runtime.properties` and, for the `Business Central` 
+service, also to host the local Git repository.
+
 ## Install and configure RHPAM services
 These steps are performed with the [installer.sh](./installer.sh) script that is configured with the following properties
 in [installer.properties](./installer.properties): 
@@ -34,6 +40,11 @@ in [installer.properties](./installer.properties):
 * `RHPAM_SERVER`: one of: `business-central` or `kie-server`
 * `KIE_SERVER_TYPE`: only for `RHPAM_SERVER=kie-server`, one of: `unmanaged` or `managed`
 * `EAP_HOME`: the root folder of RHPAM installation
+* `RHPAM_HOME`: The RHPAM home folder (maven settings file, kie server config file)
+* `RHPAM_PROPS_DIR`: where rhpam properties are stored (runtime.properties). In case of EFS mounted filesystem, it has to 
+match the mounted path
+* `GIT_HOME`: only for `RHPAM_SERVER=business-central`, the folder where git repository is located (as `.niogit/`).
+In case of EFS mounted filesystem, it has to match the mounted path
 * `DRY_RUN_ONLY`: set to "yes" to generate only the list of commands in the `installer.log` file
 
 ## Install KIE Server
