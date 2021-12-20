@@ -4,7 +4,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=/bin/bash ${RHPAM_DATA_DIR}/bc-service.sh ${RHPAM_EFS_HOME}
+ExecStart=/bin/bash ${RHPAM_HOME}/bc-service.sh ${RHPAM_PROPS_DIR}
 
 [Install]
 WantedBy=multi-user.target

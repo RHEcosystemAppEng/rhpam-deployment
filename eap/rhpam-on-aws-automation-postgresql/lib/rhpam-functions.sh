@@ -24,8 +24,8 @@ function configureSso(){
 
 function configureMavenRepository(){
   headerLog "configureMavenRepository"
-  execute "sudo rm -rf ${RHPAM_DATA_DIR}; sudo mkdir -p ${RHPAM_DATA_DIR}"
-  execute "sudo mv /tmp/settings.xml ${RHPAM_DATA_DIR}/settings.xml.template"
+  execute "sudo rm -rf ${RHPAM_HOME}; sudo mkdir -p ${RHPAM_HOME}"
+  execute "sudo mv /tmp/settings.xml ${RHPAM_HOME}/settings.xml.template"
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/maven-repo.cli"
 }
 
@@ -35,8 +35,8 @@ function configureAndStartService(){
   launcher=$2
   echo "configureAndStartService ${service} as ${launcher}"
   execute "sudo systemctl stop ${service};sudo systemctl disable ${service};sudo rm /etc/systemd/system/${service};sudo systemctl daemon-reload;sudo systemctl reset-failed"
-  execute "sudo mv /tmp/runtime.properties ${RHPAM_EFS_HOME}"
-  execute "sudo mv /tmp/${launcher} ${RHPAM_DATA_DIR}"
+  execute "sudo mv /tmp/runtime.properties ${RHPAM_PROPS_DIR}"
+  execute "sudo mv /tmp/${launcher} ${RHPAM_HOME}"
   execute "sudo mv /tmp/${service} /etc/systemd/system"
   execute "sudo systemctl start ${service};sudo systemctl enable ${service}"
 }

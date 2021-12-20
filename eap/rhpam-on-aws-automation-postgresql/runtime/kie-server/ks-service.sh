@@ -1,12 +1,12 @@
 #!/bin/bash
 
-RHPAM_EFS_HOME=$1
-echo "Starting from ${RHPAM_EFS_HOME}/runtime.properties"
-source ${RHPAM_EFS_HOME}/runtime.properties
+RHPAM_PROPS_DIR=$1
+echo "Starting from ${RHPAM_PROPS_DIR}/runtime.properties"
+source ${RHPAM_PROPS_DIR}/runtime.properties
 
 function updateMavenSettings(){
   sed 's@${MAVEN_REPO_USERNAME}@'$MAVEN_REPO_USERNAME'@g ; s@${MAVEN_REPO_PASSWORD}@'$MAVEN_REPO_PASSWORD'@g ; s@${MAVEN_REPO_URL}@'$MAVEN_REPO_URL'@' \
-    $(dirname "$0")/settings.xml.template > ${RHPAM_DATA_DIR}/settings.xml
+    $(dirname "$0")/settings.xml.template > ${RHPAM_HOME}/settings.xml
 }
 
 function get_private_ip() {
@@ -35,4 +35,4 @@ ${EAP_HOME}/bin/standalone.sh -c standalone-full.xml -b 0.0.0.0 \
   -DkeycloakSso_realm_client_name=${keycloakSso_realm_client_name} -DkeycloakSso_realm_client_secret=${keycloakSso_realm_client_secret} \
   -Dkieserver_privateIp=${kieserver_privateIp} -Dkieserver_hostname=${kieserver_hostname} -Dkieserver_port=${RHPAM_SERVER_PORT} \
   -DbusinessCentral_host=${businessCentral_host} -DbusinessCentral_port=${businessCentral_port} -DrhpamController_username=${rhpamController_username} -DrhpamController_password=${rhpamController_password} \
-  -Drhpam_server_data_dir=${RHPAM_DATA_DIR}
+  -Drhpam_server_data_dir=${RHPAM_HOME}

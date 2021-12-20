@@ -87,11 +87,6 @@ function installDependencies(){
   execute "sudo dnf -y install unzip bind-utils java-11-openjdk-devel"
 }
 
-function mountEfsFileSystem(){
-  headerLog "mountEfsFileSystem"
-  execute "/tmp/efs.sh ${RHPAM_EFS_HOME} ${EFS_IP} ${EFS_ROOT_PATH} '${EFS_OPTIONS}'"
-}
-
 function waitForServer() {
   headerLog "$(date) waitForServer http://${RHPAM_SERVER_IP}:${RHPAM_SERVER_PORT}"
   if [[ "${DRY_RUN_ONLY}" != "yes" ]]; then

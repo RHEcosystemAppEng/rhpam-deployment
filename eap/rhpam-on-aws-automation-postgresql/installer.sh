@@ -31,7 +31,9 @@ function initInstaller() {
   log "RHPAM_SERVER=${RHPAM_SERVER}"
   log "KIE_SERVER_TYPE=${KIE_SERVER_TYPE}"
   log "EAP_HOME=${EAP_HOME}"
-  log "RHPAM_DATA_DIR=${RHPAM_DATA_DIR}"
+  log "RHPAM_HOME=${RHPAM_HOME}"
+  log "RHPAM_PROPS_DIR=${RHPAM_PROPS_DIR}"
+  log "GIT_HOME=${GIT_HOME}"
 
   INSTALL_LOCATION_USE_SUDO=true
   INSTALL_LOCATION_IS_REMOTE=true
@@ -73,11 +75,11 @@ function copyResources(){
   sed 's@${EAP_HOME}@'$EAP_HOME'@' ./installer/jboss-eap/eap-auto.xml > ./${RHPAM_SERVER}_tmp/eap-auto.xml
   if [ $(isKieServer) ]; then
     sed 's@${EAP_HOME}@'$EAP_HOME'@' ./installer/kie-server/ks-auto.xml > ./${RHPAM_SERVER}_tmp/ks-auto.xml
-    sed 's@${RHPAM_DATA_DIR}@'$RHPAM_DATA_DIR'@;s@${RHPAM_EFS_HOME}@'$RHPAM_EFS_HOME'@' \
+    sed 's@${RHPAM_HOME}@'$RHPAM_HOME'@;s@${RHPAM_PROPS_DIR}@'$RHPAM_PROPS_DIR'@' \
       ./runtime/kie-server/ks.service > ./${RHPAM_SERVER}_tmp/ks.service
   else
     sed 's@${EAP_HOME}@'$EAP_HOME'@' ./installer/business-central/bc-auto.xml > ./${RHPAM_SERVER}_tmp/bc-auto.xml
-    sed 's@${RHPAM_DATA_DIR}@'$RHPAM_DATA_DIR'@;s@${RHPAM_EFS_HOME}@'$RHPAM_EFS_HOME'@' \
+    sed 's@${RHPAM_HOME}@'$RHPAM_HOME'@;s@${RHPAM_PROPS_DIR}@'$RHPAM_PROPS_DIR'@' \
       ./runtime/business-central/bc.service > ./${RHPAM_SERVER}_tmp/bc.service
   fi
   copyFolder "./${RHPAM_SERVER}_tmp"
@@ -85,10 +87,10 @@ function copyResources(){
 
   execute "echo \"\" >> /tmp/runtime.properties"
   execute "echo \"EAP_HOME=${EAP_HOME}\" >> /tmp/runtime.properties"
-  execute "echo \"RHPAM_DATA_DIR=${RHPAM_DATA_DIR}\" >> /tmp/runtime.properties"
+  execute "echo \"RHPAM_HOME=${RHPAM_HOME}\" >> /tmp/runtime.properties"
   execute "echo \"RHPAM_SERVER_PORT=${RHPAM_SERVER_PORT}\" >> /tmp/runtime.properties"
   if [ ! $(isKieServer) ]; then
-    execute "echo \"GIT_HOME=${RHPAM_EFS_HOME}\" >> /tmp/runtime.properties"
+    execute "echo \"GIT_HOME=${GIT_HOME}\" >> /tmp/runtime.properties"
   fi
 }
 
@@ -148,7 +150,6 @@ copyResources
 if [[ ${INSTALL_TYPE} == 'REMOTE_FULL' ]]; then
   installDependencies
   stopFirewallService
-  mountEfsFileSystem
 fi
 if [ $(isKieServer) ]; then
   configurePostgresQL
