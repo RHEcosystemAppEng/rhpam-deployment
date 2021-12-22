@@ -6,7 +6,7 @@ node('mvnjdk11') {
           }
         
         
-        //whenever i'll checkout real mirror maven repository of business central, then i'll activate this to identified the tag commit which reflecting the artifact
+        //whenever i'll checkout real mirror maven repository of business central, then i'll activate this to identify the tag commit which reflecting the artifact name in repo
         //  stage('get changed artifact to be handled')
         //  {
               
