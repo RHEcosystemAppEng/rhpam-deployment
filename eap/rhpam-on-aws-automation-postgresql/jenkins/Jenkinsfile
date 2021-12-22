@@ -1,4 +1,4 @@
-Library('shared-jenkins-library') _
+@Library('shared-jenkins-library') _
 node {
         //   stage('checkout repo from Git')
         //   {
