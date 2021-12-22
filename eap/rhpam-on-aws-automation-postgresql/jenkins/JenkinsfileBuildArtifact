@@ -1,0 +1,38 @@
+node('mvnjdk11') {
+          stage('checkout repo from Git')
+          {
+             checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/zvigrinberg/first.git']]])
+    
+          }
+        
+        
+        //whenever i'll checkout real mirror maven repository of business central, then i'll activate this to identified the tag commit which reflecting the artifact
+        //  stage('get changed artifact to be handled')
+        //  {
+              
+        //      def tagArtifactName = sh(script : "git rev-list --all | grep -m 1 -E '[0-9a-zA-Z]*' | xargs -i git tag --contains {}",returnStdout: true).trim()
+        //  }
+        
+        
+        stage('Deploy artifact to Maven Repository') {
+             configFileProvider( 
+        [configFile(fileId: 'maven-settings', variable: 'MAVEN_SETTINGS')]) {
+           echo "${MAVEN_SETTINGS}"
+           def result = sh(script : "mvn -s $MAVEN_SETTINGS clean deploy",returnStdout: true).trim()
+          }
+        }
+        
+        stage('trigger deployment job')
+        {
+            def groupId = sh(script : "cat pom.xml | grep -i -m 1 groupid | awk -F '>' '{print \$2}' | awk -F '<' '{print \$1}'",returnStdout: true).trim()
+            def artifact = sh(script : "cat pom.xml | grep -i -m 1 artifactid | awk -F '>' '{print \$2}' | awk -F '<' '{print \$1}'",returnStdout: true).trim()
+            def version = sh(script : "cat pom.xml | grep -i -m 1 \"<version>\" | awk -F '>' '{print \$2}' | awk -F '<' '{print \$1}'",returnStdout: true).trim()
+            build wait: false, job: 'deploy-maven-artifact', parameters: [string(name: 'GROUPID', value: groupId), string(name: 'ARTIFACTID', value: artifact), string(name: 'ARTIFACT_VERSION', value: version)]
+            echo 'job was triggered!'
+        }
+            
+        stage('Clean Workspace')
+          {
+              cleanWs()
+          }
+}
