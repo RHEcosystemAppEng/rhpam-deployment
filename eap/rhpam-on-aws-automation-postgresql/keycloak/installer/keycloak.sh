@@ -6,6 +6,7 @@ source keycloak-functions.sh
 RHPAM_SERVER_IP=$KEYCLOAK_SERVER_IP
 RHPAM_SERVER_PORT=$KEYCLOAK_SERVER_PORT
 EAP_HOME=$KEYCLOAK_HOME
+RHPAM_HOME=$KEYCLOAK_DATA_DIR
 
 # this script is run on the machine where we need to install keycloak => the INSTALL_LOCATION_IS_REMOTE is always false
 INSTALL_LOCATION_IS_REMOTE=false
@@ -15,7 +16,8 @@ then
   INSTALL_LOCATION_USE_SUDO=false
 fi
 
-SERVICE_LAUNCHER=keycloak-service.sh
+SERVICE_SCRIPT="keycloak.service"
+SERVICE_LAUNCHER="keycloak-service.sh"
 
 if [[ ${INSTALL_TYPE} == 'REMOTE_FULL' ]]; then
   installDependencies
@@ -24,6 +26,7 @@ fi
 if [[ ${INSTALL_TYPE} != 'REMOTE_PARTIAL' ]]; then
   installKeycloak
 fi
+
 startServer
 login
 createRealm ${REALM_NAME}
@@ -36,3 +39,9 @@ defineUser "${USER3}"
 addClientRoleToUser ${REALM_NAME} "${USER1}" "realm-management" "realm-admin"
 createClient ${REALM_NAME} "business-central" "-s protocol=openid-connect -s rootUrl=${BC_URL} -s redirectUris=[\"${BC_URL}/*\",\"${BC_HTTPS_URL}/*\"] -s bearerOnly=false -s publicClient=false"
 createClient ${REALM_NAME} "kie-server" "-s protocol=openid-connect -s rootUrl=${KS_URL} -s bearerOnly=false -s publicClient=false"
+
+if [[ ${INSTALL_TYPE} == 'REMOTE_FULL' ]]; then
+  stopServer
+  configureAndStartService "${SERVICE_SCRIPT}" "${SERVICE_LAUNCHER}"
+  logService "${SERVICE_SCRIPT}"
+fi

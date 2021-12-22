@@ -19,7 +19,7 @@ Place the required software artifacts under the `installer` folder, in the expec
 
 ## Configuring dependant components
 ### Configuring Keycloak
-**TBD** Add new installer
+Install following instructions in [keycloak installer manual](./keycloak/Readme.md)
 
 ### Configuring PostgresQL
 The database is created and initialized during the creation of the KIE Server, in case it is not already there, using
@@ -58,7 +58,7 @@ actual Keycloak and PostgresQL instances, then run it as:
 ./installer.sh
 ```
 
-## Install KIE Server
+## Install Business Central
 Update the environment properties in [installer.properties](./installer.properties), in particular:
 * `RHPAM_SERVER`: must be `business-central`
 
@@ -78,6 +78,35 @@ function get_hostname() {
 }
 ```
 E.g., it returns something like `ip-10-0-1-211` which is unique within the local subnet.
+
+### Static access to Business Central (BC)
+BC uses an Auto Scale Group with capacity/min/max of 1 for automatic recovery. The ASG can be standalone or in conjunction with a Load Balancer.
+When using a LB, access from other systems (controller address from KS, client urls/uris in Keycloak) will be through using the LB DNS.
+Without an LB or, if KS needs to access BC directly NOT through the LB, BC needs to use a static IP.
+Runbook steps taken from [rhpam-on-aws-with-managed-postgresql runbook](../rhpam-on-aws-with-managed-postgresql/README.md) are marked with an __
+
+#### With Load Balancer
+- __**Create the Target Groups**  
+- __**Create the Load Balancer**  
+receives a DNS with the following syntax: **name-id**.elb.**region**.amazonaws.com  
+- __**Create the Launch Configuration**  
+- __**Create the Auto Scaling Group**  
+- Update BC host in urls/uris in Keycloak -> client -> business-central
+- Update Bc host in KS runtime.properties on Ks instance -> restart ks.service
+
+#### Without Load Balancer
+- Create Elastic IP with TAG: `key:app, value=bc-eip`
+- Run `./installer/eip_attach/installer.sh` 
+- Update BC host in urls/uris in Keycloak -> client -> business-central
+- Update Bc host in KS runtime.properties on Ks instance -> restart ks.service
+
+### Good practices when testing things out on AWS:
+1. stop resources (VMs, Databases, etc) at end of working day
+2. delete obsolete AMIs: deregister AMI (note the AMI id) AND delete its snapshot using the AMI ID to find the correct one
+3. EIPs are free of charge if a couple of constraints are met, one of them being that the EIP is attached to a RUNNING instance
+   -> if instance is stopped, an associated EIP to that instance again incurs costs
+4. VMs used by an ASG can be stopped BUT the ASG might/will spin up another instance instead => set capacity/min/max to 0
+
 
 <!-- links -->
 [reference-procedure]: https://github.com/RHEcosystemAppEng/rhpam-deployment/tree/main/eap/rhpam-on-aws-with-managed-postgresql

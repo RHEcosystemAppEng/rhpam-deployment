@@ -118,3 +118,12 @@ function logService(){
 #function getPortWithOffset(){
 #  echo $((8080+$1))
 #}
+
+function installAwsCli(){
+  headerLog "installAwsCli"
+  execute "cd /tmp; curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip"
+  execute "cd /tmp; unzip awscliv2.zip"
+  execute "cd /tmp; sudo ./aws/install"
+  execute "cd /tmp; rm -r ./aws"
+  execute "cd /tmp; rm awscliv2.zip"
+}

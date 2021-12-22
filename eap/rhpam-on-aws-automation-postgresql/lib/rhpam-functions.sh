@@ -12,6 +12,7 @@ POSTGRESQL_DRIVER=postgresql-42.3.1.jar
 function installRhpam(){
   headerLog "installRhpam $1"
   installerXml=$1
+  execute "sudo rm -rf ${RHPAM_HOME}; sudo mkdir -p ${RHPAM_HOME}"
   execute "cd /tmp; sudo java -jar ${RHPAM_INSTALLER} /tmp/${installerXml}"
   execute "sudo cp ${EAP_HOME}/standalone/configuration/standalone-full.xml ${EAP_HOME}/standalone/configuration/standalone-full.xml.bak"
 }
@@ -24,7 +25,6 @@ function configureSso(){
 
 function configureMavenRepository(){
   headerLog "configureMavenRepository"
-  execute "sudo rm -rf ${RHPAM_HOME}; sudo mkdir -p ${RHPAM_HOME}"
   execute "sudo mv /tmp/settings.xml ${RHPAM_HOME}/settings.xml.template"
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/maven-repo.cli"
 }

@@ -2,10 +2,13 @@
 
 source keycloak.properties
 source common-functions.sh
+source rhpam-functions.sh
 
 function installKeycloak(){
   headerLog "installKeycloak"
   execute "sudo rm -rf ${KEYCLOAK_HOME}; sudo mkdir ${KEYCLOAK_HOME}"
+  execute "sudo rm -rf ${KEYCLOAK_DATA_DIR}; sudo mkdir -p ${KEYCLOAK_DATA_DIR}"
+
   execute "sudo cp /tmp/${KEYCLOAK_INSTALLER} ${KEYCLOAK_HOME}"
   execute "cd ${KEYCLOAK_HOME}"
   execute "sudo tar -xvzf ${KEYCLOAK_INSTALLER} --strip-components=1"

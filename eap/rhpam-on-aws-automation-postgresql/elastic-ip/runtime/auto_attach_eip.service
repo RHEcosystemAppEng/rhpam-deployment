@@ -1,0 +1,10 @@
+[Unit]
+Description=Auto Attach EIP to EC2 instance
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/bin/bash ${RHPAM_HOME}/auto_attach_eip.sh
+
+[Install]
+WantedBy=multi-user.target
