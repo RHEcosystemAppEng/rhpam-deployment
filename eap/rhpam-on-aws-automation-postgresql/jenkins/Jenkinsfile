@@ -1,16 +1,11 @@
 @Library('shared-jenkins-library') _
 node {
-        //   stage('checkout repo from Git')
-        //   {
-            //   checkout scm
-            // checkout([$class: 'GitSCM', branches: [[name: '*/zvikatest']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/RHEcosystemAppEng/rhpam-deployment']]])
-    
-        //   }
         def kieServersInstances
-        def containerId = "test_1.0.0-SNAPSHOT"
-        def groupId = 'com.myspace'
-        def artifact = "test"
-        def version = "1.0.0-SNAPSHOT"
+        def groupId = "${params.GROUPID}"
+        def artifact = "${params.ARTIFACTID}"
+        def version = "${params.ARTIFACT_VERSION}"
+        def containerId = artifact + "_" + version
+        
         stage('Authentication To AWS') {
                 
                 withCredentials([usernamePassword(credentialsId: 'AWS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
@@ -56,3 +51,4 @@ node {
               cleanWs()
           }
 }
+
