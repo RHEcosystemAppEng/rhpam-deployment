@@ -1,7 +1,7 @@
 [Unit]
 Description=RHPAM Business Central service
-After=network-online.target
-Wants=network-online.target
+Wants=network-online.target ${EFS_MOUNT_UNIT}
+After=network-online.target ${EFS_MOUNT_UNIT}
 
 [Service]
 ExecStart=/bin/bash ${RHPAM_HOME}/bc-service.sh ${RHPAM_PROPS_DIR}

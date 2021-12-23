@@ -79,7 +79,13 @@ function copyResources(){
       ./runtime/kie-server/ks.service > ./${RHPAM_SERVER}_tmp/ks.service
   else
     sed 's@${EAP_HOME}@'$EAP_HOME'@' ./installer/business-central/bc-auto.xml > ./${RHPAM_SERVER}_tmp/bc-auto.xml
-    sed 's@${RHPAM_HOME}@'$RHPAM_HOME'@;s@${RHPAM_PROPS_DIR}@'$RHPAM_PROPS_DIR'@' \
+    EFS_MOUNT_UNIT=""
+    EFS_MOUNT_RECORD=$(execute "systemctl list-units | grep $RHPAM_PROPS_DIR" "no")
+    EFS_MOUNT=$(echo $EFS_MOUNT_RECORD | awk '{ print $1 }')
+    if [[ $EFS_MOUNT == *'.mount' ]]; then
+      EFS_MOUNT_UNIT=$EFS_MOUNT
+    fi
+    sed 's@${RHPAM_HOME}@'$RHPAM_HOME'@;s@${RHPAM_PROPS_DIR}@'$RHPAM_PROPS_DIR'@;s@${EFS_MOUNT_UNIT}@'$EFS_MOUNT_UNIT'@' \
       ./runtime/business-central/bc.service > ./${RHPAM_SERVER}_tmp/bc.service
   fi
   copyFolder "./${RHPAM_SERVER}_tmp"

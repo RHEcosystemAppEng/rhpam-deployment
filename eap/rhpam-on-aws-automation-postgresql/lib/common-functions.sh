@@ -16,18 +16,21 @@ function headerLog() {
 
 function execute() {
   cmd=$1
+  isLog="yes"
+  if [ $2 ]; then isLog="no"; fi
 
   if [ $INSTALL_LOCATION_USE_SUDO == false ]
   then
      cmd=${cmd//sudo /""}
   fi
   if [[ "${DRY_RUN_ONLY}" != "yes" ]]; then
+    if [ $isLog == "yes" ]; then
+      echo "=== $cmd ==="
+    fi
     if [ $INSTALL_LOCATION_IS_REMOTE == true ]
     then
-      echo "=== remote install: $cmd ==="
       ssh -i ${SSH_PEM_FILE} ${SSH_USER_ID}@$RHPAM_SERVER_IP "${cmd}"
     else
-      echo "=== local install: $cmd ==="
       eval $cmd
     fi
   fi
