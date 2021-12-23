@@ -1,0 +1,10 @@
+[Unit]
+Description=Keycloak service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/bin/bash ${KEYCLOAK_DATA_DIR}/keycloak-service.sh
+
+[Install]
+WantedBy=multi-user.target
