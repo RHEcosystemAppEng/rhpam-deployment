@@ -14,6 +14,11 @@ node('mvnjdk11') {
         //  }
         
         
+        stage('undeploy previous artifacts version')
+        {
+        //TODO fetch all containers with get rest api endpoint, and delete all containers that their artifact id is matched to the parameter's one.
+        }
+        
         stage('Deploy artifact to Maven Repository') {
              configFileProvider( 
         [configFile(fileId: 'maven-settings', variable: 'MAVEN_SETTINGS')]) {
