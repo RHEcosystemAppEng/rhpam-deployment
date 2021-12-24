@@ -25,7 +25,7 @@ Install following instructions in [keycloak installer manual](./keycloak/Readme.
 The database is created and initialized during the creation of the KIE Server, in case it is not already there, using
 the connection properties defined in [runtime.properties](./runtime/kie-server/runtime.properties)
 
-### Mounting EFS filesystem
+### Mounting EFS filesystem (optional)
 In case we need to mount an EFS filesystem, the [efs.sh](./efs/efs.sh) script is available to initialize the mount point
 on the target VM. 
 
@@ -34,10 +34,27 @@ See related [efs.properties](./efs/efs.properties) configuration properties to d
 **Note**: in case of mounted EFS filesystem, we will use this path to store `runtime.properties` and, for the `Business Central` 
 service, also to host the local Git repository.
 
+### Preparing SSH Tunnel (optional)
+In case the actual VM is reached through an SSH Tunnel, you can create the tunnel by running the provided utility
+[ssh-tunnel.sh](./lib/ssh-tunnel.sh) as follows:
+```shell
+lib/ssh-tunnel.sh -t 1.2.3.4 -s abc.pem -u tuser -r 5.6.7.8 -l 5001
+```
+This creates a tunnel to the remote host `5.6.7.8` passing through host `1.2.3.4` at local port `5001`.
+
+You can test the tunnel by connecting as:
+```shell
+ssh -i  abc.pem -p 5001 ruser@localhost
+```
+Note that `tuser` and `ruser` might actually be different.
+
 ## Install and configure RHPAM services
 These steps are performed with the [installer.sh](./installer.sh) script that is configured with the following properties
 in [installer.properties](./installer.properties): 
-* `RHPAM_SERVER_IP`: the public IP of the VM to configure
+* `RHPAM_SERVER_IP`: the public IP of the VM to configure. **Note**: in case of SSH tunnel, use `localhost`
+* `RHPAM_SERVER_PORT`: the port used to connect the RHPAM service (default is `8080`)
+* `SSH_PORT`: The SSH connection port (deafult is 22). **Note**: if an SSH tunnel is used to reach the remote server, put 
+the local port of the tunnel (option `-l` of the `ssh-tunnel.sh` script)
 * `SSH_PEM_FILE`: the SSH key file
 * `SSH_USER_ID`: the SSH user
 * `RHPAM_SERVER`: one of: `business-central` or `kie-server`

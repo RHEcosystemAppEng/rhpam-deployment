@@ -29,7 +29,7 @@ function execute() {
     fi
     if [ $INSTALL_LOCATION_IS_REMOTE == true ]
     then
-      ssh -i ${SSH_PEM_FILE} ${SSH_USER_ID}@$RHPAM_SERVER_IP "${cmd}"
+      ssh -i ${SSH_PEM_FILE} -p ${SSH_PORT} ${SSH_USER_ID}@${RHPAM_SERVER_IP} "${cmd}"
     else
       eval $cmd
     fi
@@ -66,13 +66,13 @@ function copyFile() {
   then
     echo "copyFile remote: ${f}"
     if [[ $f == *.jar  || $f == *.zip || $f == *.tar.gz ]]; then
-      if ssh -i ${SSH_PEM_FILE} ${SSH_USER_ID}@${RHPAM_SERVER_IP} "test -e /tmp/${f}"; then
+      if ssh -i ${SSH_PEM_FILE} -p ${SSH_PORT} ${SSH_USER_ID}@${RHPAM_SERVER_IP} "test -e /tmp/${f}"; then
         echo "Skipping ${f}"
       else
-        scp -i ${SSH_PEM_FILE} ${folder}/${f} ${SSH_USER_ID}@${RHPAM_SERVER_IP}:/tmp
+        scp -i ${SSH_PEM_FILE} -P ${SSH_PORT} ${folder}/${f} ${SSH_USER_ID}@${RHPAM_SERVER_IP}:/tmp
       fi
     else
-        scp -i ${SSH_PEM_FILE} ${folder}/${f} ${SSH_USER_ID}@${RHPAM_SERVER_IP}:/tmp
+        scp -i ${SSH_PEM_FILE} -P ${SSH_PORT} ${folder}/${f} ${SSH_USER_ID}@${RHPAM_SERVER_IP}:/tmp
     fi
   else
     echo "copyFile local: ${f}"
