@@ -7,15 +7,15 @@ Installed components include:
 * Configuration of PostgresQL
 
 ## Software inventory
-Place the required software artifacts under the `installer` folder, in the expected sub-folders
-### jboss-eap folder
-[jboss-eap-7.3.0-installer.jar][jboss-eap-installer]
-[jboss-eap-7.3.6-patch.zip][jboss-eap-patch]
-[keycloak-oidc-wildfly-adapter-12.0.4.zip][keycloak-adapter]
-### rhpam folder
-[rhpam-installer-7.9.1.jar][rhpam-installer]
-### database folder
-[rhpam-7.9.1-add-ons.zip][rhpam-add-ons]
+Place the required software artifacts under the `installer` folder, in the expected sub-folders:
+* jboss-eap folder
+  * [jboss-eap-7.3.0-installer.jar][jboss-eap-installer]
+  * [jboss-eap-7.3.6-patch.zip][jboss-eap-patch]
+  * [keycloak-oidc-wildfly-adapter-12.0.4.zip][keycloak-adapter]
+* rhpam folder
+  * [rhpam-installer-7.9.1.jar][rhpam-installer]
+* database folder
+  * [rhpam-7.9.1-add-ons.zip][rhpam-add-ons]
 
 ## Configuring dependant components
 ### Configuring Keycloak
@@ -27,14 +27,17 @@ the connection properties defined in [runtime.properties](./runtime/kie-server/r
 
 ### Mounting EFS filesystem
 In case we need to mount an EFS filesystem, the [efs.sh](./efs/efs.sh) script is available to initialize the mount point
-on the target VM. See related [efs.properties](./efs/efs.properties) configuration properties to define the mounted path.
+on the target VM. 
+
+See related [efs.properties](./efs/efs.properties) configuration properties to define the mounted path.
+
 **Note**: in case of mounted EFS filesystem, we will use this path to store `runtime.properties` and, for the `Business Central` 
 service, also to host the local Git repository.
 
 ## Install and configure RHPAM services
 These steps are performed with the [installer.sh](./installer.sh) script that is configured with the following properties
 in [installer.properties](./installer.properties): 
-*`RHPAM_SERVER_IP`: the public IP of the VM to configure
+* `RHPAM_SERVER_IP`: the public IP of the VM to configure
 * `SSH_PEM_FILE`: the SSH key file
 * `SSH_USER_ID`: the SSH user
 * `RHPAM_SERVER`: one of: `business-central` or `kie-server`
@@ -68,7 +71,7 @@ actual Keycloak instance, then run it as:
 ./installer.sh
 ```
 
-## Open points
+## Deployment Notes
 ### Unique server ID
 This `bash` function returns the local host name of the current AWS EC2 VM, purged of the suffix `.ec2.internal`:
 ```shell
@@ -86,11 +89,11 @@ Without an LB or, if KS needs to access BC directly NOT through the LB, BC needs
 Runbook steps taken from [rhpam-on-aws-with-managed-postgresql runbook](../rhpam-on-aws-with-managed-postgresql/README.md) are marked with an __
 
 #### With Load Balancer
-- __**Create the Target Groups**  
-- __**Create the Load Balancer**  
+- Create the Target Groups  
+- Create the Load Balancer  
 receives a DNS with the following syntax: **name-id**.elb.**region**.amazonaws.com  
-- __**Create the Launch Configuration**  
-- __**Create the Auto Scaling Group**  
+- Create the Launch Configuration  
+- Create the Auto Scaling Group  
 - Update BC host in urls/uris in Keycloak -> client -> business-central
 - Update Bc host in KS runtime.properties on Ks instance -> restart ks.service
 
@@ -101,8 +104,8 @@ receives a DNS with the following syntax: **name-id**.elb.**region**.amazonaws.c
 - Update Bc host in KS runtime.properties on Ks instance -> restart ks.service
 
 ### Good practices when testing things out on AWS:
-1. stop resources (VMs, Databases, etc) at end of working day
-2. delete obsolete AMIs: deregister AMI (note the AMI id) AND delete its snapshot using the AMI ID to find the correct one
+1. Stop resources (VMs, Databases, etc) at end of working day
+2. Delete obsolete AMIs: deregister AMI (note the AMI id) AND delete its snapshot using the AMI ID to find the correct one
 3. EIPs are free of charge if a couple of constraints are met, one of them being that the EIP is attached to a RUNNING instance
    -> if instance is stopped, an associated EIP to that instance again incurs costs
 4. VMs used by an ASG can be stopped BUT the ASG might/will spin up another instance instead => set capacity/min/max to 0
