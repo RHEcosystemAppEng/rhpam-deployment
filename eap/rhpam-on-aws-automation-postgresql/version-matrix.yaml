@@ -1,14 +1,16 @@
 RHPAM:
   - version: 7.11.1
     jboss-eap:
-      main: 7.3.0
+      server: 7.3.0
       patch: 7.3.9
       sso-adapter: 7.4.9
   - version: 7.9.1
     jboss-eap:
-      main: 7.3.0
+      server: 7.3.0
       patch: 7.3.6
       sso-adapter: 7.4.0
     keycloak:
-      main: 10.0.1
-      jboss-eap-adapter: 10.0.1 # not used
+      - server: 10.0.1
+        jboss-eap-adapter: 10.0.1
+      - server: 12.0.2
+        jboss-eap-adapter: 12.0.4

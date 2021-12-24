@@ -1,5 +1,9 @@
 #!/bin/bash
 
+EAP_INSTALLER=jboss-eap-7.3.0-installer.jar
+EAP_PATCH=jboss-eap-7.3.6-patch.zip
+EAP_SSO_ADAPTER=keycloak-oidc-wildfly-adapter-12.0.4.zip
+
 function installEap(){
   stopServer
   headerLog "installEap"

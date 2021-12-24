@@ -3,7 +3,7 @@ This procedure is defined to provide an automated installation and configuration
 Installed components include:
 * RHPAM Business Central (v. 7.9.1)
 * RHPAM Kie Server (v. 7.9.1)
-* Configuration of Keycloak (v. 10.0.1)
+* Configuration of Keycloak (v. 12.0.2)
 * Configuration of PostgresQL
 
 ## Software inventory
@@ -11,7 +11,7 @@ Place the required software artifacts under the `installer` folder, in the expec
 ### jboss-eap folder
 [jboss-eap-7.3.0-installer.jar][jboss-eap-installer]
 [jboss-eap-7.3.6-patch.zip][jboss-eap-patch]
-[rh-sso-7.4.0-eap7-adapter.zip][sso-eap7-adapter]
+[keycloak-oidc-wildfly-adapter-12.0.4.zip][keycloak-adapter]
 ### rhpam folder
 [rhpam-installer-7.9.1.jar][rhpam-installer]
 ### database folder
@@ -107,11 +107,10 @@ receives a DNS with the following syntax: **name-id**.elb.**region**.amazonaws.c
    -> if instance is stopped, an associated EIP to that instance again incurs costs
 4. VMs used by an ASG can be stopped BUT the ASG might/will spin up another instance instead => set capacity/min/max to 0
 
-
 <!-- links -->
 [reference-procedure]: https://github.com/RHEcosystemAppEng/rhpam-deployment/tree/main/eap/rhpam-on-aws-with-managed-postgresql
 [jboss-eap-installer]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=appplatform&version=7.3
 [jboss-eap-patch]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?product=appplatform&downloadType=patches&version=7.3
-[sso-eap7-adapter]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?product=core.service.rhsso&downloadType=patches&version=7.4
+[keycloak-adapter]: https://www.keycloak.org/archive/downloads-12.0.4.html
 [rhpam-installer]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=rhpam&version=7.09.1
 [rhpam-add-ons]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=rhpam&version=7.09.1

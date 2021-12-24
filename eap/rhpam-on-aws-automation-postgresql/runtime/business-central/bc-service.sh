@@ -4,7 +4,7 @@ echo "Starting from ${RHPAM_PROPS_DIR}/runtime.properties"
 source ${RHPAM_PROPS_DIR}/runtime.properties
 
 function updateMavenSettings(){
-  sed 's@${MAVEN_REPO_USERNAME}@'$MAVEN_REPO_USERNAME'@g ; s@${MAVEN_REPO_PASSWORD}@'$MAVEN_REPO_PASSWORD'@g ; s@${MAVEN_REPO_URL}@'$MAVEN_REPO_URL'@' \
+  sed 's/${MAVEN_REPO_USERNAME}/'$MAVEN_REPO_USERNAME'/g ; s/${MAVEN_REPO_PASSWORD}/'$MAVEN_REPO_PASSWORD'/g ; s@${MAVEN_REPO_URL}@'$MAVEN_REPO_URL'@' \
     $(dirname "$0")/settings.xml.template > ${RHPAM_HOME}/settings.xml
 }
 
