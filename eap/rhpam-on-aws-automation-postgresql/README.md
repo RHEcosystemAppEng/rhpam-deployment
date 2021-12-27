@@ -123,8 +123,7 @@ receives a DNS with the following syntax: **name-id**.elb.**region**.amazonaws.c
 ### Good practices when testing things out on AWS:
 1. Stop resources (VMs, Databases, etc) at end of working day
 2. Delete obsolete AMIs: deregister AMI (note the AMI id) AND delete its snapshot using the AMI ID to find the correct one
-3. EIPs are free of charge if a couple of constraints are met, one of them being that the EIP is attached to a RUNNING instance
-   -> if instance is stopped, an associated EIP to that instance again incurs costs
+3. Release any not needed EIPs. An EIP is only free of charge if a couple of constraints are met: it must be associated with a RUNNING EC2 instance which has only one EIP attached and it also must be associated with an attached network interface [source](https://aws.amazon.com/premiumsupport/knowledge-center/elastic-ip-charges/) 
 4. VMs used by an ASG can be stopped BUT the ASG might/will spin up another instance instead => set capacity/min/max to 0
 
 <!-- links -->
