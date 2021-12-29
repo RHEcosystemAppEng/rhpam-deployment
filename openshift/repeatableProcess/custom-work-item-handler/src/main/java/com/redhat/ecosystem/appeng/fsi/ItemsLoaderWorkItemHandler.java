@@ -73,7 +73,7 @@ public class ItemsLoaderWorkItemHandler extends AbstractLogOrThrowWorkItemHandle
         try {
             RequiredParameterValidator.validate(this.getClass(), workItem);
 
-            // sample parameters
+            // createLatestArtifactGavInWorkspace parameters
             name = (String) workItem.getParameter("name");
             System.out.println("Starting Items Loader with name=" + name);
 
