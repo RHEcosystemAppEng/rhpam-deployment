@@ -6,13 +6,13 @@
  * @param pathToFile - the path of the script file in the context/workspace directory, that will be the user-data.
  * @return result of the command
  */
-//create a new launch configuration
-def call(String launchConfigName,String imageId,String instanceType,String pathToFile)
+//updates ASG with new launch configuration
+def call(String asgName,String launchConfigName)
 {
-    echo "started updateAutoScalingGroup/4"
-    def result = sh(script : "aws autoscaling create-launch-configuration --launch-configuration-name ${launchConfigName} \
-                              --image-id ${imageId}  --instance-type ${instanceType} \
-                              --user-data ${pathToFile}",returnStdout: true).trim()
+    echo "started updateAutoScalingGroup/2"
+    def result = sh(script : "aws autoscaling update-auto-scaling-group --auto-scaling-group-name ${asgName}  \
+                               --launch-configuration-name ${launchConfigName}",returnStdout: true).trim()
+
     echo "result is ${result}"
     return result;
 }

@@ -1,20 +1,27 @@
+//##pipeline for dev environment
+
 @Library('shared-jenkins-library') _
 node {
+        def kieServerAddressPlusPort
+        def imageId
+        def instanceType
         def kieServersInstances
         def groupId = "${params.GROUPID}"
         def artifact = "${params.ARTIFACTID}"
         def version = "${params.ARTIFACT_VERSION}"
         def containerId = artifact + "_" + version
+        String lastVersion = ""
         
         stage('Authentication To AWS') {
-                
+
                 withCredentials([usernamePassword(credentialsId: 'AWS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
                      authenticateAWS (USER, PASSWORD, 'us-east-1')
+
                  }
                  
         }
         
-        stage('fetching instances by tag')
+        stage('Fetching instances by tag')
         {
             // getAwsInstancesByAppTagValue - call(String keyApplicationName,String appName)
             kieServersInstances = getAwsInstancesByAppTagValue("app","RHPAM-KS")
@@ -22,6 +29,29 @@ node {
             
            
             
+        }
+
+
+         stage('Retrieve Instance Details'){
+                def jsonWithArray = readJSON text: kieServersInstances
+                def InstainceId = jsonWithArray.Tags[0].instanceId
+                def instanceJsonString = getInstanceDetailsById(instanceId)
+                def instanceJson = readJSON text: instanceJsonString
+
+                imageId = instanceJson.Reservations["Instances"][0].ImageId
+                instanceType = instanceId = instanceJson.Reservations["Instances"][0].InstanceType
+                kieServerAddressPlusPort = instanceId = instanceJson.Reservations["Instances"][0].PublicIpAddress
+                kieServerAddressPlusPort = kieServerAddressPlusPort.substring(1,publicIpAddress.length()-1) + ":8080"
+
+
+         }
+
+        stage('Retrieve Last Artifact version '){
+            withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
+                //def call(String server,String userName,String password, String groupId , String artifactId, String version )
+                lastVersion = getArtifactLatestVersionFromKieServer(publicIpAddress,USER,PASSWORD,groupId,artifact,version)
+            }
+
         }
         stage('Deploy artifact to KIeServers') {
             def jsonWithArray = readJSON text: kieServersInstances
@@ -45,7 +75,60 @@ node {
            }
             
         }
-            
+        stage('Undeploy last version of artifact') {
+            if(!lastVersion.trim().equals("")) {
+                def jsonWithArray = readJSON text: kieServersInstances
+                jsonWithArray.Tags.each { json ->
+                    def instanceId = json.ResourceId
+                    // getInstanceDetailsById - call(String instanceId)
+                    def jsonInstance = getInstanceDetailsById(instanceId)
+                    def jsonS = readJSON text: jsonInstance
+
+                    def publicIpAddress = jsonS.Reservations["Instances"][0].PublicIpAddress.toString()
+
+                    echo "Deploying to instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
+
+                    def ipAddressStripped = publicIpAddress.substring(1, publicIpAddress.length() - 1) + ":8080"
+
+                    withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
+                        //undeployArtifactFromKieServer - def call(String server,String userName,String password,String containerId)
+                        def oldContainerId = artifact + "_" + lastVersion
+                        undeployArtifactFromKieServer(ipAddressStripped, USER, PASSWORD, oldContainerId)
+
+                    }
+                }
+            }
+
+            else
+            {
+                echo "Artifact has no previous version, there is nothing to delete"
+            }
+
+        }
+
+        stage('Update ASG with updated GAV userData')
+                {
+                    //First, need to build GAV property into a file in the build workspace
+                    String gavPropertyFileLocationForUserData = createLatestArtifactGavInWorkspace(groupId,artifact,version)
+
+                    //Secondly, needs to retrieve Auto scaling group name (ASG name) according to tags
+//                    def call(String tagKey,String tagValue)
+//                    String asgName = AgetAwsAsgNameByTagAndValue("asgType","kieServers")
+                    String asgName = AgetAwsAsgNameByTagAndValue("environment","test")
+
+                    //Thirdly, needs to create launch configuration name, need to be unique, so it will be combined from group-id+artifact+version+jenkins build number concatenated with dashes
+                    //if will be problematic in the future(if the jenkins builds number will start over from the start - 1), then can add GIT_COMMIT env variable so it'll be 100% unique.
+                    def launchConfigurationName = "${groupId}-${artifact}-${version}-${currentBuild.number}"
+
+                    //Fourthly , needs to create a new launch configuration That will contain this GAV property in user-data property
+//                    def call(String launchConfigName,String imageId,String instanceType,String pathToFile)
+                    createLaunchConfigurationAWS(launchConfigurationName,imageId,instanceType,gavPropertyFileLocationForUserData)
+
+                    //Lastly, needs to update Auto scaling Group with this new version of launch configuration.
+//                    def call(String asgName,String launchConfigName)
+                    updateAutoScalingGroup(asgName,launchConfigurationName)
+
+                }
         stage('Clean Workspace')
           {
               cleanWs()
