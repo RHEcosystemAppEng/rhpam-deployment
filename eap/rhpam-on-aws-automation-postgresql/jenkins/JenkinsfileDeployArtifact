@@ -2,6 +2,7 @@
 
 @Library('shared-jenkins-library') _
 node {
+        def asgName = "ks-eip-asg"
         def launchConfigurationBaseName = "ks-eip-launch-configuration"
         def kieServerAddressPlusPort
         def imageId
@@ -117,7 +118,7 @@ node {
                     //Secondly, needs to retrieve Auto scaling group name (ASG name) according to tags
 //                    def call(String tagKey,String tagValue)
 //                    String asgName = getAwsAsgNameByTagAndValue("asgType","kieServers")
-                    String asgName = getAwsAsgNameByTagAndValue("environment","test-ks")
+//                    String asgName = getAwsAsgNameByTagAndValue("environment","test-ks")
 
                     //Thirdly, needs to create launch configuration name, need to be unique, so it will be combined from group-id+artifact+version+jenkins build number concatenated with dashes
                     //if will be problematic in the future(if the jenkins builds number will start over from the start - 1), then can add GIT_COMMIT env variable so it'll be 100% unique.
