@@ -2,6 +2,7 @@
 
 @Library('shared-jenkins-library') _
 node {
+        def awsRegion = "us-east-1"
         def asgName = "ks-eip-asg"
         def launchConfigurationBaseName = "ks-eip-launch-configuration"
         def kieServerAddressPlusPort
@@ -18,7 +19,7 @@ node {
         stage('Authentication To AWS') {
 
                 withCredentials([usernamePassword(credentialsId: 'AWS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
-                     authenticateAWS (USER, PASSWORD, 'us-east-1')
+                     authenticateAWS (USER, PASSWORD, awsRegion)
 
                  }
                  
@@ -105,7 +106,7 @@ node {
 
             else
             {
-                echo "Artifact has no previous version, there is nothing to delete"
+                echo "Artifact has no previous version or it's the same version, there is nothing to delete"
             }
 
         }
@@ -120,14 +121,17 @@ node {
 //                    String asgName = getAwsAsgNameByTagAndValue("asgType","kieServers")
 //                    String asgName = getAwsAsgNameByTagAndValue("environment","test-ks")
 
-                    //Thirdly, needs to create launch configuration name, need to be unique, so it will be combined from group-id+artifact+version+jenkins build number concatenated with dashes
+                    //Thirdly, needs to create launch configuration name, need to be unique, so it will be combined from launchConfigurationBaseName +jenkins build number concatenated with dash
                     //if will be problematic in the future(if the jenkins builds number will start over from the start - 1), then can add GIT_COMMIT env variable so it'll be 100% unique.
 //                    def launchConfigurationName = "${groupId}-${artifact}-${version}-${currentBuild.number}"
                     def launchConfigurationName = "${launchConfigurationBaseName}-${currentBuild.number}"
 
                     //Fourthly , needs to create a new launch configuration That will contain this GAV property in user-data property
-//                    def call(String launchConfigName,String imageId,String instanceType,String pathToFile)
-                    createLaunchConfigurationAWS(launchConfigurationName,imageId,instanceType,gavPropertyFileLocationForUserData)
+//                    def call(String launchConfigName,String imageId,String instanceType,String pathToFile,String securityGroup,String awsRegion)
+                    String imageIdStripped = imageId.toString().substring(1,imageId.toString().length()-1)
+                    String instanceTypeStripped = instanceType.toString().substring(1,instanceType.toString().length()-1)
+                    String securityGroupStripped = securityGroup.toString().substring(1,securityGroup.toString().length()-1)
+                    createLaunchConfigurationAWS(launchConfigurationName,imageIdStripped,instanceTypeStripped,gavPropertyFileLocationForUserData,securityGroupStripped,awsRegion)
 
                     //Lastly, needs to update Auto scaling Group with this new version of launch configuration.
 //                    def call(String asgName,String launchConfigName)
