@@ -2,9 +2,11 @@
 
 @Library('shared-jenkins-library') _
 node {
+        def launchConfigurationBaseName = "ks-eip-launch-configuration"
         def kieServerAddressPlusPort
         def imageId
         def instanceType
+        def securityGroup
         def kieServersInstances
         def groupId = "${params.GROUPID}"
         def artifact = "${params.ARTIFACTID}"
@@ -34,14 +36,15 @@ node {
 
          stage('Retrieve Instance Details'){
                 def jsonWithArray = readJSON text: kieServersInstances
-                def InstainceId = jsonWithArray.Tags[0].instanceId
+                def instanceId = jsonWithArray.Tags[0].ResourceId
                 def instanceJsonString = getInstanceDetailsById(instanceId)
                 def instanceJson = readJSON text: instanceJsonString
 
                 imageId = instanceJson.Reservations["Instances"][0].ImageId
-                instanceType = instanceId = instanceJson.Reservations["Instances"][0].InstanceType
-                kieServerAddressPlusPort = instanceId = instanceJson.Reservations["Instances"][0].PublicIpAddress
-                kieServerAddressPlusPort = kieServerAddressPlusPort.substring(1,publicIpAddress.length()-1) + ":8080"
+                instanceType = instanceJson.Reservations["Instances"][0].InstanceType
+                securityGroup = instanceJson.Reservations["Instances"][0].SecurityGroups[0].GroupId
+                kieServerAddressPlusPort = instanceJson.Reservations["Instances"][0].PublicIpAddress.toString()
+                kieServerAddressPlusPort = kieServerAddressPlusPort.substring(1,kieServerAddressPlusPort.length()-1) + ":8080"
 
 
          }
@@ -49,7 +52,7 @@ node {
         stage('Retrieve Last Artifact version '){
             withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
                 //def call(String server,String userName,String password, String groupId , String artifactId, String version )
-                lastVersion = getArtifactLatestVersionFromKieServer(publicIpAddress,USER,PASSWORD,groupId,artifact,version)
+                lastVersion = getArtifactLatestVersionFromKieServer(kieServerAddressPlusPort,USER,PASSWORD,groupId,artifact,version)
             }
 
         }
@@ -114,11 +117,12 @@ node {
                     //Secondly, needs to retrieve Auto scaling group name (ASG name) according to tags
 //                    def call(String tagKey,String tagValue)
 //                    String asgName = AgetAwsAsgNameByTagAndValue("asgType","kieServers")
-                    String asgName = AgetAwsAsgNameByTagAndValue("environment","test")
+                    String asgName = AgetAwsAsgNameByTagAndValue("environment","test-ks")
 
                     //Thirdly, needs to create launch configuration name, need to be unique, so it will be combined from group-id+artifact+version+jenkins build number concatenated with dashes
                     //if will be problematic in the future(if the jenkins builds number will start over from the start - 1), then can add GIT_COMMIT env variable so it'll be 100% unique.
-                    def launchConfigurationName = "${groupId}-${artifact}-${version}-${currentBuild.number}"
+//                    def launchConfigurationName = "${groupId}-${artifact}-${version}-${currentBuild.number}"
+                    def launchConfigurationName = "${launchConfigurationBaseName}-${currentBuild.number}"
 
                     //Fourthly , needs to create a new launch configuration That will contain this GAV property in user-data property
 //                    def call(String launchConfigName,String imageId,String instanceType,String pathToFile)

@@ -9,7 +9,7 @@ def call(String server,String userName,String password, String groupId , String 
     def url = "http://" + server + contextUrl
     def userPass = userName + ":" + password;
 
-    def allContainers = sh(script: '''curl --user $userPass --X GET $url \
+    def allContainers = sh(script: '''curl --user $userPass -X GET $url \
             --header 'Accept: application/json' ''',returnStdout : true)
 
 
