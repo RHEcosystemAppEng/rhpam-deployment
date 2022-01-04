@@ -13,7 +13,7 @@ def call(String launchConfigName,String imageId,String instanceType,String pathT
     def result = sh(script : "aws autoscaling create-launch-configuration --launch-configuration-name ${launchConfigName} \
                               --image-id ${imageId}  --instance-type ${instanceType} \
                               --security-groups ${securityGroupdId} \
-                              ----user-data ${pathToFile}",returnStdout: true).trim()
+                              --user-data ${pathToFile}",returnStdout: true).trim()
     echo "result is ${result}"
     return result
 }
