@@ -7,6 +7,8 @@ def call(String server,String userName,String password, String groupId , String 
     echo "started getArtifactLatestVersionFromKieServer/6"
     def contextUrl = "/kie-server/services/rest/server/containers/"
     String url = "http://$server$contextUrl"
+    echo "url= ${url}"
+    echo "user= ${userName}"
 
 
     def allContainers = sh(script: '''curl --user $userName:$password -X GET $url --header 'Accept: application/json' ''',returnStdout : true)
