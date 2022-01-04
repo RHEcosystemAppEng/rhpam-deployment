@@ -9,7 +9,7 @@ def call(String server,String userName,String password,String containerId)
     def url = "http://" + server + contextUrl + containerId
     def userPass = userName + ":" + password;
 
-    def result = sh(script: "curl --user ${userPass} --X DELETE ${url} \
+    def result = sh(script: "curl --user ${userPass} -X DELETE ${url} \
             --header 'Accept: application/json' ",returnStdout : true)
 
 
