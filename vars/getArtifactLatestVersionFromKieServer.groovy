@@ -19,7 +19,7 @@ def call(String server,String userName,String password, String groupId , String 
     def resultVersion = "";
     def containers = readJSON text: allContainers
     if(!containers.result["kie-containers"]["kie-container"].isEmpty()) {
-        containers.result.kie - containers.kie - container.each { container ->
+        containers.result["kie-containers"]["kie-container"].each { container ->
             def currentGroupId = container["release-id"]["group-id"]
             def currentArtifactId = container["release-id"]["artifact-id"]
             if (groupId.equals(currentGroupId) && artifactId.equals(currentArtifactId)) {
