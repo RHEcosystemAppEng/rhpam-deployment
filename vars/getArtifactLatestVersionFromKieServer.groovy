@@ -18,7 +18,7 @@ def call(String server,String userName,String password, String groupId , String 
     // return space.
     def resultVersion = "";
     def containers = readJSON text: allContainers
-    if(!containers.result.kie-containers.kie-container.isEmpty()) {
+    if(!containers.result["kie-containers"]["kie-container"].isEmpty()) {
         containers.result.kie - containers.kie - container.each { container ->
             def currentGroupId = container["release-id"]["group-id"]
             def currentArtifactId = container["release-id"]["artifact-id"]
