@@ -18,11 +18,13 @@ def call(String server,String userName,String password, String groupId , String 
     // return space.
     def resultVersion = "";
     def containers = readJSON text: allContainers
-    containers.result.kie-containers.kie-container.each {container ->
-        def currentGroupId = container.release-id.group-id
-        def currentArtifactId = container.release-id.artifact-id
-        if (groupId.equals(currentGroupId) && artifactId.equals(currentArtifactId)) {
-            resultVersion =  container.release-id.version
+    if(!containers.result.kie-containers.kie-container.isEmpty()) {
+        containers.result.kie - containers.kie - container.each { container ->
+            def currentGroupId = container.release - id.group - id
+            def currentArtifactId = container.release - id.artifact - id
+            if (groupId.equals(currentGroupId) && artifactId.equals(currentArtifactId)) {
+                resultVersion = container.release - id.version
+            }
         }
     }
 
