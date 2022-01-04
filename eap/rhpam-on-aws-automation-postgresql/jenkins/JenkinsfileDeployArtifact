@@ -80,7 +80,7 @@ node {
             
         }
         stage('Undeploy last version of artifact') {
-            if(!lastVersion.trim().equals("")) {
+            if(!lastVersion.trim().equals("") && !lastVersion.equals(version)) {
                 def jsonWithArray = readJSON text: kieServersInstances
                 jsonWithArray.Tags.each { json ->
                     def instanceId = json.ResourceId
