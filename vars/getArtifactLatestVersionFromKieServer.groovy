@@ -1,5 +1,3 @@
-package org.demo
-
 //return the latest version deployed of a given artifact, if it's not deployed at all, return space
 def call(String server,String userName,String password, String groupId , String artifactId, String version )
 {
