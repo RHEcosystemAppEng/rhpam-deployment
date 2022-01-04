@@ -9,7 +9,7 @@ def call(String server,String userName,String password, String groupId , String 
 //    echo "user= ${userName}"
 
 
-    def allContainers = sh(script: "curl --user ${userName}:${password} -X GET ${url} ",returnStdout : true)
+    def allContainers = sh(script: "curl --user ${userName}:${password} -X GET ${url} --header 'Accept: application/json' ",returnStdout : true)
 
 
     echo "the containers in kie-server : \\n  ${allContainers}"
