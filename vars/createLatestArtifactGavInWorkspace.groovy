@@ -12,7 +12,7 @@ def call(String groupId , String artifactId, String version )
     String gav = 'latest-artifact-gav=' + groupId + ':' + artifactId + ':' + version
     echo 'started createLatestArtifactGavInWorkspace/3'
 
-    sh(script: "echo \"#!/bin/bash\" > ./gav.out  ; echo ${gav} >> ./gav.out")
+    sh(script: "echo ${gav} > ./gav.out")
     sh(script: "cat ./gav.out | base64 > ./gav-base64.out")
     def pwd= sh(script: "pwd" , returnStdout : true).trim()
     def result = "file://$pwd/gav.out"

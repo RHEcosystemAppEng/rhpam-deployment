@@ -6,18 +6,22 @@ node('mvnjdk11') {
           }
         
         
-        //whenever i'll checkout real mirror maven repository of business central, then i'll activate this to identify the tag commit which reflecting the artifact name in repo
+        //whenever a checkout of real mirror git repository of business central(with all artifacts in repository), then i'll activate this to identify the tag commit which reflecting the artifact name in repo
+//        or according to commit id, will get the file name that changed, and will extract from its path the name of the artifact.
         //  stage('get changed artifact to be handled')
         //  {
-              
+//              Option 1 - get the artifact name according to tag associated with last git commit, assuming that this tag has the artifact name.
         //      def tagArtifactName = sh(script : "git rev-list --all | grep -m 1 -E '[0-9a-zA-Z]*' | xargs -i git tag --contains {}",returnStdout: true).trim()
+
+//               Option2 - more general, gets according to the build commit-id, the list of file names that was changed in the commit, and extract from their path
+//              the artifact name:
+
+//                  def lineWithPath = sh(script : "git show ${env.GIT_COMMIT} --name-only  | grep -v -E '(Author:)|(Date:)|(commit )|^[[:space:]]' | grep --max-count=1 [a-zA-Z0-9]",returnStdout: true).trim()
+//                 if ${env.GIT_COMMIT} doesn't resolve to last git commit, you can get the last commit hash with shell script git command "git rev-parse HEAD".
         //  }
         
         
-        stage('undeploy previous artifacts version')
-        {
-        //TODO fetch all containers with get rest api endpoint, and delete all containers that their artifact id is matched to the parameter's one.
-        }
+
         
         stage('Deploy artifact to Maven Repository') {
              configFileProvider( 
@@ -32,7 +36,8 @@ node('mvnjdk11') {
             def groupId = sh(script : "cat pom.xml | grep -i -m 1 groupid | awk -F '>' '{print \$2}' | awk -F '<' '{print \$1}'",returnStdout: true).trim()
             def artifact = sh(script : "cat pom.xml | grep -i -m 1 artifactid | awk -F '>' '{print \$2}' | awk -F '<' '{print \$1}'",returnStdout: true).trim()
             def version = sh(script : "cat pom.xml | grep -i -m 1 \"<version>\" | awk -F '>' '{print \$2}' | awk -F '<' '{print \$1}'",returnStdout: true).trim()
-            build wait: false, job: 'deploy-maven-artifact', parameters: [string(name: 'GROUPID', value: groupId), string(name: 'ARTIFACTID', value: artifact), string(name: 'ARTIFACT_VERSION', value: version)]
+            //invoke the deploy job of builded artifact on a sample region. if needed, this line can be replicated for the rest of the relevant regions in AWS.
+            build wait: false, job: 'deploy-maven-artifact', parameters: [string(name: 'GROUPID', value: groupId), string(name: 'ARTIFACTID', value: artifact), string(name: 'ARTIFACT_VERSION', value: version), string(name: 'AWS_REGION', value: "us-east-1")]
             echo 'job was triggered!'
         }
             

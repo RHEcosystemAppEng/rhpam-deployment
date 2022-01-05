@@ -2,7 +2,7 @@
 
 @Library('shared-jenkins-library') _
 node {
-        def awsRegion = "us-east-1"
+//        def awsRegion = "us-east-1"
         def asgName = "ks-eip-asg"
         def launchConfigurationBaseName = "ks-eip-launch-configuration"
         def kieServerAddressPlusPort
@@ -13,6 +13,7 @@ node {
         def groupId = "${params.GROUPID}"
         def artifact = "${params.ARTIFACTID}"
         def version = "${params.ARTIFACT_VERSION}"
+        def awsRegion = "${params.AWS_REGION}"
         def containerId = artifact + "_" + version
         String lastVersion = ""
         
@@ -137,6 +138,11 @@ node {
 //                    def call(String asgName,String launchConfigName)
                     updateAutoScalingGroup(asgName,launchConfigurationName)
 
+                }
+
+        stage('start Instances refresh for ASG')
+                {
+                    //TODO implement  AWS start Instances refresh process for auto scaling group
                 }
         stage('Clean Workspace')
           {
