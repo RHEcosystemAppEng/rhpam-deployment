@@ -15,7 +15,7 @@ def call(String groupId , String artifactId, String version )
     sh(script: "echo \"#!/bin/bash\" > ./gav.out  ; echo ${gav} >> ./gav.out")
     sh(script: "cat ./gav.out | base64 > ./gav-base64.out")
     def pwd= sh(script: "pwd" , returnStdout : true).trim()
-    def result = "file:/$pwd/gav-base64.out"
+    def result = "file://$pwd/gav.out"
 
 
 
