@@ -73,7 +73,7 @@ podman push docker.io/youruser/yourrepo:tag#
 ```shell
 oc new-project your-project
 ```
-####Jenkins Installation   
+#### Jenkins Installation   
 3.now We'll use the self created container image from previous step in order to run on cluster Jenkins with AWS cli utility(if wanted to use another registry than docker.io, need to override in values.yaml property volumePermissions.image.registry),notice that JenkinsUser & JenkinsPassword are the credentials of admin user of jenkins:
 ```shell
 helm install jenkins-test  --set jenkinsUser=admin   --set jenkinsPassword=******* \
@@ -101,7 +101,7 @@ jenkins-test-587fbcf497-76knq   1/1     Running   0          120s
 zgrinber@zgrinber tmp]$ oc get route | awk '!/^(NAME)/' | awk '{print $2}'
 jenkins-test-zgrinber-dev.apps.sandbox.x8i5.p1.openshiftapps.com
 ```
-##Jenkins Configuration
+## Jenkins Configuration
 
 ### Global Configuration
 FIrst, Go to global configuration Inside Jenkins Main screen(Dashboard)-> Go to *Manage Jenkins* on the left panel-> Click on *Configure System*
@@ -119,7 +119,7 @@ Value= /bitnami/jenkins/home
     Search for `Global Pipeline Libraries` Header and click on the 'Add' button.
     a group of fields revealed , populate the fields with following values
 
-####Text Values:
+#### Text Values:
 ```prototext 
 Name=shared-jenkins-library,
 Default Version= main,
@@ -129,13 +129,13 @@ Source Code Management=https://github.com/RHEcosystemAppEng/rhpam-deployment.git
 
 ```
 
-####CheckBox Values:
+#### CheckBox Values:
 - [ ] Load implicitly
 - [X] Allow default version to be overridden
 - [X] Include @Library changes in job recent changes
 
 
-###Install Plugins:
+### Install Plugins:
 
 #### The following plugins are required in order to run the pipelines(some of them already installed):
    
@@ -154,7 +154,7 @@ Source Code Management=https://github.com/RHEcosystemAppEng/rhpam-deployment.git
    - Blue Ocean
    - Configuration As Code Plugin(Optional)
 
-####How to Install Plugins:
+#### How to Install Plugins:
 in main menu of Jenkins server, go to Manage Jenkins->Click on Manage Plugins->
 THen Go to 'Available' tab->in the above search editor field enter the required plugin or look for it
 In the presented table of available plugins, next to the desired plugins(can check multiple plugins), check their checkbox
@@ -163,7 +163,7 @@ and click below on either of buttons 'Install without Restart' and then click on
 ![Example of installing plugin](./pictures/pluginInstallation.png)
 ![Example of installing plugin](./pictures/pluginInstallation2.png)
 
-###Credentials and Secrets management:
+### Credentials and Secrets management:
 Jenkins manage and store the credentials in a secured manner and in a secured place, 
 and using the 'Credentials Binding Plugin' it can inject any credentials into a pipeline in order to be used,
 jenkins and the plugin masking the secrets from being displayed on logs, so they remain secured 
@@ -174,7 +174,7 @@ and there is no fear that secrets will be leaked or compromised
 - KS_CREDENTIALS - Kie Server Controller Username and password for interacting with Kie Server using REST API
 - jenkins-sa-token(optional) - In case of using kubernetes pod template as jenkins agent/slave - should be defined with kind of Secret text.
 
-####How to define credentials in jenkins:
+#### How to define credentials in jenkins:
 From jenkins server main screen, go to Manage Jenkins-> go to security section-> click on Manage Credentials
 -> then on the bottom click on '(global)' link under Domains column->on the left panel click on 'Add Credentials'
 Then you should fill the details of secret as shown below:
@@ -235,7 +235,7 @@ in settings.xml and choose jenkins credentials for the maven repo
 and then the plugin will inject the user/password to the rendered
 settings.xml that will be injected to running agent during runtime_**
 
-###Setup A Kubernetes pod template agent
+### Setup A Kubernetes pod template agent
 
 Jenkins jobs can run on master node(jenkins master), but it's not considered
 as best practice because of the following reasons:
@@ -343,7 +343,7 @@ oc get secret $(oc get sa jenkins -n jenkins-test -o jsonpath={.secrets[0].name}
 oc patch deployment/jenkins-test -p '{"spec":{"template":{"spec":{"serviceAccount":"jenkins"}}}}'
 ```
 
-####Second Step: Define Openshift Cloud in jenkins
+#### Second Step: Define Openshift Cloud in jenkins
 1. in main menu of Jenkins server, go to Manage Jenkins->In System configuration Section
    go to 'Manage Nodes And Clouds'->Go on the left panel to Configure Clouds->
    press on button/drop down list 'Add a new cloud', and choose Kubernetes.
