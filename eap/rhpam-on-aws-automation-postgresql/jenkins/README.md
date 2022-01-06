@@ -187,7 +187,7 @@ Then you should fill the details of secret as shown below:
 
 ![define credential](./pictures/addnewsecret2.png)
 
-###Defining external configuration file(Example with maven - settings.xml)
+### Defining external configuration file(Example with maven - settings.xml)
 Jenkins, Using 'Config File Provider Plugin', offers a way to decouple config files
 From the jenkins agent that the pipeline will run onto, so the configuration file is defined as an object with id, and it can be used through pipeline execution using the plugin,
 regardless of the agent that is being used, jenkins inject/mount the rendered file
