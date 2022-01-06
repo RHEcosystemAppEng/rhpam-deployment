@@ -29,9 +29,9 @@ Goal - To create a jenkins Automation server to run on Openshift cluster in orde
 
 * A Running Openshift Cluster
 
-##Procedure:
+## Procedure:
 
-###Creating a customized image with jenkins and aws cli utility:
+### Creating a customized image with jenkins and aws cli utility:
 
 **Create a new image from jenkins bitnami newest image version**
 
@@ -263,7 +263,7 @@ as best practice because of the following reasons:
 **_We'll go through the setup and configuration required to setup pod templates
 agents in jenkins that will run in an openshift cluster._**
 
-####First Step: Create Service Account in openshift Cluster
+#### First Step: Create Service Account in openshift Cluster
 
 1. login to openshift cluster using oc login.
 2. switch to project/namespace that you want projects to run in, for example,
