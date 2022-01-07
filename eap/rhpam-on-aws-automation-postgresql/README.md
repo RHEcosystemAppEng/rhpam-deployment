@@ -1,4 +1,4 @@
-## Deployment of infrastructure components 
+# Deployment of infrastructure components 
 This procedure is defined to provide an automated installation and configuration of RHPAM services on the AWS cloud.
 Installed components include:
 * RHPAM Business Central (v. 7.9.1)
@@ -67,7 +67,7 @@ match the mounted path
 In case of EFS mounted filesystem, it has to match the mounted path
 * `DRY_RUN_ONLY`: set to "yes" to generate only the list of commands in the `installer.log` file
 
-## Install KIE Server
+### Install KIE Server
 Update the environment properties in [installer.properties](./installer.properties), in particular:
 * `RHPAM_SERVER`: must be `kie-server`
 * `KIE_SERVER_TYPE`: either `managed` or `unmanaged`
@@ -78,7 +78,7 @@ actual Keycloak and PostgresQL instances, then run it as:
 ./installer.sh
 ```
 
-## Install Business Central
+### Install Business Central
 Update the environment properties in [installer.properties](./installer.properties), in particular:
 * `RHPAM_SERVER`: must be `business-central`
 
@@ -87,6 +87,9 @@ actual Keycloak instance, then run it as:
 ```shell
 ./installer.sh
 ```
+
+## Testing the deployment
+See [Deployment validation](./test/README.md) procedure.
 
 ## Deployment Notes
 ### Unique server ID
