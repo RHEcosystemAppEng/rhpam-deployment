@@ -1,15 +1,19 @@
 # Functional checklist
 
 ## RHPAM Authoring with local git
-- [ ] Create project on BC
+- [x] Create project on BC
   - Add `<distributionManagement>` to `pom.xml` pointing to Maven repository
-- [ ] Deploy project on the server
-  - [ ] Running server is listed in `Execution Servers` page
-  - [ ] Validate artifact is deployed on Maven Nexus repository
-  - [ ] Validate artifact is deployed on server
+- [x] Deploy project on the server
+  - [x] Running server is listed in `Execution Servers` page
+  - [x] Validate artifact is deployed on Maven Nexus repository
+  - [x] Validate artifact is deployed on server
+
+**Issues**:
+* [[Issue] Server not listed in ExecutionServers page](https://issues.redhat.com/browse/APPENG-219)
+* [[Issue] Build & Install periodically fails](https://issues.redhat.com/browse/APPENG-220)
 
 ## Process management from Business Central
-- [ ] Start a process on KS
+- ❌ Start a process on KS
   - [ ] Process is listed in `Process Instance` page
   - [ ] Validate process state and diagram
 - [ ] Complete the process
@@ -19,6 +23,9 @@ Repeat the above tests for the following scenarios:
 - [ ] Process without human task that auto-completes
 - [ ] Process with human task
   - The user task is assigned to the user who deployed the project
+
+**Issues**:
+* [[Issue] Deployed process is not listed in Business Central console](https://issues.redhat.com/browse/APPENG-222)
 
 ## RHPAM Authoring with remote git
 The purpose is to connect the Business Central Git to the remote Git
@@ -50,13 +57,16 @@ echo "#\!/bin/sh\ngit push origin +master" > post-commit
   - [ ] Validate the changes are present
 
 ## User Management from Business Central
-- [ ] Admin>Roles page contains the roles defined in Keycloak `Rhpam` realm
+- ❌ Admin>Roles page contains the roles defined in Keycloak `Rhpam` realm
 - [ ] Admin>Groups page contains `kie-server` role defined in Keycloak `Rhpam` realm
 - [ ] Admin>Users page contains the users defined in Keycloak `Rhpam` realm
 - [ ] Create a new user from Admin>Users page
   - [ ] The user is reflected in the Keycloak `Rhpam` realm
 - [ ] Delete a user from Admin>Users page
   - [ ] The user is removed from the Keycloak `Rhpam` realm
+
+**Issues**:
+* [[Issue] Admin page is not listing expected Roles, Groups and Users](https://issues.redhat.com/browse/APPENG-221)
 
 ## Testing Kie-Server REST API
 - [ ] Get list of available containers using `GET https://{{kieserver-url}}/services/rest/server/containers`
