@@ -413,8 +413,8 @@ The remaining fields can stay with default values.
 ```
 4. After filling all above fields, click on button "Pod Template Details..."
    and then click on Add Pod Template, and you should supply image for the pod
-   that will run when the pod agent will be created by jenkins, see example 
-   in the screenshots below:
+   that will run when the pod agent will be created by jenkins, and additional details like label,Volume , etc.\
+   see example in the screenshots below:
 ![sample](./pictures/openshiftcloud1.png)
 ![sample](./pictures/openshiftcloud2.png)
 ![sample](./pictures/openshiftcloud3.png)
@@ -428,7 +428,7 @@ Labels = the name of the agent pod in order to instruct jenkins to run a pipelin
 ContainerName = the name of the container of the agent in pod
 DockerImage = the Docker image that the container will be derived from - must be sub image of jenkins/agent or jenkins/slave
 WorkingDirectory = the directory in which the agent will work in when provisioned for a pipeline
-PersistentVolumeClaim = a name of PVC that can be mounted into mount path in container in order to increase performance of build, for example, for a maven builder agent, it's sensible to mount a pvc to the agent's local repository directory, so it will not need to download the artifacts over and over on each build, just refresh whatever is new or deleted.              
+PersistentVolumeClaim = Under Volumes Section, a name of PVC that can be mounted into mount path in container in order to increase performance of build, for example, for a maven builder agent, it's sensible to mount a pvc to the agent's local repository directory, so it will not need to download the artifacts over and over on each build, just refresh whatever is new or deleted.              
 ```
 5.Click on Save.
 
