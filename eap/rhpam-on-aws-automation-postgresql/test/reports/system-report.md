@@ -61,6 +61,10 @@ sudo systemctl daemon-reload
 ```
 If another mount point should also exist on Kie server, repeat above check on that server
 
+**Issues**:
+* [[Issue] mount point with hyphen copy problem](https://issues.redhat.com/browse/APPENG-223)
+
+
 ## Business Central
 Purpose is to validate the connectivity to Business Central and from Business Central to Kie server, Keycloak 
 - [ ] Check accessibility of Business Central from browser
@@ -69,6 +73,8 @@ Purpose is to validate the connectivity to Business Central and from Business Ce
 - [ ] Check accessibility of Kie Server from Business Central VM
   - [ ] Curl to Kie Server private ip
 ```shell
+-L for following redirects, -k for self-signed certificates, -v for verbose
+
 curl -vk --user username:password --header 'Content-Type: application/json' http://<KS-private-ip>:8080/kie-server/services/rest/server/containers
 curl -vk --user username:password --header 'Content-Type: application/json' https://<KS-private-ip>:8443/kie-server/services/rest/server/containers
 ```
@@ -93,6 +99,7 @@ Purpose is to validate the connectivity to Kie Server and from Kie server to Bus
 - [ ] Check accessibility of Business Central from Kie Server VM
   - [ ] Curl to Business Central Controller through ALB
 ```shell
+-L for following redirects, -k for self-signed certificates, -v for verbose
 curl -kv --user username:password --header 'Content-Type: application/json' https://<BC-Host>/business-central/rest/controller/management/servers
 ```
 - [ ] Check authentication through Keycloak
