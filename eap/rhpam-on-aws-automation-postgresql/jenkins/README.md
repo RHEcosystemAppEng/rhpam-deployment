@@ -1,7 +1,8 @@
-# Provisioning Of a Jenkins Server on Openshift
+# Provisioning a Jenkins Server on Openshift For CI/CD pipeline on AWS 
 
-  
-Goal - To create a jenkins Automation server to run on Openshift cluster in order to intract with AWS API and Kie Servers for  deploying artifacts to Kie Servers.
+## Main Goal - Build CI/CD Pipeline for dev/prod Environments for building artifacts and deploy them on RHPAM'S KieServers Running on AWS for Temenos 
+   
+### Objective - To create a jenkins Automation server to run on Openshift cluster in order to intract with AWS API and Kie Servers for  deploying artifacts to Kie Servers.
 * The Idea is to use bitnami jenkins chart with modified customized image that will
   contain all of the content of the parent image, and in addition will include AWS cli utility to interact
  with AWS console API using its CLI.
@@ -263,6 +264,7 @@ as best practice because of the following reasons:
 **_We'll go through the setup and configuration required to setup pod templates
 agents in jenkins that will run in an openshift cluster._**
 
+**_Note: Kubernetes Plugin for jenkins is a Prerequisite for running pod template agents on jenkins_**
 #### First Step: Create Service Account in openshift Cluster
 
 1. login to openshift cluster using oc login.
@@ -271,7 +273,7 @@ agents in jenkins that will run in an openshift cluster._**
 ```shell
 oc project jenkins-test
 ```
-3. Create a service account for jenkins that it be able to access cluster:
+3. Create a service account for jenkins so that it will be able to access the cluster:
 ```shell
 oc create serviceaccount jenkins -n jenkins-test
 ```
@@ -334,9 +336,7 @@ oc get secret $(oc get sa jenkins -n jenkins-test -o jsonpath={.secrets[0].name}
 ```shell
 oc get secret $(oc get sa jenkins -n jenkins-test -o jsonpath={.secrets[0].name}) -n jenkins-test -o jsonpath={.data.'ca\.crt'} | base64 --decode
 ```
-<!-- links -->
-[Helm Installation Page]: https://helm.sh/docs/intro/install/
-[Podman Installation Page]: https://podman.io/getting-started/installation
+
 
 8.If running on the same namespace as jenkins master, you can apply this service account to jenkins deployment:
 ```shell
@@ -398,3 +398,522 @@ PersistentVolumeClain = a name of PVC that can be mounted into mount path in con
 6.Go to Manage Jenkins->Security section->click on Configure Global Security->
    in Agents Section, choose radioButton Random,
    And in 'Agent - Controller Security', check checkbox 'Enable Agent -> Controller Access Control'
+
+### Jenkins - Configuration As Code Plugin
+
+ This plugin can export most of the configuration in jenkins(
+beside jobs configuration and plugins configuration) to a YAML file,
+So most of the configuration can be expressed in a declarative way in
+ that file, For example:
+ ```yaml
+ credentials:
+   system:
+     domainCredentials:
+       - credentials:
+           - string:
+               description: "Jenkins ServiceAccount Token"
+               id: "jenkins-sa-token"
+               scope: GLOBAL
+               secret: "{AQAAABAAAATwmw4RprFIw9r05+DzIZOANvCw9RCQehy7/9mrRRhGYueGGfcjbcRV27VDnfQHDoa//CiKI0PtCk3TcoeDR57G9H7NUdt9JQ10i9m/LmbKuevXhrC3tfAXSNWJMUwHOs4ju/PwZ2/l3ViaVldUwxZZ/ZlaOODl5BYU+T5LZQdFXNPawcONoTLeMZMSxq4aNVGYiEUOTYedIpL5cLJZ06Mx1dRMbK8PyZu5HuN2a72btyZf75wJddRZ8PAIqBAiS3uLuvi2UFsSEBLHlbL8V+c2tlqklLAAqG1vywBOlvUORH0Jq9iyJW9HQwy9wl3NPcithR1pTaPPY/uVuq29uPsJh8mhjMVm63lf2ES8MfGQuglqJzSbcVqN4ybPA04jPbUyPmAYJgV/H67SSAnPEgdPM7tvfG7APG1HYvV7oWnt9yKKUctTnTCb2d+Vt/IWQE8hlmXCK4rCiczqMAq/ApnIoESj61nBDZXEqX0Y88U+TPJ3r9tAF5Q4NfwLdOp2ddKgQzOTce7rD+tpd38dYlNZRUU6f6OOb3qXgumDSxeBrC+BWVEAQp9uv77teFJ7AHlzqABdi3Pz46iIePsYDwXWOf/eskDu4M4Ehv7yl3EgELynyMsocI9rzuOfVM8Dp/xMWC4Vr7M/r/QdTjUlxps+hm0L/2m4HwB/y3M/Cwhtbj9JbArETPmGQs0/wpdXJ+memlBbj2gr9OS38eGyYPCahBRIIxMuMn8ML60Gy4vni1Bxrvo1lc25wNGCOeVNufiZL66Xc8dXhXyCP9yZDAkhZSF4h9PIUEgFO9eVnTP0y3Pr4L6Kpi0sLNaEcYC6VL7ayQN40f0mk2w9a/dpkuHMdBQsnbMUzN/j4hyXlhBVxJve5lwB49gBCyP4weJ0YRNr1uT7pSBH5m1flYrbpKZwuZMz9PhxPEK0GzGurbta+sR/gi+wBL4u0fetKUIVhsiKWH/4VL/qb0SUyalwtbik+a7q666xGnpNlzRB8wqEsZ6Rnwl5JxZKmAV0I4Sk/gduaPz0Ek/ovn85iJtk68Ih2a5ihscY/VI3ulC/4LgoAG/tM5VQdyr6iVjPQW1O0PskL9plOdIE3hY3RoZwl9OjEUvq9fd5q6q+CeFVA5v75HiOAURd1lq/H/2BJQA682PxqQ7M2Ma8UUIZQ8QDmaQGQ0vn0MHhKRuML5Lvurkx80gSgwYIq0aVgPB135EFzjB5flLbCXr5MSPkdR6p8O8tbu6mu5FmWQmXdvTOhwZrFUmlCT9JgPgyR1WKOjr39/msHeByIADVeXA9fWfoDe4sm46XT1o/9UcSjejDrMFCqC6uLiogWMUqG9aE2ZoRhukiKEWmVaM1zQ6UxjR0CVxYdszKBdoAuk4C2MP4tVGYEt3r+myb4D3KwTYf5PWkaXzwldCfpcPYl1R+wG+PCAdSmCZqJDKT9vUUi6PxTVO5SBBW4DtuvLD/P2uLCpCRiE7S0UK/+n3QB6qjT335kBfoNZo3GM4klGSbE1rrclm1sZ3SgUcXqp/PnQannM6tPFT0Glurv8gEny7zQh2+YYqjIvtVZCLimaJD6nCf9jwZ0re8JAYorTSW2oHA3zSnOZ6rQkzRLf4/4O/MNHu9s5pYuoRP9qUvMvrFo80imcM91CYuWtM+MNFdbk2SQ69jg6eqnWqsWNXuAli4JnixfFopcJ14G2vJSwiBIJ+mrOzsSPU=}"
+           - usernamePassword:
+               description: "username and password for maven repository"
+               id: "maven-repo-secret"
+               password: "{AQAAABAAAAAQZrzexuLtdRy5hOk+pGGfjiXfyr1di0XhVxapNiWVmsc=}"
+               scope: GLOBAL
+               username: "aaaaaaaaa"
+               usernameSecret: true
+           - usernamePassword:
+               description: "AWS Access Key Id and Secret"
+               id: "AWS_CREDENTIALS"
+               password: "{AQAAABAAAAAwX3JeSYhC11kW9i9IIX9RgHipP1K1cQ7NZT/sI8xXUDGs57g5w5VWcPuN2VsQH+nw+F0Ue1o0NZ9zq0zpGg6J+A==}"
+               scope: GLOBAL
+               username: "bbbbbbbb"
+               usernameSecret: true
+           - usernamePassword:
+               description: "Kie Server Controller User and password"
+               id: "KS_CREDENTIALS"
+               password: "{AQAAABAAAAAQn2Mr7z7pCl+0R1U/SUv4/zRA1ftPq1lDAkvvtZfm1ew=}"
+               scope: GLOBAL
+               username: "controller"
+               usernameSecret: true
+ jenkins:
+   agentProtocols:
+     - "JNLP4-connect"
+     - "Ping"
+   authorizationStrategy:
+     loggedInUsersCanDoAnything:
+       allowAnonymousRead: false
+   clouds:
+     - kubernetes:
+         containerCap: 10
+         containerCapStr: "10"
+         credentialsId: "jenkins-sa-token"
+         jenkinsUrl: "http://10.131.0.98:8080"
+         name: "Openshift"
+         namespace: "jenkins-test"
+         serverCertificate: |
+           -----BEGIN CERTIFICATE-----
+           Certificate-keys-goes-here-1
+           -----END CERTIFICATE-----
+           -----BEGIN CERTIFICATE-----
+           Certificate-keys-goes-here-2
+           -----END CERTIFICATE-----
+           -----BEGIN CERTIFICATE-----
+           Certificate-keys-goes-here-3
+           -----END CERTIFICATE-----
+           -----BEGIN CERTIFICATE-----
+           Certificate-keys-goes-here-4
+           -----END CERTIFICATE-----
+         serverUrl: "https://api.ocp-dev01.lab.eng.tlv2.redhat.com:6443"
+         templates:
+           - containers:
+               - image: "docker.io/jenkins/inbound-agent:latest"
+                 livenessProbe:
+                   failureThreshold: 0
+                   initialDelaySeconds: 0
+                   periodSeconds: 0
+                   successThreshold: 0
+                   timeoutSeconds: 0
+                 name: "jnlp"
+                 workingDir: "/home/jenkins/agent"
+             id: "c1c4d9e7-a3f5-495a-8ce1-c4bb384deae9"
+             label: "kubeagent"
+             name: "kube-agent"
+             namespace: "jenkins-test"
+             yamlMergeStrategy: "override"
+           - containers:
+               - envVars:
+                   - envVar:
+                       key: "HOME"
+                       value: "/home"
+                 image: "docker.io/jenkins/jnlp-agent-maven:jdk11"
+                 livenessProbe:
+                   failureThreshold: 0
+                   initialDelaySeconds: 0
+                   periodSeconds: 0
+                   successThreshold: 0
+                   timeoutSeconds: 0
+                 name: "jnlp"
+                 workingDir: "/home"
+             id: "0d0c6195-9f26-4f2e-9fb6-a1fff7f1a540"
+             label: "mvnjdk11"
+             name: "jdk-maven-slave"
+             namespace: "jenkins-test"
+             volumes:
+               - persistentVolumeClaim:
+                   claimName: "jenkins-test-slave"
+                   mountPath: "/home/.m2"
+                   readOnly: false
+             yamlMergeStrategy: "override"
+   crumbIssuer:
+     standard:
+       excludeClientIPFromCrumb: true
+   disableRememberMe: false
+   globalNodeProperties:
+     - envVars:
+         env:
+           - key: "HOME"
+             value: "/bitnami/jenkins/home"
+   labelAtoms:
+     - name: "built-in"
+     - name: "kubeagent"
+     - name: "mvnjdk11"
+   markupFormatter: "plainText"
+   mode: NORMAL
+   myViewsTabBar: "standard"
+   numExecutors: 2
+   primaryView:
+     all:
+       name: "all"
+   projectNamingStrategy: "standard"
+   quietPeriod: 5
+   remotingSecurity:
+     enabled: true
+   scmCheckoutRetryCount: 0
+   securityRealm:
+     local:
+       allowsSignup: false
+       enableCaptcha: false
+       users:
+         - id: "admin"
+           name: "admin"
+           properties:
+             - "apiToken"
+             - "mailer"
+             - "myView"
+             - preferredProvider:
+                 providerId: "default"
+             - "timezone"
+             - favoriting:
+                 autofavoriteEnabled: true
+             - "favorite"
+   slaveAgentPort: 0
+   updateCenter:
+     sites:
+       - id: "default"
+         url: "https://updates.jenkins.io/update-center.json"
+   views:
+     - all:
+         name: "all"
+   viewsTabBar: "standard"
+ globalCredentialsConfiguration:
+   configuration:
+     providerFilter: "none"
+     typeFilter: "none"
+ security:
+   apiToken:
+     creationOfLegacyTokenEnabled: false
+     tokenGenerationOnCreationEnabled: false
+     usageStatisticsEnabled: true
+   sSHD:
+     port: -1
+   scriptApproval:
+     approvedSignatures:
+       - "method groovy.lang.GroovyObject invokeMethod java.lang.String java.lang.Object"
+       - "staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.util.Collection\
+      \ java.lang.String"
+ unclassified:
+   bitbucketEndpointConfiguration:
+     endpoints:
+       - bitbucketCloudEndpoint:
+           enableCache: false
+           manageHooks: false
+           repositoriesCacheDuration: 0
+           teamCacheDuration: 0
+   buildDiscarders:
+     configuredBuildDiscarders:
+       - "jobBuildDiscarder"
+   buildStepOperation:
+     enabled: false
+   email-ext:
+     adminRequiredForTemplateTesting: false
+     allowUnregisteredEnabled: false
+     charset: "UTF-8"
+     debugMode: false
+     defaultBody: |-
+       $PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS:
+
+       Check console output at $BUILD_URL to view the results.
+     defaultContentType: "text/plain"
+     defaultSubject: "$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!"
+     defaultTriggerIds:
+       - "hudson.plugins.emailext.plugins.trigger.FailureTrigger"
+     maxAttachmentSize: -1
+     maxAttachmentSizeMb: -1
+     precedenceBulk: false
+     watchingEnabled: false
+   fingerprints:
+     fingerprintCleanupDisabled: false
+     storage: "file"
+   gitHubConfiguration:
+     apiRateLimitChecker: ThrottleForNormalize
+   gitHubPluginConfig:
+     hookUrl: "http://jenkins-test-jenkins-test.apps.ocp-dev01.lab.eng.tlv2.redhat.com/github-webhook/"
+   gitSCM:
+     addGitTagAction: false
+     allowSecondFetch: false
+     createAccountBasedOnEmail: false
+     disableGitToolChooser: false
+     hideCredentials: false
+     showEntireCommitSummaryInChanges: false
+     useExistingAccountWithSameEmail: false
+   globalConfigFiles:
+     configs:
+       - mavenSettings:
+           comment: "User settings"
+           content: |-
+             <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+                 <profiles>
+                     <profile>
+                         <id>rhpam</id>
+                         <activation>
+                             <activeByDefault>true</activeByDefault>
+                         </activation>
+                         <repositories>
+                             <repository>
+                                 <id>redhat-ga</id>
+                                 <url>https://maven.repository.redhat.com/ga/</url>
+                             </repository>
+                         </repositories>
+                         <pluginRepositories>
+                             <pluginRepository>
+                                 <id>redhat-ga</id>
+                                 <url>https://maven.repository.redhat.com/ga/</url>
+                             </pluginRepository>
+                         </pluginRepositories>
+                         <distributionManagement>
+                             <repository>
+                                 <id>rhpam</id>
+                                 <url>https://repo.repsy.io/mvn/dmartino/rhpam</url>
+                             </repository>
+                         </distributionManagement>
+                     </profile>
+                 </profiles>
+             </settings>
+           id: "maven-settings"
+           isReplaceAll: true
+           name: "settingsxml"
+           providerId: "org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig"
+           serverCredentialMappings:
+             - credentialsId: "maven-repo-secret"
+               serverId: "rhpam"
+   globalLibraries:
+     libraries:
+       - defaultVersion: "main"
+         name: "shared-jenkins-library"
+         retriever:
+           modernSCM:
+             scm:
+               git:
+                 id: "f1e8168c-1058-410c-be40-c20415dfee91"
+                 remote: "https://github.com/RHEcosystemAppEng/rhpam-deployment.git"
+                 traits:
+                   - "gitBranchDiscovery"
+   junitTestResultStorage:
+     storage: "file"
+   location:
+     adminAddress: "zgrinber@redhat.com"
+     url: "http://jenkins-test-jenkins-test.apps.ocp-dev01.lab.eng.tlv2.redhat.com/"
+   mailer:
+     charset: "UTF-8"
+     useSsl: false
+     useTls: false
+   mavenModuleSet:
+     localRepository: "default"
+   pollSCM:
+     pollingThreadCount: 10
+   subversionSCM:
+     workspaceFormat: 8
+   timestamper:
+     allPipelines: false
+     elapsedTimeFormat: "'<b>'HH:mm:ss.S'</b> '"
+     systemTimeFormat: "'<b>'HH:mm:ss'</b> '"
+ tool:
+   git:
+     installations:
+       - home: "git"
+         name: "Default"
+   maven:
+     installations:
+       - name: "maven"
+         properties:
+           - installSource:
+               installers:
+                 - maven:
+                     id: "3.8.4"
+   mavenGlobalConfig:
+     globalSettingsProvider: "standard"
+     settingsProvider: "standard"
+```
+ - The Credentials passwords are encrypted using some encryption's key of the plugin.
+ - The Credentials usernames are not encrypted, thus were obscured intentionally manually.
+ - Unfortunately, when trying to import the yaml into jenkins, it sometimes failed, so when not
+   working in such cases, can be used as a compact way of storing the data of configuration in jenkins in a structured way
+ - Opened To do - An Attempt to import the configuration from yaml to jenkins with the 'credentials' 
+   portion omitted(import a yaml with only 'jenkins' portion)
+
+### Job Configuration
+
+- The jobs configuration are stored in xml files inside jenkins master
+  in the following directory -  $JENKINS_HOME/jobs.
+- Each job has its own directory and contains:
+
+
+  1. builds directory with all build numbers and their data and logs.
+
+  
+  2. File that keep the number of Next Build Number.
+
+  
+  3. config.xml, the job configuration in jenkins , using it you can 
+     export a job configuration from one jenkins server to another.
+     you just have copy the directory of the job in $JENKINS_HOME/jobs
+     from jenkins A to $JENKINS_HOME/jobs in jenkins B(usually only config,xml
+      will be sufficient as we don't want history of builds and logs of Jenkins B). 
+  
+- the job configuration may contain pipeline code as well, but in 
+     this one I'm using a PAAC(Pipeline As a Code) approach, where the
+     pipeline code is separated from job configuration, and are only referenced
+     and fetched by job configuration, usually from a remote git repository where
+     it's defined, it's better to manage it that way because we can manage the versions of
+     the pipeline and keep track of pipeline's changes using git in a more convenient, easy and elegant way   
+
+There are two jobs in the pipeline:
+
+1. Build Artifact - Which checkout a git repository contains a RHPAM project ,
+   parse the pom.xml of it, takes that groupId, Artifact, And version, and build
+   the project using maven, a KJAR artifact is generated and deployed to a remote
+   maven server, afterwards it invokes a deployment job(Deploy Artifact job) of that artifact with its
+   exact id(groupId,artifact,Version), and an AWS region to deploy the artifact to the
+   KIE Servers at this region, optionally can include an invocation command of the deploy job
+   for each relevant AWS region.
+   
+
+   [The pipeline's code of this job - can be viewed here](./JenkinsfileBuildArtifact)
+
+2. Deploy Artifact - which get as parameters the groupId, artifact and version(abbreviated - 'GAV'),
+   authenticate itself to aws using aws cli to the region parameter, and deploy
+   the maven artifact to all kie servers associated with an auto-scaling group.
+   the pipeline code(JenkinsFile) files for dev & prod are different, as the requirements are different.\
+     
+   Assumptions that the pipeline makes:
+   1. the Auto Scaling Group(ASG) of the Kie Servers is known to the pipeline code.
+   
+   2. launch Configuration base name of ASG is known to the pipeline code.
+   
+   3. Kie Servers instances all have tag called 'app' with value of 'RHPAM-KS' and it's derived from ASG when a scale out action 
+      is performed- can be changed in pipeline to whatever value that is desired and defined in ASG.
+   
+
+   
+   
+[The pipeline's code of this job in dev environment -  can be viewed here](./JenkinsfileDeployArtifact)
+
+
+ 
+
+
+
+   
+_**Note:The pipeline code for production environment is in progrss**_
+
+#### Job Build Artifact Config:
+
+```xml
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1145.v7f2433caa07f">
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers>
+        <hudson.triggers.SCMTrigger>
+          <spec>* * * * *</spec>
+          <ignorePostCommitHooks>false</ignorePostCommitHooks>
+        </hudson.triggers.SCMTrigger>
+      </triggers>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@2648.va9433432b33c">
+    <scm class="hudson.plugins.git.GitSCM" plugin="git@4.10.1">
+      <configVersion>2</configVersion>
+      <userRemoteConfigs>
+        <hudson.plugins.git.UserRemoteConfig>
+          <url>https://github.com/RHEcosystemAppEng/rhpam-deployment/</url>
+        </hudson.plugins.git.UserRemoteConfig>
+      </userRemoteConfigs>
+      <branches>
+        <hudson.plugins.git.BranchSpec>
+          <name>*/main</name>
+        </hudson.plugins.git.BranchSpec>
+      </branches>
+      <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+      <submoduleCfg class="empty-list"/>
+      <extensions/>
+    </scm>
+    <scriptPath>eap/rhpam-on-aws-automation-postgresql/jenkins/JenkinsfileBuildArtifact</scriptPath>
+    <lightweight>true</lightweight>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
+
+```
+
+
+
+
+
+#### Job Deploy Artifact Config
+```xml
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1145.v7f2433caa07f">
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>GROUPID</name>
+          <description>Project-id in the pom.xml</description>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>ARTIFACTID</name>
+          <description>The artifact name in pom.xml</description>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>ARTIFACT_VERSION</name>
+          <description>The version of the artifact in pom.xml</description>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>AWS_REGION</name>
+          <description>The aws region to deploy to</description>
+          <defaultValue>us-east-1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@2648.va9433432b33c">
+    <scm class="hudson.plugins.git.GitSCM" plugin="git@4.10.1">
+      <configVersion>2</configVersion>
+      <userRemoteConfigs>
+        <hudson.plugins.git.UserRemoteConfig>
+          <url>https://github.com/RHEcosystemAppEng/rhpam-deployment.git</url>
+        </hudson.plugins.git.UserRemoteConfig>
+      </userRemoteConfigs>
+      <branches>
+        <hudson.plugins.git.BranchSpec>
+          <name>*/main</name>
+        </hudson.plugins.git.BranchSpec>
+      </branches>
+      <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+      <submoduleCfg class="empty-list"/>
+      <extensions/>
+    </scm>
+    <scriptPath>eap/rhpam-on-aws-automation-postgresql/jenkins/JenkinsfileDeployArtifact</scriptPath>
+    <lightweight>true</lightweight>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
+
+```
+**_Several notes on the jobs configuration:_**
+
+  1. The job triggering mechanism defined in jobs configuration is SCM Polling('Poll Scm' option in Build Triggers) here, while it's not efficient.
+     The reason that I chose it is that the cluster where i deployed jenkins has access to internet, but
+     external git repositories(to the cluster) can't access it, so jenkins in this way has to poll every 1 minute 
+     the git Repository for changes, but when jenkins is accessible from an external git repo , it's much more better
+     to define a webhook with secret token in jenkins job, and let every push or pull request
+     to that git repo to invoke jenkins job via web-hook(using Build Triggers' 'Trigger builds remotely'),
+     Click on the job name in jenkins dashboard->on left panel click on 'Configure' -> Inside Job Configuration
+     go to Build Triggers->Instead of Poll SCM,  check 'Trigger builds remotely (e.g., from scripts)' Checkbox as shown below:
+
+     ![define a web-hook](./pictures/webhookchangetriggering.png)
+
+  2. Url and Script-Path tags in the above xml, are for defining the **location of the pipeline code for the job to be executed** 
+     , So it needs to point to an existing repo and pipeline jenkinsfile.
+    
+     
+   
+### Shared Library Resources and files:
+
+All the pipelines above, and in addition to that, yet to come deployment pipeline for
+production environment, are relying on a shared library that defines groovy functions
+for re-use by the pipelines, and all files of library  must be in /vars directory of whatever
+git repository you're defining as shared library, as jenkins expecting that
+the shared library's files will be in /vars in any given repo.\
+Our share Library can be found [here](../../../vars)
+
+
+
+<!-- links -->
+[Helm Installation Page]: https://helm.sh/docs/intro/install/
+[Podman Installation Page]: https://podman.io/getting-started/installation
