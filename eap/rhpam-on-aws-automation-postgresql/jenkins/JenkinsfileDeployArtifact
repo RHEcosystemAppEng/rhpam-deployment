@@ -72,7 +72,7 @@ node {
                 def jsonS = readJSON text: jsonInstance
                 
                 def publicIpAddress = jsonS.Reservations["Instances"][0].PublicIpAddress.toString()
-                def instanceState = sonS.Reservations["Instances"][0].State.Name.toString()
+                def instanceState = jsonS.Reservations["Instances"][0].State.Name.toString()
                 if(instanceState.equals("running")) {
                     echo "Deploying to instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
 
