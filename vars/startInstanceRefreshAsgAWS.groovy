@@ -7,11 +7,10 @@
  * @return result of the command
  */
 //updates ASG with new launch configuration
-def call(String asgName,String launchConfigName)
+def call(String asgName)
 {
-    echo "started updateAutoScalingGroup/2"
-    def result = sh(script : "aws autoscaling update-auto-scaling-group --auto-scaling-group-name ${asgName}  \
-                               --launch-configuration-name ${launchConfigName}",returnStdout: true).trim()
+    echo "started startInstanceRefreshAsgAWS/1"
+    def result = sh(script : "aws autoscaling start-instance-refresh --auto-scaling-group-name ${asgName}",returnStdout: true).trim()
 
     echo "result is ${result}"
     return result;

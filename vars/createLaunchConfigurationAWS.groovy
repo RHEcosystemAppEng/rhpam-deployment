@@ -7,13 +7,13 @@
  * @return result of the command
  */
 //create a new launch configuration
-def call(String launchConfigName,String imageId,String instanceType,String pathToFile,String securityGroupdId,String awsRegion)
+def call(String launchConfigName,String imageId,String instanceType,String pathToFile,String securityGroupdId,String awsRegion,String keyName)
 {
-    echo "started createLaunchConfigurationAWS/5"
+    echo "started createLaunchConfigurationAWS/6"
     def result = sh(script : "aws autoscaling create-launch-configuration --launch-configuration-name ${launchConfigName} \
                               --image-id ${imageId}  --instance-type ${instanceType} \
                               --security-groups ${securityGroupdId} --region ${awsRegion} \
-                              --user-data ${pathToFile}",returnStdout: true).trim()
+                              --user-data ${pathToFile} --key-name ${keyName}",returnStdout: true).trim()
     echo "result is ${result}"
     return result
 }
