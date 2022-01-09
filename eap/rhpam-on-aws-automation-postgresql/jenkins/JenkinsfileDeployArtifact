@@ -10,6 +10,7 @@ node {
         def instanceType
         def securityGroup
         def kieServersInstances
+        String keyName
         def groupId = "${params.GROUPID}"
         def artifact = "${params.ARTIFACTID}"
         def version = "${params.ARTIFACT_VERSION}"
@@ -47,7 +48,10 @@ node {
                 instanceType = instanceJson.Reservations["Instances"][0].InstanceType
                 securityGroup = instanceJson.Reservations["Instances"][0].SecurityGroups[0].GroupId
                 kieServerAddressPlusPort = instanceJson.Reservations["Instances"][0].PublicIpAddress.toString()
+                kieServerAddressPlusPort = instanceJson.Reservations["Instances"][0].PublicIpAddress.toString()
                 kieServerAddressPlusPort = kieServerAddressPlusPort.substring(1,kieServerAddressPlusPort.length()-1) + ":8080"
+                keyName = instanceJson.Reservations["Instances"][0].keyName
+
 
 
          }
@@ -68,16 +72,18 @@ node {
                 def jsonS = readJSON text: jsonInstance
                 
                 def publicIpAddress = jsonS.Reservations["Instances"][0].PublicIpAddress.toString()
-                
-                echo "Deploying to instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
-                
-                ipAddressStripped = publicIpAddress.substring(1,publicIpAddress.length()-1) + ":8080"
-                
-                withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
-                    //deployToKieServerArtifact - def call(String server,String userName,String password,String containerId, String groupId , String artifactId, String version )
-                     deployToKieServerArtifact (ipAddressStripped,USER, PASSWORD, containerId ,groupId ,artifact,version)
-                     
-                }                
+                def instanceState = sonS.Reservations["Instances"][0].State.Name.toString()
+                if(instanceState.equals("running")) {
+                    echo "Deploying to instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
+
+                    ipAddressStripped = publicIpAddress.substring(1, publicIpAddress.length() - 1) + ":8080"
+
+                    withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
+                        //deployToKieServerArtifact - def call(String server,String userName,String password,String containerId, String groupId , String artifactId, String version )
+                        deployToKieServerArtifact(ipAddressStripped, USER, PASSWORD, containerId, groupId, artifact, version)
+
+                    }
+                }
            }
             
         }
@@ -91,16 +97,18 @@ node {
                     def jsonS = readJSON text: jsonInstance
 
                     def publicIpAddress = jsonS.Reservations["Instances"][0].PublicIpAddress.toString()
+                    def instanceState = sonS.Reservations["Instances"][0].State.Name.toString()
+                    if(instanceState.equals("running")) {
+                        echo "Undeploying from instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
 
-                    echo "Deploying to instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
+                        def ipAddressStripped = publicIpAddress.substring(1, publicIpAddress.length() - 1) + ":8080"
 
-                    def ipAddressStripped = publicIpAddress.substring(1, publicIpAddress.length() - 1) + ":8080"
+                        withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
+                            //undeployArtifactFromKieServer - def call(String server,String userName,String password,String containerId)
+                            def oldContainerId = artifact + "_" + lastVersion
+                            undeployArtifactFromKieServer(ipAddressStripped, USER, PASSWORD, oldContainerId)
 
-                    withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
-                        //undeployArtifactFromKieServer - def call(String server,String userName,String password,String containerId)
-                        def oldContainerId = artifact + "_" + lastVersion
-                        undeployArtifactFromKieServer(ipAddressStripped, USER, PASSWORD, oldContainerId)
-
+                        }
                     }
                 }
             }
@@ -132,7 +140,7 @@ node {
                     String imageIdStripped = imageId.toString().substring(1,imageId.toString().length()-1)
                     String instanceTypeStripped = instanceType.toString().substring(1,instanceType.toString().length()-1)
                     String securityGroupStripped = securityGroup.toString().substring(1,securityGroup.toString().length()-1)
-                    createLaunchConfigurationAWS(launchConfigurationName,imageIdStripped,instanceTypeStripped,gavPropertyFileLocationForUserData,securityGroupStripped,awsRegion)
+                    createLaunchConfigurationAWS(launchConfigurationName,imageIdStripped,instanceTypeStripped,gavPropertyFileLocationForUserData,securityGroupStripped,awsRegion,keyName)
 
                     //Lastly, needs to update Auto scaling Group with this new version of launch configuration.
 //                    def call(String asgName,String launchConfigName)
@@ -142,7 +150,8 @@ node {
 
         stage('start Instances refresh for ASG')
                 {
-                    //TODO implement  AWS start Instances refresh process for auto scaling group
+//                    def call(String asgName)
+                    startInstanceRefreshAsgAWS(asgName)
                 }
         stage('Clean Workspace')
           {
