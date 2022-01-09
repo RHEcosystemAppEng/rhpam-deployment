@@ -342,6 +342,43 @@ oc get secret $(oc get sa jenkins -n jenkins-test -o jsonpath={.secrets[0].name}
 ```shell
 oc patch deployment/jenkins-test -p '{"spec":{"template":{"spec":{"serviceAccount":"jenkins"}}}}'
 ```
+9. Optional - Define A PVC for high performance build with maven, so the third party libraries and
+   Dependencies will not be re-downloaded for every artifact build, but only the delta needed, and every build run duration will
+   be shortened by 2-5 minutes, depending on download speed of internet connection. 
+   
+```shell
+cat > jenkins-rolebinding.yaml << EOF
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    volume.alpha.kubernetes.io/storage-class: default
+  labels:
+    app.kubernetes.io/instance: jenkins-test
+    app.kubernetes.io/name: jenkins
+  name: jenkins-test-slave
+  namespace: jenkins-test
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+  volumeMode: Filesystem
+status:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 3Gi
+
+EOF
+```
+The pvc Name created should be inputted in the cloud definition of openshift in Jenkins.\
+See the last properties name 'PersistentVolumeClaim' in next step at section 4's explanation [here](#explanation-for-fields-openshift-cloud)
+
+
+
 
 #### Second Step: Define Openshift Cloud in jenkins
 1. in main menu of Jenkins server, go to Manage Jenkins->In System configuration Section
@@ -383,7 +420,7 @@ The remaining fields can stay with default values.
 ![sample](./pictures/openshiftcloud3.png)
 ![sample](./pictures/openshiftcloud4.png)
 
-**_Explanation for important fields in the screenshot:_**
+#### Explanation for fields openshift cloud
 ```properties
 Name = the Pod template name,
 Namespace = in which namespace in the cluster the agent pod will run
@@ -391,7 +428,7 @@ Labels = the name of the agent pod in order to instruct jenkins to run a pipelin
 ContainerName = the name of the container of the agent in pod
 DockerImage = the Docker image that the container will be derived from - must be sub image of jenkins/agent or jenkins/slave
 WorkingDirectory = the directory in which the agent will work in when provisioned for a pipeline
-PersistentVolumeClain = a name of PVC that can be mounted into mount path in container in order to increase performance of build, for example, for a maven builder agent, it's sensible to mount a pvc to the agent's local repository directory, so it will not need to download the artifacts over and over on each build, just refresh whatever is new or deleted.              
+PersistentVolumeClaim = a name of PVC that can be mounted into mount path in container in order to increase performance of build, for example, for a maven builder agent, it's sensible to mount a pvc to the agent's local repository directory, so it will not need to download the artifacts over and over on each build, just refresh whatever is new or deleted.              
 ```
 5.Click on Save.
 
