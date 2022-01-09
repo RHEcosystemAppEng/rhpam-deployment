@@ -10,7 +10,8 @@
 def call(String asgName)
 {
     echo "started startInstanceRefreshAsgAWS/1"
-    def result = sh(script : "aws autoscaling start-instance-refresh --auto-scaling-group-name ${asgName}",returnStdout: true).trim()
+    def result = sh(script : "aws autoscaling start-instance-refresh \
+                             --auto-scaling-group-name ${asgName}",returnStdout: true).trim()
 
     echo "result is ${result}"
     return result;

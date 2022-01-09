@@ -50,7 +50,7 @@ node {
                 kieServerAddressPlusPort = instanceJson.Reservations["Instances"][0].PublicIpAddress.toString()
                 kieServerAddressPlusPort = instanceJson.Reservations["Instances"][0].PublicIpAddress.toString()
                 kieServerAddressPlusPort = kieServerAddressPlusPort.substring(1,kieServerAddressPlusPort.length()-1) + ":8080"
-                keyName = instanceJson.Reservations["Instances"][0].keyName
+                keyName = instanceJson.Reservations["Instances"][0].KeyName
 
 
 
@@ -140,7 +140,8 @@ node {
                     String imageIdStripped = imageId.toString().substring(1,imageId.toString().length()-1)
                     String instanceTypeStripped = instanceType.toString().substring(1,instanceType.toString().length()-1)
                     String securityGroupStripped = securityGroup.toString().substring(1,securityGroup.toString().length()-1)
-                    createLaunchConfigurationAWS(launchConfigurationName,imageIdStripped,instanceTypeStripped,gavPropertyFileLocationForUserData,securityGroupStripped,awsRegion,keyName)
+                    String keyNameStripped = keyName.toString().substring(1,keyName.toString().length()-1)
+                    createLaunchConfigurationAWS(launchConfigurationName,imageIdStripped,instanceTypeStripped,gavPropertyFileLocationForUserData,securityGroupStripped,awsRegion,keyNameStripped)
 
                     //Lastly, needs to update Auto scaling Group with this new version of launch configuration.
 //                    def call(String asgName,String launchConfigName)
