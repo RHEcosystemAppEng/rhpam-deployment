@@ -801,7 +801,8 @@ There are two jobs in the pipeline:
    
    3. Kie Servers instances all have tag called 'app' with value of 'RHPAM-KS' and it's derived from ASG when a scale out action 
       is performed- can be changed in pipeline to whatever value that is desired and defined in ASG.
-   
+      In other words, the ASG defines a tag with key= 'app' and value = 'RHPAM-KS', and its tag new instance = yes.
+        
 
    
    
