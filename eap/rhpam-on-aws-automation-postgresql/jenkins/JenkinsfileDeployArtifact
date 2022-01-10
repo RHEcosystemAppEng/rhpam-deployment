@@ -85,7 +85,8 @@ node {
                 
                 def publicIpAddress = jsonS.Reservations["Instances"][0].PublicIpAddress.toString()
                 def instanceState = jsonS.Reservations["Instances"][0].State.Name.toString()
-                if(instanceState.equals("running")) {
+                echo "instance state : ${instanceState}"
+                if(instanceState.trim().equalsIgnoreCase("running")) {
                     echo "Deploying to instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
 
                     ipAddressStripped = publicIpAddress.substring(1, publicIpAddress.length() - 1) + ":8080"
