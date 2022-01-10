@@ -55,6 +55,7 @@ node {
             withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
                 //def call(String server,String userName,String password, String groupId , String artifactId, String version )
                 lastVersion = getArtifactLatestVersionFromKieServer(kieServerAddressPlusPort,USER,PASSWORD,groupId,artifact,version)
+                echo "last version is ${lastVersion}"
             }
 
         }
@@ -91,7 +92,7 @@ node {
 
                     def publicIpAddress = jsonS.Reservations["Instances"][0].PublicIpAddress.toString()
 
-                    echo "Deploying to instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
+                    echo "Undeploying to instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
 
                     def ipAddressStripped = publicIpAddress.substring(1, publicIpAddress.length() - 1) + ":8080"
 
