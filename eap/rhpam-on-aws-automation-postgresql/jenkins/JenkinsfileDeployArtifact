@@ -39,12 +39,24 @@ node {
 
 
          stage('Retrieve Instance Details'){
-                def jsonWithArray = readJSON text: kieServersInstances
-                def instanceId = jsonWithArray.Tags[0].ResourceId
-                def instanceJsonString = getInstanceDetailsById(instanceId)
-                def instanceJson = readJSON text: instanceJsonString
 
-                imageId = instanceJson.Reservations["Instances"][0].ImageId
+                def jsonWithArray = readJSON text: kieServersInstances
+                def instanceJson
+             //go over json of instances, and return the first instance that is running
+                jsonWithArray.Tags.any{instance->
+
+                    def instanceId = instance.ResourceId
+                    def instanceJsonString = getInstanceDetailsById(instanceId)
+                    instanceJson = readJSON text: instanceJsonString
+                    def instanceState = instanceJson["Instances"][0].State.Name.toString()
+                    if(instanceState.equalsIgnoreCase("running"))
+                    {
+                        return true
+                    }
+                }
+
+             //retrieve important information from the chosen running KIE Server
+             imageId = instanceJson.Reservations["Instances"][0].ImageId
                 instanceType = instanceJson.Reservations["Instances"][0].InstanceType
                 securityGroup = instanceJson.Reservations["Instances"][0].SecurityGroups[0].GroupId
                 kieServerAddressPlusPort = instanceJson.Reservations["Instances"][0].PublicIpAddress.toString()
