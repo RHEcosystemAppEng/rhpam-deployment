@@ -2,7 +2,7 @@
 
 ## Main Goal - Build CI/CD Pipeline for dev/prod Environments for building artifacts and deploy them on RHPAM'S KieServers Running on AWS for Temenos 
    
-### Objective - To create a jenkins Automation server to run on Openshift cluster in order to intract with AWS API and Kie Servers for  deploying artifacts to Kie Servers.
+### Objective - To create a jenkins Automation server to run on Openshift cluster in order to interact with AWS API and Kie Servers for  deploying artifacts to Kie Servers using pipeline code.
 * The Idea is to use bitnami jenkins chart with modified customized image that will
   contain all of the content of the parent image, and in addition will include AWS cli utility to interact
  with AWS console API using its CLI.
