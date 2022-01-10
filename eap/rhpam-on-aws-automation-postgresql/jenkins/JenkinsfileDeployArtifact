@@ -90,7 +90,7 @@ node {
                 if(instanceStateStripped.trim().equalsIgnoreCase("running")) {
                     echo "Deploying to instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
 
-                    ipAddressStripped = publicIpAddress.substring(1, publicIpAddress.length() - 1) + ":8080"
+                    ipAddressStripped = stripStartAndEnd(publicIpAddress) + ":8080"
 
                     withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
                         //deployToKieServerArtifact - def call(String server,String userName,String password,String containerId, String groupId , String artifactId, String version )
@@ -112,10 +112,11 @@ node {
 
                     def publicIpAddress = jsonS.Reservations["Instances"][0].PublicIpAddress.toString()
                     def instanceState = jsonS.Reservations["Instances"][0].State.Name.toString()
-                    if(instanceState.equals("running")) {
+                    def instanceStateStripped = stripStartAndEnd(instanceState)
+                    if(instanceStateStripped.trim().equalsIgnoreCase("running")) {
                         echo "Undeploying from instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
 
-                        def ipAddressStripped = publicIpAddress.substring(1, publicIpAddress.length() - 1) + ":8080"
+                        def ipAddressStripped = stripStartAndEnd(publicIpAddress) + ":8080"
 
                         withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
                             //undeployArtifactFromKieServer - def call(String server,String userName,String password,String containerId)
@@ -151,10 +152,10 @@ node {
 
                     //Fourthly , needs to create a new launch configuration That will contain this GAV property in user-data property
 //                    def call(String launchConfigName,String imageId,String instanceType,String pathToFile,String securityGroup,String awsRegion)
-                    String imageIdStripped = imageId.toString().substring(1,imageId.toString().length()-1)
-                    String instanceTypeStripped = instanceType.toString().substring(1,instanceType.toString().length()-1)
-                    String securityGroupStripped = securityGroup.toString().substring(1,securityGroup.toString().length()-1)
-                    String keyNameStripped = keyName.toString().substring(1,keyName.toString().length()-1)
+                    String imageIdStripped = stripStartAndEnd(imageId.toString())
+                    String instanceTypeStripped = stripStartAndEnd(instanceType.toString())
+                    String securityGroupStripped = stripStartAndEnd(securityGroup.toString())
+                    String keyNameStripped = stripStartAndEnd(keyName.toString())
                     createLaunchConfigurationAWS(launchConfigurationName,imageIdStripped,instanceTypeStripped,gavPropertyFileLocationForUserData,securityGroupStripped,awsRegion,keyNameStripped)
 
                     //Lastly, needs to update Auto scaling Group with this new version of launch configuration.
@@ -173,7 +174,8 @@ node {
                         def instanceJsonString = getInstanceDetailsById(instanceId)
                         def instanceJson = readJSON text: instanceJsonString
                         def instanceState = instanceJson.Reservations["Instances"][0].State.Name.toString()
-                        if(instanceState.equalsIgnoreCase("running"))
+                        def instanceStateStripped = stripStartAndEnd(instanceState)
+                        if(instanceStateStripped.equalsIgnoreCase("running"))
                         {
                             stopInstanceAWS(instanceId)
                         }
