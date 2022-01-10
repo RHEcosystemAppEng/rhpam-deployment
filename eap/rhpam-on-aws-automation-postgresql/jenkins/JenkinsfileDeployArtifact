@@ -48,7 +48,7 @@ node {
                     def instanceId = instance.ResourceId
                     def instanceJsonString = getInstanceDetailsById(instanceId)
                     instanceJson = readJSON text: instanceJsonString
-                    def instanceState = instanceJson["Instances"][0].State.Name.toString()
+                    def instanceState = instanceJson.Reservations["Instances"][0].State.Name.toString()
                     if(instanceState.equalsIgnoreCase("running"))
                     {
                         return true
@@ -164,7 +164,12 @@ node {
         stage('start Instances refresh for ASG')
                 {
 //                    def call(String asgName)
-                    startInstanceRefreshAsgAWS(asgName)
+//                    startInstanceRefreshAsgAWS(asgName)
+                    def jsonArray = readJSON text: kieServersInstances
+                    jsonArray.Tags.each{ json ->
+                                  def instanceId = json.ResourceId
+                                  stopInstanceAWS(instanceId)
+                    }
                 }
         stage('Clean Workspace')
           {
