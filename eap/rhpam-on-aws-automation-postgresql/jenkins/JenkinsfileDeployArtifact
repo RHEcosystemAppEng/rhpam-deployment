@@ -167,8 +167,15 @@ node {
 //                    startInstanceRefreshAsgAWS(asgName)
                     def jsonArray = readJSON text: kieServersInstances
                     jsonArray.Tags.each{ json ->
-                                  def instanceId = json.ResourceId
-                                  stopInstanceAWS(instanceId)
+                        def instanceId = json.ResourceId
+                        def instanceJsonString = getInstanceDetailsById(instanceId)
+                        def instanceJson = readJSON text: instanceJsonString
+                        def instanceState = instanceJson.Reservations["Instances"][0].State.Name.toString()
+                        if(instanceState.equalsIgnoreCase("running"))
+                        {
+                            stopInstanceAWS(instanceId)
+                        }
+
                     }
                 }
         stage('Clean Workspace')
