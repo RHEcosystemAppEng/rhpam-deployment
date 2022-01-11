@@ -103,7 +103,7 @@ node('awsjdk11') {
         stage('Undeploy last version of artifact') {
             echo "current version is ${version}"
             echo "previous version is ${lastVersion}"
-            if(!lastVersion.trim().equals("") && !lastVersion.equals(version)) {
+            if(!lastVersion.trim().equals("") && !lastVersion.trim().equalsIgnoreCase(version.trim())) {
                 def jsonWithArray = readJSON text: kieServersInstances
                 jsonWithArray.Tags.each { json ->
                     def instanceId = json.ResourceId

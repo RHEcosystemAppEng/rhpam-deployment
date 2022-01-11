@@ -13,12 +13,6 @@ node('mvnjdk11') {
         //      def tagArtifactName = sh(script : "git rev-list --all | grep -m 1 -E '[0-9a-zA-Z]*' | xargs -i git tag --contains {}",returnStdout: true).trim()
         //  }
         
-        
-        stage('undeploy previous artifacts version')
-        {
-        //TODO fetch all containers with get rest api endpoint, and delete all containers that their artifact id is matched to the parameter's one.
-        }
-        
         stage('Deploy artifact to Maven Repository') {
              configFileProvider( 
         [configFile(fileId: 'maven-settings', variable: 'MAVEN_SETTINGS')]) {
