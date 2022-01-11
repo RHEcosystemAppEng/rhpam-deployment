@@ -1,7 +1,7 @@
 //##pipeline for dev environment
 
 @Library('shared-jenkins-library') _
-node {
+node('awsjdk11') {
 //        def awsRegion = "us-east-1"
         def asgName = "ks-eip-asg"
         def launchConfigurationBaseName = "ks-eip-launch-configuration"
@@ -167,20 +167,21 @@ node {
         stage('start Instances refresh for ASG')
                 {
 //                    def call(String asgName)
-//                    startInstanceRefreshAsgAWS(asgName)
-                    def jsonArray = readJSON text: kieServersInstances
-                    jsonArray.Tags.each{ json ->
-                        def instanceId = json.ResourceId
-                        def instanceJsonString = getInstanceDetailsById(instanceId)
-                        def instanceJson = readJSON text: instanceJsonString
-                        def instanceState = instanceJson.Reservations["Instances"][0].State.Name.toString()
-                        def instanceStateStripped = stripStartAndEnd(instanceState)
-                        if(instanceStateStripped.equalsIgnoreCase("running"))
-                        {
-                            stopInstanceAWS(instanceId)
-                        }
+                    startInstanceRefreshAsgAWS(asgName)
+//                    def jsonArray = readJSON text: kieServersInstances
+//                    jsonArray.Tags.each{ json ->
+//                        def instanceId = json.ResourceId
+//                        def instanceJsonString = getInstanceDetailsById(instanceId)
+//                        def instanceJson = readJSON text: instanceJsonString
+//                        def instanceState = instanceJson.Reservations["Instances"][0].State.Name.toString()
+//                        def instanceStateStripped = stripStartAndEnd(instanceState)
+//                        if(instanceStateStripped.equalsIgnoreCase("running"))
+//                        {
+//                            stopInstanceAWS(instanceId)
+//                        }
+//
+//                    }
 
-                    }
                 }
         stage('Clean Workspace')
           {
