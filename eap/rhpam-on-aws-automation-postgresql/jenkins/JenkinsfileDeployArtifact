@@ -1,7 +1,7 @@
 //##pipeline for dev environment
 
 @Library('shared-jenkins-library@demo') _
-node {
+node('awsjdk11') {
         def awsRegion = "us-east-1"
         def asgName = "ks-eip-asg"
         def launchConfigurationBaseName = "ks-eip-launch-configuration"
@@ -10,6 +10,7 @@ node {
         def instanceType
         def securityGroup
         def kieServersInstances
+        String keyName
         def groupId = "${params.GROUPID}"
         def artifact = "${params.ARTIFACTID}"
         def version = "${params.ARTIFACT_VERSION}"
@@ -38,15 +39,28 @@ node {
 
          stage('Retrieve Instance Details'){
                 def jsonWithArray = readJSON text: kieServersInstances
-                def instanceId = jsonWithArray.Tags[0].ResourceId
-                def instanceJsonString = getInstanceDetailsById(instanceId)
-                def instanceJson = readJSON text: instanceJsonString
+                def instanceJson
+             //go over json of instances, and return the first instance that is running
+                jsonWithArray.Tags.any{instance->
 
-                imageId = instanceJson.Reservations["Instances"][0].ImageId
+                    def instanceId = instance.ResourceId
+                    def instanceJsonString = getInstanceDetailsById(instanceId)
+                    instanceJson = readJSON text: instanceJsonString
+                    def instanceState = instanceJson.Reservations["Instances"][0].State.Name.toString()
+                    if(instanceState.equalsIgnoreCase("running"))
+                    {
+                        return true
+                    }
+                }
+
+             //retrieve important information from the chosen running KIE Server
+             imageId = instanceJson.Reservations["Instances"][0].ImageId
                 instanceType = instanceJson.Reservations["Instances"][0].InstanceType
                 securityGroup = instanceJson.Reservations["Instances"][0].SecurityGroups[0].GroupId
                 kieServerAddressPlusPort = instanceJson.Reservations["Instances"][0].PublicIpAddress.toString()
-                kieServerAddressPlusPort = kieServerAddressPlusPort.substring(1,kieServerAddressPlusPort.length()-1) + ":8080"
+                kieServerAddressPlusPort = stripStartAndEnd(kieServerAddressPlusPort) + ":8080"
+                keyName = instanceJson.Reservations["Instances"][0].KeyName
+
 
 
          }
@@ -69,16 +83,20 @@ node {
                 def jsonS = readJSON text: jsonInstance
                 
                 def publicIpAddress = jsonS.Reservations["Instances"][0].PublicIpAddress.toString()
-                
-                echo "Deploying to instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
-                
-                ipAddressStripped = publicIpAddress.substring(1,publicIpAddress.length()-1) + ":8080"
-                
-                withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
-                    //deployToKieServerArtifact - def call(String server,String userName,String password,String containerId, String groupId , String artifactId, String version )
-                     deployToKieServerArtifact (ipAddressStripped,USER, PASSWORD, containerId ,groupId ,artifact,version)
-                     
-                }                
+                def instanceState = jsonS.Reservations["Instances"][0].State.Name.toString()
+                def instanceStateStripped = stripStartAndEnd(instanceState)
+                echo "instance state : ${instanceStateStripped}"
+                if(instanceStateStripped.trim().equalsIgnoreCase("running")) {
+                    echo "Deploying to instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
+
+                    ipAddressStripped = stripStartAndEnd(publicIpAddress) + ":8080"
+
+                    withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
+                        //deployToKieServerArtifact - def call(String server,String userName,String password,String containerId, String groupId , String artifactId, String version )
+                        deployToKieServerArtifact(ipAddressStripped, USER, PASSWORD, containerId, groupId, artifact, version)
+
+                    }
+                }
            }
             
         }
@@ -94,20 +112,22 @@ node {
                     def jsonS = readJSON text: jsonInstance
 
                     def publicIpAddress = jsonS.Reservations["Instances"][0].PublicIpAddress.toString()
+                    def instanceState = jsonS.Reservations["Instances"][0].State.Name.toString()
+                    def instanceStateStripped = stripStartAndEnd(instanceState)
+                    if (instanceStateStripped.trim().equalsIgnoreCase("running")) {
+                        echo "Undeploying from instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
 
-                    echo "Undeploying from instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
+                        def ipAddressStripped = stripStartAndEnd(publicIpAddress) + ":8080"
 
-                    def ipAddressStripped = publicIpAddress.substring(1, publicIpAddress.length() - 1) + ":8080"
+                        withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
+                            //undeployArtifactFromKieServer - def call(String server,String userName,String password,String containerId)
+                            def oldContainerId = artifact + "_" + lastVersion
+                            undeployArtifactFromKieServer(ipAddressStripped, USER, PASSWORD, oldContainerId)
 
-                    withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
-                        //undeployArtifactFromKieServer - def call(String server,String userName,String password,String containerId)
-                        def oldContainerId = artifact + "_" + lastVersion
-                        undeployArtifactFromKieServer(ipAddressStripped, USER, PASSWORD, oldContainerId)
-
+                        }
                     }
                 }
             }
-
             else
             {
                 echo "Artifact has no previous version or it's the same version, there is nothing to delete"
@@ -132,10 +152,11 @@ node {
 
                     //Fourthly , needs to create a new launch configuration That will contain this GAV property in user-data property
 //                    def call(String launchConfigName,String imageId,String instanceType,String pathToFile,String securityGroup,String awsRegion)
-                    String imageIdStripped = imageId.toString().substring(1,imageId.toString().length()-1)
-                    String instanceTypeStripped = instanceType.toString().substring(1,instanceType.toString().length()-1)
-                    String securityGroupStripped = securityGroup.toString().substring(1,securityGroup.toString().length()-1)
-                    createLaunchConfigurationAWS(launchConfigurationName,imageIdStripped,instanceTypeStripped,gavPropertyFileLocationForUserData,securityGroupStripped,awsRegion)
+                    String imageIdStripped = stripStartAndEnd(imageId.toString())
+                    String instanceTypeStripped = stripStartAndEnd(instanceType.toString())
+                    String securityGroupStripped = stripStartAndEnd(securityGroup.toString())
+                    String keyNameStripped = stripStartAndEnd(keyName.toString())
+                    createLaunchConfigurationAWS(launchConfigurationName,imageIdStripped,instanceTypeStripped,gavPropertyFileLocationForUserData,securityGroupStripped,awsRegion,keyNameStripped)
 
                     //Lastly, needs to update Auto scaling Group with this new version of launch configuration.
 //                    def call(String asgName,String launchConfigName)
@@ -146,5 +167,9 @@ node {
           {
               cleanWs()
           }
+}
+
+private String stripStartAndEnd(String text) {
+    return text.substring(1, text.length() - 1)
 }
 
