@@ -157,7 +157,7 @@ Source Code Management=https://github.com/RHEcosystemAppEng/rhpam-deployment.git
 
 #### How to Install Plugins:
 in main menu of Jenkins server, go to Manage Jenkins->Click on Manage Plugins->
-THen Go to 'Available' tab->in the above search editor field enter the required plugin or look for it
+Then Go to 'Available' tab->in the above search editor field enter the required plugin or look for it
 In the presented table of available plugins, next to the desired plugins(can check multiple plugins), check their checkbox
 and click below on either of buttons 'Install without Restart' and then click on checkbox 'restart jenkins', as shown in the following pictures
 
@@ -173,7 +173,9 @@ and there is no fear that secrets will be leaked or compromised
 - maven-repo-secret - username and password for maven repository in a remote server
 - AWS_CREDENTIALS - AWS Access Key Id and Secret for AWS cli login, should be defined as user and password kind. 
 - KS_CREDENTIALS - Kie Server Controller Username and password for interacting with Kie Server using REST API
-- jenkins-sa-token(optional) - In case of using kubernetes pod template as jenkins agent/slave - should be defined with kind of Secret text.
+
+- jenkins-sa-token(optional) - In case of using kubernetes pod templates as jenkins agent/slave, this is the token 
+  of the service account that jenkins is using to connect to k8s cluster, should be defined with kind of Secret text.
 
 #### How to define credentials in jenkins:
 From jenkins server main screen, go to Manage Jenkins-> go to security section-> click on Manage Credentials
