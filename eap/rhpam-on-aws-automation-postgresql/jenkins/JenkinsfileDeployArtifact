@@ -167,25 +167,6 @@ node('awsjdk11') {
 
                 }
 
-        stage('start Instances refresh for ASG')
-                {
-//                    def call(String asgName)
-                    starAtInstanceRefreshAsgAWS(asgName)
-//                    def jsonArray = readJSON text: kieServersInstances
-//                    jsonArray.Tags.each{ json ->
-//                        def instanceId = json.ResourceId
-//                        def instanceJsonString = getInstanceDetailsById(instanceId)
-//                        def instanceJson = readJSON text: instanceJsonString
-//                        def instanceState = instanceJson.Reservations["Instances"][0].State.Name.toString()
-//                        def instanceStateStripped = stripStartAndEnd(instanceState)
-//                        if(instanceStateStripped.equalsIgnoreCase("running"))
-//                        {
-//                            stopInstanceAWS(instanceId)
-//                        }
-//
-//                    }
-
-                }
         stage('Clean Workspace')
           {
               cleanWs()
