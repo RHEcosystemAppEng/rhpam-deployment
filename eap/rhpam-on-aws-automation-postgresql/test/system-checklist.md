@@ -5,6 +5,8 @@ Purpose is to validate connectivity to git repo
 - [ ]  Setup an empty repository on the git server
 ```shell
 [from git VM]
+sudo su
+su - git
 cd /home/git/
 mkdir <directory_name>  e.g. mkdir redhat.git
 cd redhat.git
