@@ -440,6 +440,93 @@ PersistentVolumeClaim = Under Volumes Section, a name of PVC that can be mounted
    in Agents Section, choose radioButton Random,
    And in 'Agent - Controller Security', check checkbox 'Enable Agent -> Controller Access Control'
 
+#### Create AWS Jenkins Agent Image
+
+It's apparent that Jenkins master contains an old version of AWS cli.\
+The reason for it is that when the jenkins image was created, the APT high level tool
+for Debian package manager(Debian is the linux distribution being used in jenkins master server official image ),
+installed a very old version of AWS cli, and this is a common issue with APT.
+As a result, with the need to install a new version of AWS cli tool, we'll take this situation as opportunity 
+to create jenkins aws agent(slave), that will contain a new version of aws cli , and on
+that way will benefit from running the deployment job on a dedicated agent instead of on jenkins master.
+
+Using the ServiceAccount created in First Step, and the Openshift Cloud defined
+in the Second Step, we only have to create a custom slave image with what we need,
+and define a new pod template in the Openshift Cloud at jenkins.
+
+**_Steps to be performed:_**
+1. Create A Dockerfile for creating the jenkins aws slave image
+```dockerfile
+FROM jenkins/jnlp-slave:latest
+
+USER root
+
+RUN apt-get update && apt-get install -y tree less groff unzip  
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip ; ./aws/install \
+    
+USER jenkins    
+```
+
+2. Build the new image using podman or buildah tools:
+```shell
+zgrinber@zgrinber /]$ buildah bud -f DockerFile
+
+or
+
+[zgrinber@zgrinber /]$ podman build .
+```
+
+
+
+3. tag the new created image with buildah or podman with repo name and path that will reflect
+   the registry server, your account and repo name in the remote registry, for example:
+  
+```shell
+[zgrinber@zgrinber /]$ buildah tag #createdImageNumber quay.io/zvigrinberg/jenkins-agent:aws2
+or 
+[zgrinber@zgrinber /]$ podman tag #createdImageNumber quay.io/zvigrinberg/jenkins-agent:aws2
+````
+4. Login to your registry account using your credentials:
+```shell
+[zgrinber@zgrinber /]$ podman login quay.io --user bbbbbbb --password aaaaaaa
+```
+5. push the image to the registry:
+```shell
+[zgrinber@zgrinber /]$ podman push quay.io/zvigrinberg/jenkins-agent:aws2
+```
+
+
+6. Create a secret in openshift for the credentials that will be used to pull the image from registry:
+```shell
+[zgrinber@zgrinber /]$ oc create secret docker-registry --docker-server=quay.io \ 
+   --docker-username=your_username --docker-password=yourpassword \
+   --docker-email=unused registry-name
+```
+
+7. Link the new pull secret to the 'jenkins' service account used by jenkins to connect to openshift cluster:
+
+```shell
+[zgrinber@zgrinber /]$ oc secret link jenkins registry-name --for=pull
+```
+
+8. In Jenkins, Define a new pod Template that will use the image that was
+   just created.\
+   In main menu of Jenkins server, go to Manage Jenkins->In System configuration Section
+   go to 'Manage Nodes And Clouds'->Go on the left panel to Configure Clouds-> in Kubernetes Cloud
+   with Name=Openshift, Click on the 'Pod Templates...' button, and press on button 
+   called 'Add Pod Template'\
+   The following values should be supplied:
+   ![sample](./pictures/openshiftcloud5.png)
+   ![sample](./pictures/openshiftcloud6.png)
+  
+
+   **_Important Note: If we're running aws on slave, we have to neutralize/delete
+   the global environment variable called 'HOME' in jenkins settings, otherwise the global definition
+   will override the environment variable in container and will cause errors when using aws cli tool_**
+
+   See [the definition here](#global-configuration) - You need just to delete the environment variable in 
+   case you're using this agent and not planning to run aws on jenkins master.
 ### Jenkins - Configuration As Code Plugin
 
  This plugin can export most of the configuration in jenkins(
