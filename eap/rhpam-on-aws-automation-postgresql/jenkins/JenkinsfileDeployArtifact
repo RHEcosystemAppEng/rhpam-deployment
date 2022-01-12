@@ -60,8 +60,7 @@ node('awsjdk11') {
                 instanceType = instanceJson.Reservations["Instances"][0].InstanceType
                 securityGroup = instanceJson.Reservations["Instances"][0].SecurityGroups[0].GroupId
                 kieServerAddressPlusPort = instanceJson.Reservations["Instances"][0].PublicIpAddress.toString()
-                kieServerAddressPlusPort = instanceJson.Reservations["Instances"][0].PublicIpAddress.toString()
-                kieServerAddressPlusPort = kieServerAddressPlusPort.substring(1,kieServerAddressPlusPort.length()-1) + ":8080"
+                kieServerAddressPlusPort = stripStartAndEnd(kieServerAddressPlusPort) + ":8080"
                 keyName = instanceJson.Reservations["Instances"][0].KeyName
 
 
@@ -72,6 +71,8 @@ node('awsjdk11') {
             withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
                 //def call(String server,String userName,String password, String groupId , String artifactId, String version )
                 lastVersion = getArtifactLatestVersionFromKieServer(kieServerAddressPlusPort,USER,PASSWORD,groupId,artifact,version)
+                lastVersion = lastVersion.toString();
+                echo "last version is ${lastVersion}"
             }
 
         }
@@ -102,7 +103,9 @@ node('awsjdk11') {
             
         }
         stage('Undeploy last version of artifact') {
-            if(!lastVersion.trim().equals("") && !lastVersion.equals(version)) {
+            echo "current version is ${version}"
+            echo "previous version is ${lastVersion}"
+            if(!lastVersion.trim().equals("") && !lastVersion.trim().equalsIgnoreCase(version.trim())) {
                 def jsonWithArray = readJSON text: kieServersInstances
                 jsonWithArray.Tags.each { json ->
                     def instanceId = json.ResourceId
@@ -113,7 +116,7 @@ node('awsjdk11') {
                     def publicIpAddress = jsonS.Reservations["Instances"][0].PublicIpAddress.toString()
                     def instanceState = jsonS.Reservations["Instances"][0].State.Name.toString()
                     def instanceStateStripped = stripStartAndEnd(instanceState)
-                    if(instanceStateStripped.trim().equalsIgnoreCase("running")) {
+                    if (instanceStateStripped.trim().equalsIgnoreCase("running")) {
                         echo "Undeploying from instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
 
                         def ipAddressStripped = stripStartAndEnd(publicIpAddress) + ":8080"
@@ -167,7 +170,7 @@ node('awsjdk11') {
         stage('start Instances refresh for ASG')
                 {
 //                    def call(String asgName)
-                    startInstanceRefreshAsgAWS(asgName)
+                    starAtInstanceRefreshAsgAWS(asgName)
 //                    def jsonArray = readJSON text: kieServersInstances
 //                    jsonArray.Tags.each{ json ->
 //                        def instanceId = json.ResourceId
