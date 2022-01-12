@@ -13,13 +13,16 @@ git init --bare
 - [ ] Add files from the Business Central VM
 ```shell
 [from Business Central VM]
+sudo su
 cd /home/git_repositories
-mkdir redhat $$ cd redhat
+mkdir redhat && cd redhat
 git init
 echo "Initial commit" >> file.txt
 git add .
 git commit -m '<commit message>’
 git remote add origin git@<GIT SERVER IP>:/home/git/redhat.git
+git config pull.rebase false
+git pull origin master --rebase
 git push origin master
 ```
 - [ ] Clone and verify the changes
