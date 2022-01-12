@@ -400,12 +400,16 @@ Credentials= click on add button-> you will navigated to add new secret, choose 
 of secret text,in secret field paste in the value from section 6 from former step.
 give id and description and after adding it, choose it as the credentials.
 
+Checkbox 'WebSocket' must be checked to enable agents to connect using
+HTTP protocol over TCP/IP rather than raw TCP transport.
+
 jenkins URL = the url of jenkins master for agents to log into it- if jenkins
 running in the cluster then need to give the service dns name of jenkins in
  openshift cluster or cluster ip of svc or ip of pod 
 that running Jenkins, with port 8080.
-for example : http://jenkins-test.jenkins-test.svc.cluster.local:8080
-
+for example : http://jenkins-test.jenkins-test.svc.cluster.local:80,
+given that the service port is 80, and the targetPort of container is 8080. 
+    
 Pod label:
 key=jenkins,
 Value=agent
@@ -426,7 +430,7 @@ Name = the Pod template name,
 Namespace = in which namespace in the cluster the agent pod will run
 Labels = the name of the agent pod in order to instruct jenkins to run a pipeline code on it 
 ContainerName = the name of the container of the agent in pod
-DockerImage = the Docker image that the container will be derived from - must be sub image of jenkins/agent or jenkins/slave
+DockerImage = the Docker image that the container will be derived from - must be a sub image of jenkins/agent or jenkins/slave, preferred jenkins/jnlp-slave:latest so it will contain the agent entrypoint script in addition to agent and slave jars, and in this particular case must contain maven installed , i used image docker.io/jenkins/jnlp-agent-maven:jdk11
 WorkingDirectory = the directory in which the agent will work in when provisioned for a pipeline
 PersistentVolumeClaim = Under Volumes Section, a name of PVC that can be mounted into mount path in container in order to increase performance of build, for example, for a maven builder agent, it's sensible to mount a pvc to the agent's local repository directory, so it will not need to download the artifacts over and over on each build, just refresh whatever is new or deleted.              
 ```
