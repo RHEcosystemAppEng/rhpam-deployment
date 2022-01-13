@@ -13,3 +13,5 @@ Use
 In case of failure:
 - Track a Jira issue with debugging details
 - Add an **Issues** paragraph to link the issue
+  - Use ✅ to track a closed issue
+  - Use 🚧 to track an open issue

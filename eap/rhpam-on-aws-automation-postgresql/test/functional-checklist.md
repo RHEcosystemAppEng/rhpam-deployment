@@ -5,8 +5,9 @@
   - Add `<distributionManagement>` to `pom.xml` pointing to Maven repository
 - [ ] Deploy project on the server
   - [ ] Running server is listed in `Execution Servers` page
-  - [ ] Validate artifact is deployed on Maven Nexus repository
-  - [ ] Validate artifact is deployed on server
+  - [ ] Artifact is deployed on Maven Nexus repository
+  - [ ] Artifact is deployed on server
+  - [ ] Business processes are listed under `Process Definitions` page
 
 ## Process management from Business Central
 - [ ] Start a process on KS
@@ -25,23 +26,29 @@ The purpose is to connect the Business Central Git to the remote Git
 so that all changes are sync-ed between the two repositories.
 
 ### Preliminary steps
-- [ ] Create project on BC
+- [ ] Create an empty project in BC
 - [ ] Clone the project locally
   - Use project settings to define the local Git URL
   - Clone using HTTPS protocol and the `rhpamAdmin` user
 - [ ] Push project on git server
   - [ ] Create the empty project on git server
+    - Remember to `sudo su` and `su - git`
   - [ ] Update the remote origin to use the git server's URL
 ```shell
-git remote add origin  <REMOTE_URL> 
+git remote set-url origin  <REMOTE_URL> 
 ```
 - [ ] Push the changes
 ```shell
 git push -u origin master
 ```
-- [ ] Configure post-commit hook in `_EAP_HOME_/bin/.niogit/<SPACE>/<PROJECT_NAME>.git/hooks`
+- [ ] Configure remote repository
+  - [ ] Delete project from Business central
+  - [ ] Import project from remote git repository
+  - [ ] Configure post-commit hook in `_EFS_MOUNT_POINT_/.niogit/<SPACE>/<PROJECT_NAME>.git/hooks`
 ```shell
-echo "#\!/bin/sh\ngit push origin +master" > post-commit
+echo '#!/bin/sh
+git push origin +master' > post-commit
+chmod 744 post-commit
 ```
 ### Authoring tests
 - [ ] Clone the project from the remote git under `/tmp`
