@@ -34,5 +34,5 @@ ${EAP_HOME}/bin/standalone.sh -c standalone-full.xml -b 0.0.0.0 \
   -DkeycloakSso_deployment=kie-server.war \
   -DkeycloakSso_realm_client_name=${keycloakSso_realm_client_name} -DkeycloakSso_realm_client_secret=${keycloakSso_realm_client_secret} \
   -Dkieserver_privateIp=${kieserver_privateIp} -Dkieserver_hostname=${kieserver_hostname} -Dkieserver_port=${RHPAM_SERVER_PORT} \
-  -DbusinessCentral_host=${businessCentral_host} -DbusinessCentral_port=${businessCentral_port} -DrhpamController_username=${rhpamController_username} -DrhpamController_password=${rhpamController_password} \
+  -DbusinessCentral_url=${businessCentral_url} -DrhpamController_username=${rhpamController_username} -DrhpamController_password=${rhpamController_password} \
   -Drhpam_server_data_dir=${RHPAM_HOME}
