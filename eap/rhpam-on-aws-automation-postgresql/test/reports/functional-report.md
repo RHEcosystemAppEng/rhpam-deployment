@@ -1,4 +1,6 @@
 # Functional checklist
+**Miscellaneous issues**:
+* ✅ [[Issue] Kie Server installer connects to controller using HTTP protocol](https://issues.redhat.com/browse/APPENG-250)
 
 ## RHPAM Authoring with local git
 - [x] Create project on BC
@@ -14,20 +16,20 @@
 * 🚧 [[Issue] Build & Install periodically fails](https://issues.redhat.com/browse/APPENG-220)
 
 ## Process management from Business Central
-- [ ] Start a process on KS
+- [x] Start a process on KS
   - [X] Process is listed in `Process Instance` page
   - [X] Validate process state and diagram
-- ❌ Complete the process
-  - ❌ The process state is updated accordingly
+- [x] Complete the process
+  - [x] The process state is updated accordingly
 
 Repeat the above tests for the following scenarios:
-- [X] Process without human task that auto-completes
-- ❌ Process with human task
+- [x] Process without human task that auto-completes
+- [x] Process with human task
   - The user task is assigned to the user who deployed the project
 
 **Issues**:
 * ✅ [[Issue] Deployed process is not listed in Business Central console](https://issues.redhat.com/browse/APPENG-222)
-* 🚧 [[Issue] Human task not listed under Task Inbox page](https://issues.redhat.com/browse/APPENG-227)
+* ✅ [[Issue] Human task not listed under Task Inbox page](https://issues.redhat.com/browse/APPENG-227)
 * 🚧 [[Issue] 2 browsers showing different redirect URIs for 'business-central' client](https://issues.redhat.com/browse/APPENG-226)
 ## RHPAM Authoring with remote git
 The purpose is to connect the Business Central Git to the remote Git
@@ -49,7 +51,7 @@ git remote set-url origin <REMOTE_URL>
 ```shell
 git push -u origin master
 ```
-- [ ] Configure remote repository
+- [x] Configure remote repository
   - [x] Delete project from Business central
   - [x] Import project from remote git repository
   - [x] Configure post-commit hook in `_EFS_MOUNT_POINT_/.niogit/<SPACE>/<PROJECT_NAME>.git/hooks`
@@ -81,8 +83,8 @@ chmod 744 post-commit
 * 🚧 [[Issue] Admin page is not listing expected Roles, Groups and Users](https://issues.redhat.com/browse/APPENG-221)
 
 ## Testing Kie-Server REST API
-- [ ] Get list of available containers using `GET https://{{kieserver-url}}/services/rest/server/containers`
-- [ ] Deploy a new container using
+- [x] Get list of available containers using `GET https://{{kieserver-url}}/services/rest/server/containers`
+- [x] Deploy a new container using
 `PUT {{scheme}}://{{kieserver-url}}/services/rest/server/containers/<NAME>` and payload:
 ```json
 {
@@ -94,21 +96,34 @@ chmod 744 post-commit
     }
 }
 ```
-- [ ] The list of available containers is updated
-- [ ] Undeploy a container using `DELETE {{scheme}}://{{kieserver-url}}/services/rest/server/containers/<NAME>` and payload:
-  - [ ] The list of available containers is updated
-- [ ] List processes for a given container using 
+- [x] The list of available containers is updated
+- [x] Undeploy a container using `DELETE {{scheme}}://{{kieserver-url}}/services/rest/server/containers/<NAME>` and payload:
+  - [x] The list of available containers is updated
+- [x] List processes for a given container using 
 `GET {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/processes`
-  - [ ] The list returns the active processes
-- [ ] Start a process instance for a given container using 
-`POST {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/processes/{{processId}}/instances`
-  - [ ] The list of active processes is updated
-- [ ] Complete an active process using
-`PUT {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/tasks/{{taskInstanceId}}/states/skipped`
-    - [ ] The list of active processes is updated
-    - [ ] The process status is updated
+  - [x] The list returns the deployed processes
+- [x] Start a process instance for a given container using: 
+```shell
+GET {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/processes/instances
+GET {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/processes/instances/{{processInstanceId}}
+POST {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/processes/{{processId}}/instances
+```
+  - [x] The list of active processes is updated
+- [x] Complete an active process using one of:
+```shell
+PUT {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/tasks/{{taskInstanceId}}/states/started?user=rhpamadmin
+PUT {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/tasks/{{taskInstanceId}}/states/completed?user=rhpamadmin
+PUT {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/tasks/{{taskInstanceId}}/states/skipped?user=rhpamadmin
+```
+  - [x] The list of active processes is updated
+  - [x] The process status is updated
 
 Repeat the above tests for the following scenarios:
-- [ ] With a container actually deployed on Maven repository and/or on the server
-- [ ] With a container that is not deployed on Maven repository or on the server
+- [x] With a container actually deployed on Maven repository and/or on the server
+- [x] With a container that is not deployed on Maven repository or on the server
   - A failure response is expected
+
+**Issues**:
+* ✅ [[Issue] Kie-Server APIs are not showing the active Human Tasks](https://issues.redhat.com/browse/APPENG-248)
+* ✅ [[Issue] Cannot start task from REST API](https://issues.redhat.com/browse/APPENG-251)
+* 🚧 [[Issue] Swagger page not available](https://issues.redhat.com/browse/APPENG-252)

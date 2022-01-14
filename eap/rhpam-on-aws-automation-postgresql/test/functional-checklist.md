@@ -84,14 +84,18 @@ chmod 744 post-commit
   - [ ] The list of available containers is updated
 - [ ] List processes for a given container using 
 `GET {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/processes`
-  - [ ] The list returns the active processes
+  - [ ] The list returns the deployed processes
 - [ ] Start a process instance for a given container using 
 `POST {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/processes/{{processId}}/instances`
   - [ ] The list of active processes is updated
-- [ ] Complete an active process using
-`PUT {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/tasks/{{taskInstanceId}}/states/skipped`
-    - [ ] The list of active processes is updated
-    - [ ] The process status is updated
+- [x] Complete an active process using one of:
+```shell
+PUT {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/tasks/{{taskInstanceId}}/states/started?user=rhpamadmin
+PUT {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/tasks/{{taskInstanceId}}/states/completed?user=rhpamadmin
+PUT {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/tasks/{{taskInstanceId}}/states/skipped?user=rhpamadmin
+```
+  - [ ] The list of active processes is updated
+  - [ ] The process status is updated
 
 Repeat the above tests for the following scenarios:
 - [ ] With a container actually deployed on Maven repository and/or on the server

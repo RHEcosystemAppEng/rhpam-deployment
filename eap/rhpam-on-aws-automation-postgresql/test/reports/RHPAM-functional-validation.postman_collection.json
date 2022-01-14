@@ -1,0 +1,512 @@
+{
+	"info": {
+		"_postman_id": "ed2c478f-5918-4ee0-88ab-cac6de67daf9",
+		"name": "RHPAM-functional validation",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get containers",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_containerId = jsonData.result['kie-containers']['kie-container'][0]['container-id'];",
+							"pm.collectionVariables.set(\"containerId\", current_containerId);",
+							"",
+							"console.log('current_containerId is', current_containerId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/server/containers",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{kieserver-url}}"
+					],
+					"path": [
+						"services",
+						"rest",
+						"server",
+						"containers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete container",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_containerId = jsonData.result['kie-containers']['kie-container'][0]['container-id'];",
+							"pm.collectionVariables.set(\"containerId\", current_containerId);",
+							"",
+							"console.log('current_containerId is', current_containerId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/server/containers/simpleProject_1.0.1-SNAPSHOT",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{kieserver-url}}"
+					],
+					"path": [
+						"services",
+						"rest",
+						"server",
+						"containers",
+						"simpleProject_1.0.1-SNAPSHOT"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create container",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_containerId = jsonData.result['kie-containers']['kie-container'][0]['container-id'];",
+							"pm.collectionVariables.set(\"containerId\", current_containerId);",
+							"",
+							"console.log('current_containerId is', current_containerId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"container-id\": \"simpleProject_1.0.1-SNAPSHOT\",\n    \"release-id\": {\n        \"group-id\": \"com.myspace\",\n        \"artifact-id\": \"simpleProject\",\n        \"version\": \"1.0.1-SNAPSHOT\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/server/containers/simpleProject_1.0.1-SNAPSHOT",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{kieserver-url}}"
+					],
+					"path": [
+						"services",
+						"rest",
+						"server",
+						"containers",
+						"simpleProject_1.0.1-SNAPSHOT"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get processes",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_processId = jsonData.processes[jsonData.processes.length - 1]['process-id'];",
+							"pm.collectionVariables.set(\"processId\", current_processId);",
+							"",
+							"console.log('current_processId is', current_processId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/processes",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{kieserver-url}}"
+					],
+					"path": [
+						"services",
+						"rest",
+						"server",
+						"containers",
+						"{{containerId}}",
+						"processes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST instance",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_containerId = jsonData.result['kie-containers']['kie-container'][0]['container-id'];",
+							"pm.collectionVariables.set(\"containerId\", current_containerId);",
+							"",
+							"console.log('current_containerId is', current_containerId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "redhat123#",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "rhpamAdmin",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/processes/{{processId}}/instances",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{kieserver-url}}"
+					],
+					"path": [
+						"services",
+						"rest",
+						"server",
+						"containers",
+						"{{containerId}}",
+						"processes",
+						"{{processId}}",
+						"instances"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get process instances",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_processInstanceId = jsonData['process-instance'][0]['process-instance-id'];",
+							"pm.collectionVariables.set(\"processInstanceId\", current_processInstanceId);",
+							"",
+							"console.log('current_processInstanceId is', current_processInstanceId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/processes/instances",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{kieserver-url}}"
+					],
+					"path": [
+						"services",
+						"rest",
+						"server",
+						"containers",
+						"{{containerId}}",
+						"processes",
+						"instances"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get instance details",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var current_taskInstanceId = jsonData['active-user-tasks']['task-summary'][0]['task-id'];",
+							"pm.collectionVariables.set(\"taskInstanceId\", current_taskInstanceId);",
+							"",
+							"console.log('current_taskInstanceId is', current_taskInstanceId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/processes/instances/{{processInstanceId}}",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{kieserver-url}}"
+					],
+					"path": [
+						"services",
+						"rest",
+						"server",
+						"containers",
+						"{{containerId}}",
+						"processes",
+						"instances",
+						"{{processInstanceId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Start",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/xml",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/tasks/{{taskInstanceId}}/states/started?user=rhpamadmin",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{kieserver-url}}"
+					],
+					"path": [
+						"services",
+						"rest",
+						"server",
+						"containers",
+						"{{containerId}}",
+						"tasks",
+						"{{taskInstanceId}}",
+						"states",
+						"started"
+					],
+					"query": [
+						{
+							"key": "user",
+							"value": "rhpamadmin"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Complete",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/xml",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/tasks/{{taskInstanceId}}/states/completed?user=rhpamadmin",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{kieserver-url}}"
+					],
+					"path": [
+						"services",
+						"rest",
+						"server",
+						"containers",
+						"{{containerId}}",
+						"tasks",
+						"{{taskInstanceId}}",
+						"states",
+						"completed"
+					],
+					"query": [
+						{
+							"key": "user",
+							"value": "rhpamadmin"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "username",
+				"value": "rhpamadmin",
+				"type": "string"
+			},
+			{
+				"key": "password",
+				"value": "redhat123#",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "containerId",
+			"value": ""
+		},
+		{
+			"key": "processInstanceId",
+			"value": ""
+		},
+		{
+			"key": "taskInstanceId",
+			"value": ""
+		},
+		{
+			"key": "processId",
+			"value": ""
+		}
+	]
+}
