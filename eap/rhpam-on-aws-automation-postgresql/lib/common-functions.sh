@@ -115,7 +115,11 @@ function stopServer(){
 function logService(){
   headerLog "logService $1"
   service=$1
-  execute "sudo journalctl -u ${service} -f"
+  if [[ ${INSTALL_TYPE} == 'LOCAL' ]]; then
+    execute "sudo tail -f ${EAP_HOME}/standalone/log/server.log"
+  else
+    execute "sudo journalctl -u ${service} -f"
+  fi
 }
 
 #function getPortWithOffset(){
