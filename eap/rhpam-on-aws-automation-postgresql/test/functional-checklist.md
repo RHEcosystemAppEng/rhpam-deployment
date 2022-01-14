@@ -1,4 +1,4 @@
-# Functional checklist
+# Functional validation checklist
 
 ## RHPAM Authoring with local git
 - [ ] Create project on BC

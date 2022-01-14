@@ -1,4 +1,4 @@
-# Functional checklist
+# Functional validation report
 **Miscellaneous issues**:
 * ✅ [[Issue] Kie Server installer connects to controller using HTTP protocol](https://issues.redhat.com/browse/APPENG-250)
 
