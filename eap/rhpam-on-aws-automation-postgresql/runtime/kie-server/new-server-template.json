@@ -1,0 +1,34 @@
+{
+  "server-id" : "$server_id",
+  "server-name" : "$server_id",
+  "container-specs" : [ {
+    "container-id" : "$artifact_id_$version",
+    "container-name" : "$artifact_id",
+    "server-template-key" : {
+      "server-id" : "$server_id",
+      "server-name" : "$server_id"
+    },
+    "release-id" : {
+      "group-id" : "$group_id",
+      "artifact-id" : "$artifact_id",
+      "version" : "$version"
+    },
+    "configuration" : {
+      "PROCESS" : {
+        "org.kie.server.controller.api.model.spec.ProcessConfig" : {
+          "runtimeStrategy" : "SINGLETON",
+          "kbase" : "",
+          "ksession" : "",
+          "mergeMode" : "MERGE_COLLECTIONS"
+        }
+      },
+      "RULE" : {
+        "org.kie.server.controller.api.model.spec.RuleConfig" : {
+          "pollInterval" : null,
+          "scannerStatus" : "STOPPED"
+        }
+      }
+    },
+    "status" : "STARTED"
+  } ]
+}
