@@ -12,37 +12,47 @@ function updateMavenSettings(){
 function updateDeploymentFromKS(){
   bc_url=$1
   ks_privateIp=$2
+  controller_user=$3
+  controller_pwd=$4
 
   kieserver_userdata=$(get_userdata)
-  if [[ "${kieserver_userdata}" == *"latest-artifact-gav"* ]]; then
+  echo "***user-data:${kieserver_userdata}"
+  if [[ "${kieserver_userdata}" == *"artifacts"* ]]; then
     server_id="ip-$(echo "${ks_privateIp}" | tr . -)"
     echo "***server_id:"$server_id
 
-    curl -v --user 'rhpamadmin:redhat123#' -H "Accept: application/json" -X GET "${bc_url}/business-central/rest/controller/management/servers" -o existing_servers.json
+    curl -v --user "${controller_user}:${controller_pwd}" -H "Accept: application/json" -X GET "${bc_url}/business-central/rest/controller/management/servers" -o /tmp/existing_servers.json
     serverExists=false
-    for i in $(jq -r '."server-template"[] | ."server-id"' existing_servers.json); do
+    for i in $(jq -r '."server-template"[] | ."server-id"' /tmp/existing_servers.json); do
         if [[ $i == "${server_id}" ]]; then
           serverExists=true
         fi
     done
-    echo $serverExists
-    rm existing_servers.json
+    rm /tmp/existing_servers.json
 
-    if [[ $serverExists != true ]]; then
-      # 1st startup after auto scale => instance is not registered yet with BC -> create server with deployment
-      artifactValue=$(echo "${kieserver_userdata}" | cut -d"=" -f2)
-      echo "***artifactValue:"$artifactValue
-      groupId=$(echo "${artifactValue}" | cut -d":" -f1)
-      artifactId=$(echo "${artifactValue}" | cut -d":" -f2)
-      version=$(echo "${artifactValue}" | cut -d":" -f3)
+    echo "***server exists:${serverExists}"
+    if [[ "${serverExists}" != true ]]; then
+      # 1st startup after auto scale => instance is not registered yet with BC -> create server with deployments
+      bc_host=${bc_url##*/}
+      sed 's@$server_id@'$server_id'@;s@$bc_host@'$bc_host'@;s@$bc_url@'$bc_url'@' \
+                 ${RHPAM_PROPS_DIR}/new-server-template.json > /tmp/new-server.json
+      curl --user "${controller_user}:${controller_pwd}" -H "Accept: application/json" -H "Content-Type: application/json" -X PUT "${bc_url}/business-central/rest/controller/management/servers/${server_id}" -d @/tmp/new-server.json
+      rm /tmp/new-server.json
 
-      sed 's@$server_id@'$server_id'@;s@$artifact_id@'$artifactId'@;s@$group_id@'$groupId'@;s@$version@'$version'@' \
-            ./new-server-template.json > ./new-server.json
-
-      curl --user 'rhpamadmin:redhat123#' -H "Accept: application/json" -H "Content-Type: application/json" -X PUT "${bc_url}/business-central/rest/controller/management/servers/${server_id}" -d @new-server.json
-      rm new-server.json
+      artifacts=$(echo "${kieserver_userdata}" | jq '.artifacts')
+      echo "***artifacts to deploy:${artifacts}"
+      for i in $(echo "${artifacts}" | jq -c '.[]'); do
+        groupId=$(echo "$i" | jq -r '.group_id')
+        artifactId=$(echo "$i" | jq -r '.artifact_id')
+        version=$(echo "$i" | jq -r '.version')
+        echo "***gav:${groupId} ${artifactId} ${version}"
+        sed 's@$server_id@'$server_id'@;s@$artifact_id@'$artifactId'@;s@$group_id@'$groupId'@;s@$version@'$version'@' \
+                  ${RHPAM_PROPS_DIR}/new-container-template.json > /tmp/new-container.json
+        curl --user "${controller_user}:${controller_pwd}" -H "Accept: application/json" -H "Content-Type: application/json" -X PUT "${bc_url}/business-central/rest/controller/management/servers/${server_id}/containers/${artifactId}_${version}" -d @/tmp/new-container.json
+        rm /tmp/new-container.json
+      done
     fi
-    # for any other subsequent ks service restart do nothing
+     # for any other subsequent ks service restart do nothing
   fi
 }
 
@@ -64,7 +74,7 @@ function get_userdata(){
 updateMavenSettings
 kieserver_privateIp=$(get_private_ip)
 kieserver_hostname=$(get_hostname)
-updateDeploymentFromKS "${businessCentral_url}" "${kieserver_privateIp}"
+updateDeploymentFromKS "${businessCentral_url}" "${kieserver_privateIp}" "${rhpamController_username}" "${rhpamController_password}"
 
 echo "#######################################################################"
 echo "Running KIE Server from ${kieserver_privateIp} as ${kieserver_hostname}"

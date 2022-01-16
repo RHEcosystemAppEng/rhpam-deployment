@@ -37,6 +37,8 @@ function configureAndStartService(){
   else
     execute "sudo systemctl stop ${service};sudo systemctl disable ${service};sudo rm /etc/systemd/system/${service};sudo systemctl daemon-reload;sudo systemctl reset-failed"
     execute "sudo mv /tmp/runtime.properties ${RHPAM_PROPS_DIR}"
+    execute "sudo mv /tmp/new-container-template.json ${RHPAM_PROPS_DIR}"
+    execute "sudo mv /tmp/new-server-template.json ${RHPAM_PROPS_DIR}"
     execute "sudo mv /tmp/${launcher} ${RHPAM_HOME}"
     execute "sudo mv /tmp/${service} /etc/systemd/system"
     execute "sudo systemctl start ${service};sudo systemctl enable ${service}"

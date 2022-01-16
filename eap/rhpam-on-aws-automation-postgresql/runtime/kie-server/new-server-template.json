@@ -1,5 +1,13 @@
 {
   "server-id" : "$server_id",
   "server-name" : "$server_id",
-  "container-specs" : [ $containers ]
+  "server-config" : { },
+  "server-instances" : [ {
+    "server-instance-id" : "$server_id@$bc_host",
+    "server-name" : "$server_id@$bc_host",
+    "server-template-id" : "$server_id",
+    "server-url" : "$bc_url/kie-server/services/rest/server"
+  } ],
+  "capabilities" : [ "RULE", "PROCESS", "PLANNING" ],
+  "mode" : "DEVELOPMENT"
 }
