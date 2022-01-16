@@ -86,11 +86,15 @@ function stopFirewallService(){
 }
 
 function installDependencies(){
-  headerLog "installDependencies"
+  isKieServer=$1
+  headerLog "installDependencies with isKieServer=$isKieServer"
   execute "sudo dnf -y install unzip bind-utils java-11-openjdk-devel"
-  execute "sudo dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
-  execute "sudo dnf -y update"
-  execute "sudo dnf -y install jq"
+  if [ $isKieServer ]; then
+    headerLog "installDependencies for kie server"
+    execute "sudo dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
+    execute "sudo dnf -y update"
+    execute "sudo dnf -y install jq"
+  fi
 }
 
 function waitForServer() {
