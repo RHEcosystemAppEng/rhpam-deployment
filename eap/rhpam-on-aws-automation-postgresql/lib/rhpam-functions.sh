@@ -30,9 +30,15 @@ function configureAndStartService(){
   service=$1
   launcher=$2
   echo "configureAndStartService ${service} as ${launcher}"
-  execute "sudo systemctl stop ${service};sudo systemctl disable ${service};sudo rm /etc/systemd/system/${service};sudo systemctl daemon-reload;sudo systemctl reset-failed"
-  execute "sudo mv /tmp/runtime.properties ${RHPAM_PROPS_DIR}"
-  execute "sudo mv /tmp/${launcher} ${RHPAM_HOME}"
-  execute "sudo mv /tmp/${service} /etc/systemd/system"
-  execute "sudo systemctl start ${service};sudo systemctl enable ${service}"
+  if [[ ${INSTALL_TYPE} == 'LOCAL' ]]; then
+    execute "sudo mv /tmp/runtime.properties ${RHPAM_PROPS_DIR}"
+    execute "sudo mv /tmp/${launcher} ${RHPAM_HOME}"
+    execute "cd ${RHPAM_HOME}; sudo ./${SERVICE_LAUNCHER} ${RHPAM_PROPS_DIR}> /dev/null 2>&1 &'"
+  else
+    execute "sudo systemctl stop ${service};sudo systemctl disable ${service};sudo rm /etc/systemd/system/${service};sudo systemctl daemon-reload;sudo systemctl reset-failed"
+    execute "sudo mv /tmp/runtime.properties ${RHPAM_PROPS_DIR}"
+    execute "sudo mv /tmp/${launcher} ${RHPAM_HOME}"
+    execute "sudo mv /tmp/${service} /etc/systemd/system"
+    execute "sudo systemctl start ${service};sudo systemctl enable ${service}"
+  fi
 }

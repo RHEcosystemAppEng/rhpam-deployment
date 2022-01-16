@@ -175,10 +175,5 @@ else
   configureGitRepository
   configureKieServer
 fi
-if [[ ${INSTALL_TYPE} == 'REMOTE_FULL' ]]; then
-  configureAndStartService "${SERVICE_SCRIPT}" "${SERVICE_LAUNCHER}"
-  logService "${SERVICE_SCRIPT}"
-fi
-if [[ ${INSTALL_TYPE} == 'LOCAL' ]]; then
-  startServer
-fi
+configureAndStartService "${SERVICE_SCRIPT}" "${SERVICE_LAUNCHER}"
+logService "${SERVICE_SCRIPT}"
