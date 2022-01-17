@@ -13,7 +13,7 @@
 
 **Issues**:
 * ✅ [[Issue] Server not listed in ExecutionServers page](https://issues.redhat.com/browse/APPENG-219)
-* 🚧 [[Issue] Build & Install periodically fails](https://issues.redhat.com/browse/APPENG-220)
+* ✅ [[Issue] Build & Install periodically fails](https://issues.redhat.com/browse/APPENG-220)
 
 ## Process management from Business Central
 - [x] Start a process on KS
