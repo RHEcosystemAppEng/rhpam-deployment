@@ -116,7 +116,7 @@ function configureKieServer() {
 ### Kie Server functions ###
 function configurePostgresQL() {
   headerLog "configurePostgresQL"
-  unzip -o ./installer/database/rhpam-7.9.1-add-ons.zip -d ./installer/database/rhpam-7.9.1-migration-tool.zip
+  unzip -o ./installer/database/rhpam-7.9.1-add-ons.zip -d ./installer/database rhpam-7.9.1-migration-tool.zip
   rm -rf installer/database/rhpam-7.9.1-migration-tool
   unzip -o ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/postgresql/postgresql-jbpm-schema.sql"
   unzip -o ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/postgresql/quartz_tables_postgres.sql"
