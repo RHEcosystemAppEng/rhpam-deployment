@@ -75,7 +75,7 @@ function copyResources(){
   sed 's@${EAP_HOME}@'$EAP_HOME'@' ./installer/jboss-eap/eap-auto.xml > ./${RHPAM_SERVER}_tmp/eap-auto.xml
   if [ $(isKieServer) ]; then
     sed 's@${EAP_HOME}@'$EAP_HOME'@' ./installer/kie-server/ks-auto.xml > ./${RHPAM_SERVER}_tmp/ks-auto.xml
-    sed 's@${RHPAM_HOME}@'$RHPAM_HOME'@;s@${RHPAM_PROPS_DIR}@'$RHPAM_PROPS_DIR'@' \
+    sed 's@${RHPAM_HOME}@'$RHPAM_HOME'@;s@${RHPAM_PROPS_DIR}@'$RHPAM_PROPS_DIR'@;s@${KIE_SERVER_TYPE}@'$KIE_SERVER_TYPE'@' \
       ./runtime/kie-server/ks.service > ./${RHPAM_SERVER}_tmp/ks.service
   else
     sed 's@${EAP_HOME}@'$EAP_HOME'@' ./installer/business-central/bc-auto.xml > ./${RHPAM_SERVER}_tmp/bc-auto.xml

@@ -4,7 +4,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=/bin/bash ${RHPAM_HOME}/ks-service.sh ${RHPAM_PROPS_DIR}
+ExecStart=/bin/bash ${RHPAM_HOME}/ks-service.sh ${RHPAM_PROPS_DIR} ${KIE_SERVER_TYPE}
 
 [Install]
 WantedBy=multi-user.target
