@@ -84,6 +84,8 @@ function copyResources(){
     EFS_MOUNT=$(echo $EFS_MOUNT_RECORD | awk '{ print $1 }')
     if [[ $EFS_MOUNT == *'.mount' ]]; then
       EFS_MOUNT_UNIT=$EFS_MOUNT
+      # escape any \2xd (hyphens in name of mount file) so that sed below does not interpret them as actual hyphens
+      EFS_MOUNT_UNIT="${EFS_MOUNT_UNIT//\x2d/\\x2d}"
     fi
     sed 's@${RHPAM_HOME}@'$RHPAM_HOME'@;s@${RHPAM_PROPS_DIR}@'$RHPAM_PROPS_DIR'@;s@${EFS_MOUNT_UNIT}@'$EFS_MOUNT_UNIT'@' \
       ./runtime/business-central/bc.service > ./${RHPAM_SERVER}_tmp/bc.service
