@@ -6,6 +6,10 @@ Installed components include:
 * Configuration of Keycloak (v. 12.0.2)
 * Configuration of PostgresQL
 
+## Software requirements
+To run the deployment procedure you need a Linux workstation with `bash` shell and the following software:  
+* `unzip`
+
 ## Software inventory
 Place the required software artifacts under the `installer` folder, in the expected sub-folders:
 * jboss-eap folder
