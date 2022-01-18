@@ -44,13 +44,13 @@ git push origin master
 
 ## EFS mount
 Purpose is to validate availability of a persistent mount directory and existence of mount unit file
-- [ ] Check mount on Business Central
+- [ ] Check mount on Business Central  
 ```shell
 [from Business Central VM]
-# mount is active
-echo $(systemctl status <mount point> | grep "active (mounted)"
 # mount exists as mount unit file -> used in bc.service
-echo $(systemctl list-unit-files -t mount) | grep  <mount point>
+systemctl list-unit-files -t mount | grep  <mount point>
+# mount is active
+systemctl status <mount point> | grep "active (mounted)"
 ```
 - Troubleshoot
 ```shell

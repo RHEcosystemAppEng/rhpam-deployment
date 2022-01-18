@@ -44,13 +44,13 @@ git push origin master
 
 ## EFS mount
 Purpose is to validate availability of a persistent mount directory and existence of mount unit file
-- [ ] Check mount on Business Central
+- [x] Check mount on Business Central  
 ```shell
 [from Business Central VM]
-# mount is active
-echo $(systemctl status <mount point> | grep "active (mounted)"
 # mount exists as mount unit file -> used in bc.service
-echo $(systemctl list-unit-files -t mount) | grep  <mount point>
+systemctl list-unit-files -t mount | grep  <mount point>
+# mount is active
+systemctl status <mount point> | grep "active (mounted)"
 ```
 - Troubleshoot
 ```shell
@@ -67,16 +67,16 @@ sudo systemctl daemon-reload
 If another mount point should also exist on Kie server, repeat above check on that server
 
 **Issues**:
-* [[Issue] mount point with hyphen copy problem](https://issues.redhat.com/browse/APPENG-223)
+*  ✅  [[Issue] mount point with hyphen copy problem](https://issues.redhat.com/browse/APPENG-223)
 
 
 ## Business Central
 Purpose is to validate the connectivity to Business Central and from Business Central to Kie server, Keycloak 
-- [ ] Check accessibility of Business Central from browser
-  - [ ] Jboss answers on https://<BC-Host>
-  - [ ] Business Central answers on https://<BC-Host>/business-central
-- [ ] Check accessibility of Kie Server from Business Central VM
-  - [ ] Curl to Kie Server private ip
+- [x] Check accessibility of Business Central from browser
+  - [x] Jboss answers on https://<BC-Host>
+  - [x] Business Central answers on https://<BC-Host>/business-central
+- [x] Check accessibility of Kie Server from Business Central VM
+  - [x] Curl to Kie Server private ip
 ```shell
 -L for following redirects, -k for self-signed certificates, -v for verbose
 
@@ -98,18 +98,18 @@ echo $(systemctl status bc.service | grep "active"
 
 ## Kie server
 Purpose is to validate the connectivity to Kie Server and from Kie server to Business Central, Keycloak
-- [ ] Check accessibility of Kie Server from browser
-  - [ ] Jboss answers on https://<KS-Host>
-  - [ ] Kie Server answers on https://<KS-Host>/kie-server/services/rest/server/containers
-- [ ] Check accessibility of Business Central from Kie Server VM
-  - [ ] Curl to Business Central Controller through ALB
+- [x] Check accessibility of Kie Server from browser
+  - [x] Jboss answers on https://<KS-Host>
+  - [x] Kie Server answers on https://<KS-Host>/kie-server/services/rest/server/containers
+- [x] Check accessibility of Business Central from Kie Server VM
+  - [x] Curl to Business Central Controller through ALB
 ```shell
 -L for following redirects, -k for self-signed certificates, -v for verbose
 curl -kv --user username:password --header 'Content-Type: application/json' https://<BC-Host>/business-central/rest/controller/management/servers
 ```
-- [ ] Check authentication through Keycloak
-  - [ ] In inkognito browser browse to https://<KS-Host>/kie-server/services/rest/server/containers
-  - [ ] In Postman Get request https://<KS-Host>/kie-server/services/rest/server/containers
+- [x] Check authentication through Keycloak
+  - [x] In inkognito browser browse to https://<KS-Host>/kie-server/services/rest/server/containers
+  - [x] In Postman Get request https://<KS-Host>/kie-server/services/rest/server/containers
 
 - TroubleShoot
 ```shell
@@ -130,7 +130,7 @@ curl -vk --user "username:password" --header 'Content-Type: application/json' ht
 
 ## Keycloak
 Purpose is to validate the connectivity to Keycloak
-- [ ] Check accessibility of Keycloak console from browser
-  - [ ] https://<Keycloak-Host>/auth
+- [x] Check accessibility of Keycloak console from browser
+  - [x] https://<Keycloak-Host>/auth
 
  
