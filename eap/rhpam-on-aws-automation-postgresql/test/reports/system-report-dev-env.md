@@ -131,6 +131,7 @@ curl -vk --user "username:password" --header 'Content-Type: application/json' ht
 ## Keycloak
 Purpose is to validate the connectivity to Keycloak
 - [x] Check accessibility of Keycloak console from browser
-  - [x] https://<Keycloak-Host>/auth
+  - [x] https://<Keycloak-Host>/auth 
+  - [x] `AAAA` realm is configured
 
  
