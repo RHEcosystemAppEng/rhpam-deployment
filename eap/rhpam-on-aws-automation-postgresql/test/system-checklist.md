@@ -1,6 +1,6 @@
 # System checklist
 
-## Remote git server
+## Remote git server [dev-env only]
 Purpose is to validate connectivity to git repo
 - [ ]  Setup an empty repository on the git server
 ```shell
@@ -42,7 +42,7 @@ git push origin master
 ```
 - [ ] Repeat clone test and verify the changes
 
-## EFS mount
+## EFS mount [dev-env only]
 Purpose is to validate availability of a persistent mount directory and existence of mount unit file
 - [ ] Check mount on Business Central
 ```shell
@@ -66,7 +66,7 @@ sudo systemctl daemon-reload
 ```
 If another mount point should also exist on Kie server, repeat above check on that server
 
-## Business Central
+## Business Central [dev-env only]
 Purpose is to validate the connectivity to Business Central and from Business Central to Kie server, Keycloak 
 - [ ] Check accessibility of Business Central from browser
   - [ ] Jboss answers on https://<BC-Host>
@@ -95,13 +95,13 @@ Purpose is to validate the connectivity to Kie Server and from Kie server to Bus
 - [ ] Check accessibility of Kie Server from browser
   - [ ] Jboss answers on https://<KS-Host>
   - [ ] Kie Server answers on https://<KS-Host>/kie-server/services/rest/server/containers
-- [ ] Check accessibility of Business Central from Kie Server VM
+- [ ] [dev-env only] Check accessibility of Business Central from Kie Server VM
   - [ ] Curl to Business Central Controller through ALB
 ```shell
 curl -kv --user username:password --header 'Content-Type: application/json' https://<BC-Host>/business-central/rest/controller/management/servers
 ```
 - [ ] Check authentication through Keycloak
-  - [ ] In inkognito browser browse to https://<KS-Host>/kie-server/services/rest/server/containers
+  - [ ] In incognito browser browse to https://<KS-Host>/kie-server/services/rest/server/containers
   - [ ] In Postman Get request https://<KS-Host>/kie-server/services/rest/server/containers
 
 - TroubleShoot
@@ -125,5 +125,6 @@ curl -vk --user "username:password" --header 'Content-Type: application/json' ht
 Purpose is to validate the connectivity to Keycloak
 - [ ] Check accessibility of Keycloak console from browser
   - [ ] https://<Keycloak-Host>/auth
+  - [ ] `AAAA` realm is configured
 
  
