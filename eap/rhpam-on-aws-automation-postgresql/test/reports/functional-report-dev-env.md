@@ -1,4 +1,4 @@
-# Functional validation report
+# Functional validation report for [dev-env]
 **Miscellaneous issues**:
 * ✅ [[Issue] Kie Server installer connects to controller using HTTP protocol](https://issues.redhat.com/browse/APPENG-250)
 
@@ -13,7 +13,7 @@
 
 **Issues**:
 * ✅ [[Issue] Server not listed in ExecutionServers page](https://issues.redhat.com/browse/APPENG-219)
-* 🚧 [[Issue] Build & Install periodically fails](https://issues.redhat.com/browse/APPENG-220)
+* ✅ [[Issue] Build & Install periodically fails](https://issues.redhat.com/browse/APPENG-220)
 
 ## Process management from Business Central
 - [x] Start a process on KS
@@ -96,7 +96,7 @@ chmod 744 post-commit
     }
 }
 ```
-- [x] The list of available containers is updated
+  - [x] The list of available containers is updated
 - [x] Undeploy a container using `DELETE {{scheme}}://{{kieserver-url}}/services/rest/server/containers/<NAME>` and payload:
   - [x] The list of available containers is updated
 - [x] List processes for a given container using 

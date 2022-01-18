@@ -1,7 +1,8 @@
 #!/bin/bash
 
 RHPAM_PROPS_DIR=$1
-echo "Starting from ${RHPAM_PROPS_DIR}/runtime.properties"
+KIE_SERVER_TYPE=$2
+echo "Starting from ${RHPAM_PROPS_DIR}/runtime.properties for ${KIE_SERVER_TYPE} server"
 source ${RHPAM_PROPS_DIR}/runtime.properties
 
 function updateMavenSettings(){
@@ -74,7 +75,9 @@ function get_userdata(){
 updateMavenSettings
 kieserver_privateIp=$(get_private_ip)
 kieserver_hostname=$(get_hostname)
-updateDeploymentFromKS "${businessCentral_url}" "${kieserver_privateIp}" "${rhpamController_username}" "${rhpamController_password}"
+if [ "${KIE_SERVER_TYPE}" == "managed" ]; then
+  updateDeploymentFromKS "${businessCentral_url}" "${kieserver_privateIp}" "${rhpamController_username}" "${rhpamController_password}"
+fi
 
 echo "#######################################################################"
 echo "Running KIE Server from ${kieserver_privateIp} as ${kieserver_hostname}"

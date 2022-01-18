@@ -1,6 +1,6 @@
 # Functional validation checklist
 
-## RHPAM Authoring with local git
+## RHPAM Authoring with local git [dev-env only]
 - [ ] Create project on BC
   - Add `<distributionManagement>` to `pom.xml` pointing to Maven repository
 - [ ] Deploy project on the server
@@ -9,7 +9,7 @@
   - [ ] Artifact is deployed on server
   - [ ] Business processes are listed under `Process Definitions` page
 
-## Process management from Business Central
+## Process management from Business Central [dev-env only]
 - [ ] Start a process on KS
   - [ ] Process is listed in `Process Instance` page
   - [ ] Validate process state and diagram
@@ -21,7 +21,7 @@ Repeat the above tests for the following scenarios:
 - [ ] Process with human task
   - The user task is assigned to the user who deployed the project
 
-## RHPAM Authoring with remote git
+## RHPAM Authoring with remote git [dev-env only]
 The purpose is to connect the Business Central Git to the remote Git
 so that all changes are sync-ed between the two repositories.
 
@@ -56,7 +56,7 @@ chmod 744 post-commit
   - [ ] Pull changes on the local repository in `/tmp`
   - [ ] Validate the changes are present
 
-## User Management from Business Central
+## User Management from Business Central [dev-env only]
 - [ ] Admin>Roles page contains the roles defined in Keycloak `Rhpam` realm
 - [ ] Admin>Groups page contains `kie-server` role defined in Keycloak `Rhpam` realm
 - [ ] Admin>Users page contains the users defined in Keycloak `Rhpam` realm
@@ -67,7 +67,7 @@ chmod 744 post-commit
 
 ## Testing Kie-Server REST API
 - [ ] Get list of available containers using `GET https://{{kieserver-url}}/services/rest/server/containers`
-- [ ] Deploy a new container using
+- [ ] [dev-env only] Deploy a new container using
 `PUT {{scheme}}://{{kieserver-url}}/services/rest/server/containers/<NAME>` and payload:
 ```json
 {
@@ -79,16 +79,20 @@ chmod 744 post-commit
     }
 }
 ```
-- [ ] The list of available containers is updated
-- [ ] Undeploy a container using `DELETE {{scheme}}://{{kieserver-url}}/services/rest/server/containers/<NAME>` and payload:
   - [ ] The list of available containers is updated
+- [ ] [prod-env only] Deploy a new container
+  - [ ] An error is returned as the server in immutable 
+- [ ] [dev-env only] Undeploy a container using `DELETE {{scheme}}://{{kieserver-url}}/services/rest/server/containers/<NAME>`
+  - [ ] The list of available containers is updated   
+- [ ] [prod-env only] Undeploy a container
+  - [ ] An error is returned as the server in immutable
 - [ ] List processes for a given container using 
 `GET {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/processes`
   - [ ] The list returns the deployed processes
 - [ ] Start a process instance for a given container using 
 `POST {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/processes/{{processId}}/instances`
   - [ ] The list of active processes is updated
-- [x] Complete an active process using one of:
+- [ ] Complete an active process using one of:
 ```shell
 PUT {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/tasks/{{taskInstanceId}}/states/started?user=rhpamadmin
 PUT {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/tasks/{{taskInstanceId}}/states/completed?user=rhpamadmin

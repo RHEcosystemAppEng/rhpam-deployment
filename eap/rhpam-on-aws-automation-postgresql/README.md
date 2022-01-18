@@ -8,6 +8,7 @@ Installed components include:
 
 ## Software requirements
 To run the deployment procedure you need a Linux workstation with `bash` shell and the following software:  
+* `zip`
 * `unzip`
 
 ## Software inventory
