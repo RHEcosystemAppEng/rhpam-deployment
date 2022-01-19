@@ -17,7 +17,7 @@ def call(String groupId , String artifactId, String version )
     def pwd= sh(script: "pwd" , returnStdout : true).trim()
     def result = "file://$pwd/gav.out"
     def jsonElement=["artifacts":[["artifact_id": "${artifactId}", "group_id": "${groupId}", "version": "${version}"]]]
-    writeJSON file: json.out , json: jsonElement
+    writeJSON file: 'json.out' , json: jsonElement
     result = "file://$pwd/json.out"
     echo "file location= ${result}"
     return result
