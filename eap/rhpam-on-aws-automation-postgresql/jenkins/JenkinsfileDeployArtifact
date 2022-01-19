@@ -6,10 +6,14 @@ node('awsjdk11') {
         def asgName = "ks-eip-asg"
         def launchConfigurationBaseName = "ks-eip-launch-configuration"
         def kieServerAddressPlusPort
+        def bcAddressPlusPort
         def imageId
         def instanceType
         def securityGroup
         def kieServersInstances
+        def bcServersInstances
+        def kieServersInstancesController
+        def kieServersInstancesControllerJSon
         String keyName
         def groupId = "${params.GROUPID}"
         def artifact = "${params.ARTIFACTID}"
@@ -17,7 +21,7 @@ node('awsjdk11') {
         def awsRegion = "${params.AWS_REGION}"
         def containerId = artifact + "_" + version
         String lastVersion = ""
-        
+        echo "Start of pipeline!! - going to deploy artifact ${groupId}-${artifact}-${version} on all managed KIE servers instances through Business central controller"
         stage('Authentication To AWS') {
 
                 withCredentials([usernamePassword(credentialsId: 'AWS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
@@ -27,10 +31,12 @@ node('awsjdk11') {
                  
         }
         
-        stage('Fetching instances by tag')
+        stage('Fetching instances by tags')
         {
             // getAwsInstancesByAppTagValue - call(String keyApplicationName,String appName)
             kieServersInstances = getAwsInstancesByAppTagValue("app","RHPAM-KS")
+            bcServersInstances = getAwsInstancesByAppTagValue("app","RHPAM-BC")
+
             // sh( script :  'aws ec2 describe-tags --filters Name=resource-type,Values=instance Name=tag:app,Values=RHPAM-KS',returnStdout : true).trim()
             
            
@@ -67,38 +73,54 @@ node('awsjdk11') {
 
          }
 
+        stage('Retrieve all Managed Kie-servers')
+                {
+                    //get public ip address of Business central
+                  def bcServersInstancesJson =  readJSON text: bcServersInstances
+                  def bcInstanceId
+                    if(bcServersInstancesJson.Tags.isEmpty())
+                    {
+                      throw new Exception("Can't find Business central on AWS, pipeline is aborted.")
+                    }
+                    else {
+                        bcInstanceId = bcServersInstancesJson.Tags[0].ResourceId
+                        def bcInstanceJsonString = getInstanceDetailsById(bcInstanceId)
+                        bcInstanceJson = readJSON text: bcInstanceJsonString
+                        bcAddressPlusPort = bcInstanceJson.Reservations["Instances"][0].PublicIpAddress.toString()
+                        bcAddressPlusPort = stripStartAndEnd(bcAddressPlusPort) + ":8080"
+                        withCredentials([usernamePassword(credentialsId: 'BC_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
+//                            def call(String server,String userName,String password)
+                            kieServersInstancesController = getAllKieServersInJson(bcAddressPlusPort, USER, PASSWORD)
+                            kieServersInstancesControllerJSon = readJson text : kieServersInstancesController
+
+                        }
+                    }
+                }
+
         stage('Retrieve Last Artifact version '){
-            withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
-                //def call(String server,String userName,String password, String groupId , String artifactId, String version )
-                lastVersion = getArtifactLatestVersionFromKieServer(kieServerAddressPlusPort,USER,PASSWORD,groupId,artifact,version)
+            withCredentials([usernamePassword(credentialsId: 'BC_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
+//                def call(String server,String userName,String password, String groupId , String artifactId, String version,String kieServerId )
+                def kieServerId = kieServersInstancesControllerJSon["server-template"][0]["server-id"]
+//                def call(String server,String userName,String password, String groupId , String artifactId, String version,String kieServerId )
+                lastVersion = getArtifactLatestVersionFromKieServerController(bcAddressPlusPort,USER,PASSWORD,groupId,artifact,version,kieServerId)
                 lastVersion = lastVersion.toString();
                 echo "last version is ${lastVersion}"
             }
 
         }
         stage('Deploy artifact to KIeServers') {
-            def jsonWithArray = readJSON text: kieServersInstances
-            jsonWithArray.Tags.each{ json ->
-                def instanceId = json.ResourceId
-                // getInstanceDetailsById - call(String instanceId)
-                def jsonInstance = getInstanceDetailsById(instanceId)
-                def jsonS = readJSON text: jsonInstance
-                
-                def publicIpAddress = jsonS.Reservations["Instances"][0].PublicIpAddress.toString()
-                def instanceState = jsonS.Reservations["Instances"][0].State.Name.toString()
-                def instanceStateStripped = stripStartAndEnd(instanceState)
-                echo "instance state : ${instanceStateStripped}"
-                if(instanceStateStripped.trim().equalsIgnoreCase("running")) {
-                    echo "Deploying to instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
 
-                    ipAddressStripped = stripStartAndEnd(publicIpAddress) + ":8080"
+                kieServersInstancesControllerJSon["server-template"].each{ json ->
+                def kieServerId = json["server-id"]
+                kieServerId = stripStartAndEnd(kieServerId)
 
-                    withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
-                        //deployToKieServerArtifact - def call(String server,String userName,String password,String containerId, String groupId , String artifactId, String version )
-                        deployToKieServerArtifact(ipAddressStripped, USER, PASSWORD, containerId, groupId, artifact, version)
+                echo "Deploying to kieServerId: ${kieServerId} Using business central controller, Business-central Ip Address and port:${bcAddressPlusPort} "
+                withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
+//                      def call(String server,String userName,String password,String containerId, String groupId , String artifactId, String version,String kieServerId )
+                      deployToKieServerArtifactController(bcAddressPlusPort, USER, PASSWORD, containerId, groupId, artifact, version,kieServerId)
 
                     }
-                }
+
            }
             
         }
@@ -106,28 +128,21 @@ node('awsjdk11') {
             echo "current version is ${version}"
             echo "previous version is ${lastVersion}"
             if(!lastVersion.trim().equals("") && !lastVersion.trim().equalsIgnoreCase(version.trim())) {
-                def jsonWithArray = readJSON text: kieServersInstances
-                jsonWithArray.Tags.each { json ->
-                    def instanceId = json.ResourceId
-                    // getInstanceDetailsById - call(String instanceId)
-                    def jsonInstance = getInstanceDetailsById(instanceId)
-                    def jsonS = readJSON text: jsonInstance
 
-                    def publicIpAddress = jsonS.Reservations["Instances"][0].PublicIpAddress.toString()
-                    def instanceState = jsonS.Reservations["Instances"][0].State.Name.toString()
-                    def instanceStateStripped = stripStartAndEnd(instanceState)
-                    if (instanceStateStripped.trim().equalsIgnoreCase("running")) {
-                        echo "Undeploying from instanceId: ${instanceId} , Ip Address ${publicIpAddress} "
+                    kieServersInstancesControllerJSon["server-template"].each{ json ->
+                    def kieServerId = json["server-id"]
+                    kieServerId = stripStartAndEnd(kieServerId)
 
-                        def ipAddressStripped = stripStartAndEnd(publicIpAddress) + ":8080"
 
-                        withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
-                            //undeployArtifactFromKieServer - def call(String server,String userName,String password,String containerId)
-                            def oldContainerId = artifact + "_" + lastVersion
-                            undeployArtifactFromKieServer(ipAddressStripped, USER, PASSWORD, oldContainerId)
+                    echo "Undeploying from kieServerId: ${kieServerId} , Business central IP Address ${bcAddressPlusPort} "
+                    withCredentials([usernamePassword(credentialsId: 'BC_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
+                         //undeployArtifactFromKieServer - def call(String server,String userName,String password,String containerId)
+                         def oldContainerId = artifact + "_" + lastVersion
+//                        def call(String server,String userName,String password,String containerId,String kieServerId )
+                        undeployArtifactFromKieServerController(ipAddressStripped, USER, PASSWORD, oldContainerId,kieServerId)
 
                         }
-                    }
+
                 }
             }
 
