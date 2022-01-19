@@ -91,7 +91,7 @@ node('awsjdk11') {
                         withCredentials([usernamePassword(credentialsId: 'BC_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
 //                            def call(String server,String userName,String password)
                             kieServersInstancesController = getAllKieServersInJson(bcAddressPlusPort, USER, PASSWORD)
-                            kieServersInstancesControllerJSon = readJson text : kieServersInstancesController
+                            kieServersInstancesControllerJSon = readJSON text : kieServersInstancesController
 
                         }
                     }
