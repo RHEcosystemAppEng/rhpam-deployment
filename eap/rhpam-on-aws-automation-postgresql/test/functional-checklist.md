@@ -105,3 +105,7 @@ Repeat the above tests for the following scenarios:
 - [ ] With a container actually deployed on Maven repository and/or on the server
 - [ ] With a container that is not deployed on Maven repository or on the server
   - A failure response is expected
+  
+## Testing Kie-Server on Business Central after Auto-scale
+- [ ] Process can be deployed to auto-scaled server from Business Central GUI [only dev]
+- [ ] Process can be executed on auto-scaled server from Business Central GUI [only dev]
