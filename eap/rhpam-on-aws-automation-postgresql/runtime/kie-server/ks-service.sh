@@ -15,6 +15,7 @@ function updateDeploymentFromKS(){
   ks_privateIp=$2
   controller_user=$3
   controller_pwd=$4
+  server_port=$5
 
   kieserver_userdata=$(get_userdata)
   echo "***user-data:${kieserver_userdata}"
@@ -33,28 +34,46 @@ function updateDeploymentFromKS(){
 
     echo "***server exists:${serverExists}"
     if [[ "${serverExists}" != true ]]; then
-      # 1st startup after auto scale => instance is not registered yet with BC -> create server with deployments
-      bc_host=${bc_url##*/}
-      sed 's@$server_id@'$server_id'@;s@$bc_host@'$bc_host'@;s@$bc_url@'$bc_url'@' \
-                 ${RHPAM_PROPS_DIR}/new-server-template.json > /tmp/new-server.json
-      curl --user "${controller_user}:${controller_pwd}" -H "Accept: application/json" -H "Content-Type: application/json" -X PUT "${bc_url}/business-central/rest/controller/management/servers/${server_id}" -d @/tmp/new-server.json
-      rm /tmp/new-server.json
-
-      artifacts=$(echo "${kieserver_userdata}" | jq '.artifacts')
-      echo "***artifacts to deploy:${artifacts}"
-      for i in $(echo "${artifacts}" | jq -c '.[]'); do
-        groupId=$(echo "$i" | jq -r '.group_id')
-        artifactId=$(echo "$i" | jq -r '.artifact_id')
-        version=$(echo "$i" | jq -r '.version')
-        echo "***gav:${groupId} ${artifactId} ${version}"
-        sed 's@$server_id@'$server_id'@;s@$artifact_id@'$artifactId'@;s@$group_id@'$groupId'@;s@$version@'$version'@' \
-                  ${RHPAM_PROPS_DIR}/new-container-template.json > /tmp/new-container.json
-        curl --user "${controller_user}:${controller_pwd}" -H "Accept: application/json" -H "Content-Type: application/json" -X PUT "${bc_url}/business-central/rest/controller/management/servers/${server_id}/containers/${artifactId}_${version}" -d @/tmp/new-container.json
-        rm /tmp/new-container.json
-      done
+      _updateDeploymentFromKS "${bc_url}" "${ks_privateIp}" "${controller_user}" "${controller_pwd}" "${server_port}" &
     fi
      # for any other subsequent ks service restart do nothing
   fi
+}
+
+function _updateDeploymentFromKS(){
+  bc_url=$1
+  ks_privateIp=$2
+  controller_user=$3
+  controller_pwd=$4
+  server_port=$5
+
+    # 1st startup after auto scale => instance is not registered yet with BC -> create server with deployments
+#      bc_host=${bc_url##*/}
+#      sed 's@$server_id@'$server_id'@;s@$bc_host@'$bc_host'@;s@$bc_url@'$bc_url'@' \
+#                 ${RHPAM_PROPS_DIR}/new-server-template.json > /tmp/new-server.json
+#      curl --user "${controller_user}:${controller_pwd}" -H "Accept: application/json" -H "Content-Type: application/json" -X PUT "${bc_url}/business-central/rest/controller/management/servers/${server_id}" -d @/tmp/new-server.json
+#      rm /tmp/new-server.json
+
+  echo "***waiting for server to be up"
+  until $(curl --output /dev/null --silent --head --fail http://${ks_privateIp}:${server_port}); do
+        printf '.'
+        sleep 5
+  done
+  echo "***server is up"
+
+  kieserver_userdata=$(get_userdata)
+  artifacts=$(echo "${kieserver_userdata}" | jq '.artifacts')
+  echo "***artifacts to deploy:${artifacts}"
+  for i in $(echo "${artifacts}" | jq -c '.[]'); do
+    groupId=$(echo "$i" | jq -r '.group_id')
+    artifactId=$(echo "$i" | jq -r '.artifact_id')
+    version=$(echo "$i" | jq -r '.version')
+    echo "***gav:${groupId} ${artifactId} ${version}"
+    sed 's@$artifact_id@'$artifactId'@;s@$group_id@'$groupId'@;s@$version@'$version'@' \
+              ${RHPAM_PROPS_DIR}/new-container-template.json > /tmp/new-container.json
+    curl --user "${controller_user}:${controller_pwd}" -H "Accept: application/json" -H "Content-Type: application/json" -X PUT "${bc_url}/business-central/rest/controller/management/servers/${server_id}/containers/${artifactId}_${version}" -d @/tmp/new-container.json
+    rm /tmp/new-container.json
+  done
 }
 
 function get_private_ip() {
@@ -76,7 +95,7 @@ updateMavenSettings
 kieserver_privateIp=$(get_private_ip)
 kieserver_hostname=$(get_hostname)
 if [ "${KIE_SERVER_TYPE}" == "managed" ]; then
-  updateDeploymentFromKS "${businessCentral_url}" "${kieserver_privateIp}" "${rhpamController_username}" "${rhpamController_password}"
+  updateDeploymentFromKS "${businessCentral_url}" "${kieserver_privateIp}" "${rhpamController_username}" "${rhpamController_password}" "${RHPAM_SERVER_PORT}"
 fi
 
 echo "#######################################################################"
@@ -92,3 +111,5 @@ ${EAP_HOME}/bin/standalone.sh -c standalone-full.xml -b 0.0.0.0 \
   -Dkieserver_privateIp=${kieserver_privateIp} -Dkieserver_hostname=${kieserver_hostname} -Dkieserver_port=${RHPAM_SERVER_PORT} \
   -DbusinessCentral_url=${businessCentral_url} -DrhpamController_username=${rhpamController_username} -DrhpamController_password=${rhpamController_password} \
   -Drhpam_server_data_dir=${RHPAM_HOME}
+
+
