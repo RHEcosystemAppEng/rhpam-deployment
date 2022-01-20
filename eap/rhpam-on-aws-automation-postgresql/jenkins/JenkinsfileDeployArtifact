@@ -4,7 +4,7 @@
 node('awsjdk11') {
 //        def awsRegion = "us-east-1"
 //        def asgName = "ks-eip-asg"
-        def launchConfigurationBaseName = "ks-eip-launch-configuration"
+        def launchConfigurationBaseName = "ls-ks-19-Jan-2"
         def kieServerAddressPlusPort
         def bcAddressPlusPort
         def imageId
