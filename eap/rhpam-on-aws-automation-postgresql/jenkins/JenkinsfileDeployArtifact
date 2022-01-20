@@ -135,7 +135,7 @@ node('awsjdk11') {
                          //undeployArtifactFromKieServer - def call(String server,String userName,String password,String containerId)
                          def oldContainerId = artifact + "_" + lastVersion
 //                        def call(String server,String userName,String password,String containerId,String kieServerId )
-                        undeployArtifactFromKieServerController(ipAddressStripped, USER, PASSWORD, oldContainerId,kieServerId)
+                        undeployArtifactFromKieServerController(bcAddressPlusPort, USER, PASSWORD, oldContainerId,kieServerId)
 
                         }
 
