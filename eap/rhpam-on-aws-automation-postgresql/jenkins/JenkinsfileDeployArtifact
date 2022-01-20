@@ -3,8 +3,8 @@
 @Library('shared-jenkins-library') _
 node('awsjdk11') {
 //        def awsRegion = "us-east-1"
-        def asgName = "ks-eip-asg"
-        def launchConfigurationBaseName = "ks-eip-launch-configuration"
+//        def asgName = "ks-eip-asg"
+        def launchConfigurationBaseName = "ls-ks-19-Jan-2"
         def kieServerAddressPlusPort
         def bcAddressPlusPort
         def imageId
@@ -19,6 +19,7 @@ node('awsjdk11') {
         def artifact = "${params.ARTIFACTID}"
         def version = "${params.ARTIFACT_VERSION}"
         def awsRegion = "${params.AWS_REGION}"
+        def asgName = "${params.ASG_NAME}"
         def containerId = artifact + "_" + version
         String lastVersion = ""
         echo "Start of pipeline!! - going to deploy artifact ${groupId}-${artifact}-${version} on all managed KIE servers instances through Business central controller"
@@ -112,8 +113,6 @@ node('awsjdk11') {
 
                 kieServersInstancesControllerJSon["server-template"].each{ json ->
                 def kieServerId = json["server-id"]
-                kieServerId = stripStartAndEnd(kieServerId)
-
                 echo "Deploying to kieServerId: ${kieServerId} Using business central controller, Business-central Ip Address and port:${bcAddressPlusPort} "
                 withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
 //                      def call(String server,String userName,String password,String containerId, String groupId , String artifactId, String version,String kieServerId )
@@ -131,9 +130,6 @@ node('awsjdk11') {
 
                     kieServersInstancesControllerJSon["server-template"].each{ json ->
                     def kieServerId = json["server-id"]
-                    kieServerId = stripStartAndEnd(kieServerId)
-
-
                     echo "Undeploying from kieServerId: ${kieServerId} , Business central IP Address ${bcAddressPlusPort} "
                     withCredentials([usernamePassword(credentialsId: 'BC_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
                          //undeployArtifactFromKieServer - def call(String server,String userName,String password,String containerId)
