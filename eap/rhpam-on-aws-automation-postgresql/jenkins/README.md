@@ -884,11 +884,12 @@ There are two jobs in the pipeline:
 
 2. Deploy Artifact - which get as parameters the groupId, artifact and version(abbreviated - 'GAV'),
    authenticate itself to aws using aws cli to the region parameter, and deploy
-   the maven artifact to all kie servers associated with an auto-scaling group.
-   the pipeline code(JenkinsFile) files for dev & prod are different, as the requirements are different.\
+   the maven artifact to all kie servers registered and managed by BC, and then update the auto-scaling group
+   to be with a new launch configuration that will have a new user-data with details of new deployed artifact.
+   the pipeline code(JenkinsFile) files for dev & prod are different, as the requirements are different
      
    Assumptions that the pipeline makes:
-   1. the Auto Scaling Group(ASG) of the Kie Servers is known to the pipeline code.
+   1. the Auto Scaling Group(ASG) of the Kie Servers is a parameter to the pipeline code, with some default name.
    
    2. launch Configuration base name of ASG is known to the pipeline code.
    
@@ -986,6 +987,12 @@ _**Note:The pipeline code for production environment is in progrss**_
           <name>AWS_REGION</name>
           <description>The aws region to deploy to</description>
           <defaultValue>us-east-1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+         <hudson.model.StringParameterDefinition>
+          <name>ASG_NAME</name>
+          <description>The aws region to deploy to</description>
+          <defaultValue>asg-ks-19-Jan</defaultValue>
           <trim>false</trim>
         </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
