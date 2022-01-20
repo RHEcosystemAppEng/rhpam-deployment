@@ -1,18 +1,27 @@
-# Jenkins checklist
-The purpose ...
+# Jenkins checklist Testing Report
+The purpose is to check that the 2 pipelines jobs - 'build-artifact' and 'deploy-artifact DEV' jobs are working together
+in a chain in order to build a new or changed artifact in a source git repo(particularly external that is 
+synced with business-central's internal git repo) and deploy it to managed kie servers.
 
-- [x] Pipeline on Kie server without user data
-  - [x] User data is added/updated
-    - [x] new launch configuration is created with the latest user data
-    - [x] launch configuration is attached to ASG
-  - [x] Container is added
-    - [x] Visible in BC
-    - [x] Available through Rest API from kie server
-  - [x] Process can be created and runs successfully
+  - [X] Run Pipeline 'build-artifact' triggered from sample git repo contains an App created in BC.
+    - [X] Build maven artifact
+    - [X] Deploy artifact to an external maven repository(repsy.io)configured in RHPAM 
+    - [X] Trigger automatically job 'deploy-artifact' to run with GAV + awsRegion  as parameters 
+   
+ 
+  - [x] Run Pipeline job 'deploy-artifact' to deploy artifact on Kie servers - kie servers have 
+        no Containers deployed
+    - [x] User data is added/updated
+      - [x] new launch configuration is created with the latest user data
+      - [x] launch configuration is attached to ASG
+    - [x] Container is added
+      - [x] Visible in BC
+      - [x] Available through Rest API from kie server
+      - [x] Process can be created and runs successfully
 
-Repeat above check for pipeline run on kie server WITH existing user data
+  Repeat above check for pipeline run on kie servers WITH existing user data(Containing Containers)
 
-- [x] Pipeline on Kie server WITH existing user data - additional checks to above
+-[x] run Pipeline job on Kie servers that contain containers  - additional checks to above:
   - [x] Old container removed from server(*1)
 
 
