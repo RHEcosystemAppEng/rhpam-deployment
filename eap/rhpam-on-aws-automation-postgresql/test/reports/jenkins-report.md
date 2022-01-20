@@ -21,7 +21,7 @@ synced with business-central's internal git repo) and deploy it to managed kie s
 
   Repeat above check for pipeline run on kie servers WITH existing user data(Containing Containers)
 
--[x] run Pipeline job on Kie servers that contain containers  - additional checks to above:
+- [x] run Pipeline job on Kie servers that contain containers  - additional checks to above:
   - [x] Old container removed from server(*1)
 
 
