@@ -3,7 +3,7 @@
 @Library('shared-jenkins-library') _
 node('awsjdk11') {
 //        def awsRegion = "us-east-1"
-        def asgName = "ks-eip-asg"
+//        def asgName = "ks-eip-asg"
         def launchConfigurationBaseName = "ks-eip-launch-configuration"
         def kieServerAddressPlusPort
         def bcAddressPlusPort
@@ -19,6 +19,7 @@ node('awsjdk11') {
         def artifact = "${params.ARTIFACTID}"
         def version = "${params.ARTIFACT_VERSION}"
         def awsRegion = "${params.AWS_REGION}"
+        def asgName = "${params.ASG_NAME}"
         def containerId = artifact + "_" + version
         String lastVersion = ""
         echo "Start of pipeline!! - going to deploy artifact ${groupId}-${artifact}-${version} on all managed KIE servers instances through Business central controller"
