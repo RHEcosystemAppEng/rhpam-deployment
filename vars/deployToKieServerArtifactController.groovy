@@ -27,7 +27,7 @@ def call(String server,String userName,String password,String containerId, Strin
             "  \"container-id\" : \"${artifactId}_${version}\",\n" +
             "  \"container-name\" : \"${artifactId}\",\n" +
             "  \"server-template-key\" : null,\n" +
-            "  \"release-id\" : {\"\n" +
+            "  \"release-id\" : {\n" +
             "    \"group-id\" : \"${groupId}\",\n" +
             "    \"artifact-id\" : \"${artifactId}\",\n" +
             "    \"version\" : \"${version}\"\n" +
