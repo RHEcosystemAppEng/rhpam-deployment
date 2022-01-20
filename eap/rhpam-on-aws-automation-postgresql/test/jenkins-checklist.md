@@ -1,5 +1,5 @@
 # Jenkins checklist
-The purpose 
+The purpose ...
 
 - [ ] Pipeline on Kie server without user data
   - [ ] User data is added/updated
