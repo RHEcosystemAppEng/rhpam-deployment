@@ -56,7 +56,7 @@ node('awsjdk11') {
                     def instanceJsonString = getInstanceDetailsById(instanceId)
                     instanceJson = readJSON text: instanceJsonString
                     def instanceState = instanceJson.Reservations["Instances"][0].State.Name.toString()
-                    if(instanceState.equalsIgnoreCase("running"))
+                    if(instanceState.equalsIgnoreCase("running") || instanceState.equalsIgnoreCase("[running]"))
                     {
                         return true
                     }
