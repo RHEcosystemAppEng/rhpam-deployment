@@ -208,6 +208,12 @@ original one.
 Instructions are provided in a separate [README.md](./jenkins/README.md)
 
 ## Additional Notes
+### EC2 VM tags required by the Jenkins pipeline
+The reference pipeline implementation lookups the RHPAM server instances by querying by tag the AWS network. The following  
+required tags must be then configured on the EC2 VM instances:
+* Kie Server: app=RHPAM-KS
+* Business Central: app=RHPAM-BC
+
 ### Isolate Development and Production environments
 For the sake of keeping these environments as much isolated as possible, the recommendation is to apply a different
 configuration for:
@@ -268,6 +274,13 @@ the associated Launch Configuration.
 
 This information is updated by the CI/CD pipeline and holds the artifact configuration using the well-known Maven
 GAV format: Group-Artifact-Version.
+
+## Deploying artifacts from Business Central
+The working assumption for the reference architecture is that all the running Kie Servers always have the same deployments: if this is not the case,
+e.g. if any user changes the deployments on any server from the Business Central console, the Load Balancer of the Kie Server might 
+forward an unmanaged request to one of the available servers, throwing back an error response to the client.
+
+Please consider using the RHPAM Smart Router as an option to by-pass this problem. 
 
 <!-- links -->
 [jboss-eap-installer]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=appplatform&version=7.3
