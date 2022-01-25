@@ -48,8 +48,11 @@ The target version of the installed components is:
 * Keycloak (v. 12.0.2)
 
 **Note**: the provisioning of the initial AWS infrastructure is out of scope
+
 **Note**: the configuration of the security certificates is out of scope
+
 **Note**: the provisioning of the connected subsystems is out of scope
+
 **Note**: the pipeline is designed to deploy and update a single artifact on the running servers, managing
 multiple artifacts is out of scope
 
@@ -84,12 +87,14 @@ The repository location is used in both Business Central and Kie Server deployme
 ##### Configure distributionManagement in RHPAM projects
 In order to deploy a RHPAM project on the configured Maven repository, the project `pom.xml` must
 include the following declaration:
+```xml
 <distributionManagement>
   <repository>
     <id>rhpam</id>
     <url><MAVEN_REPOSITORY_URL></url>
   </repository>
 </distributionManagement>
+```
 
 ### Configure the PostgreSQL DB
 The database is created and initialized during the initial configuration of the KIE Server, using
