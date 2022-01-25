@@ -1,141 +1,268 @@
-# Deployment of infrastructure components 
-This procedure is defined to provide an automated installation and configuration of RHPAM services on the AWS cloud.
-Installed components include:
+# RHPAM deployments on AWS
+The reference architecture includes a distributed network of the following services:
+* Maven repository
+* PostgreSQL database
+* Git server
+* Jenkins CI/CD
+* Keycloak authentication server
+* One or more RHPAM Kie Servers, under an Application Load Balancer and managed by an Auto Scaling Group
+  * The RHPAM Business Central is configured with a mounted EFS filesystem to restore the server status in case
+  of server failure
+* One RHPAM Business Central, under an Application Load Balancer and managed by an Auto Scaling Group (with capacity of 1 instance)
+* EFS filesystem mounted on the RHPAM Business Central VM
+
+The following diagram describes the main interactions in the system:
+![](./images/reference.png)
+
+**Note**: for simplicity, in the above architecture we omitted other resources such as the
+Load Balancers that manage the traffic directed to the exposed subsystems like Keycloak and the Maven repository
+
+## Definitions
+- `Development` environment: a runtime environment where the RHPAM Kie Server runs in `managed` and `mutable` mode
+  - The RHPAM Kie Server is controlled by the Business Central
+  - Updated artifacts are deployed through the CI/CD pipeline on all the running RHPAM Kie Servers
+- `Production` environment: a runtime environment where the RHPAM Kie Server runs in `unmanaged` and `immutable` mode
+  - No Business Central is deployed in this environment
+  - The RHPAM Kie Server is launched from an immutable AMI image that includes the application artifacts
+  - Updated artifacts are deployed through the CI/CD pipeline to create an updated runtime image
+    - Running servers are replaced by new servers based on the new images
+
+## Scope definition
+The purpose of this activity is to define an automated procedure and the manual steps to define a CI/CD pipeline for both 
+the `Development` and `Production` environments, where the CI/CD pipelines updates the deployed artifacts on all the 
+servers and guarantee that they are running the same version at any time.
+
+The procedure is targetted to install and configure:
+- The RHPAM Business Central
+- The RHPAM Kie Server
+
+Manual procedures are also given to configure the connected subsystems:
+- The Maven repository
+- The Git server
+- The Keycloak authentication realm
+- The Jenkins server
+
+The target version of the installed components is:
 * RHPAM Business Central (v. 7.9.1)
 * RHPAM Kie Server (v. 7.9.1)
-* Configuration of Keycloak (v. 12.0.2)
-* Configuration of PostgresQL
+* Keycloak (v. 12.0.2)
 
-## Software requirements
-To run the deployment procedure you need a Linux workstation with `bash` shell and the following software:  
-* `zip`
-* `unzip`
+**Note**: the provisioning of the initial AWS infrastructure is out of scope
+**Note**: the configuration of the security certificates is out of scope
+**Note**: the provisioning of the connected subsystems is out of scope
+**Note**: the pipeline is designed to deploy and update a single artifact on the running servers, managing
+multiple artifacts is out of scope
 
-## Software inventory
-Place the required software artifacts under the `installer` folder, in the expected sub-folders:
-* jboss-eap folder
-  * [jboss-eap-7.3.0-installer.jar][jboss-eap-installer]
-  * [jboss-eap-7.3.6-patch.zip][jboss-eap-patch]
-  * [keycloak-oidc-wildfly-adapter-12.0.4.zip][keycloak-adapter]
-* rhpam folder
-  * [rhpam-installer-7.9.1.jar][rhpam-installer]
-* database folder
-  * [rhpam-7.9.1-add-ons.zip][rhpam-add-ons]
+## Deployment flow
+Starting from the empty reference AWS architecture (e.g., no RHPAM deployments are configured on the assigned EC2 servers), 
+the deployment follows these manual [M] and automated steps [A]:
+- [M] Configure the Keycloak realm
+- [M] Configure the Maven repository
+- [A] Configure the PostgreSQL DB
+- [A] Deployment of RHPAM Business Central  on the assigned EC2 VM (only `Development` environment)
+- [M] Configure the Git connectivity
+- [A] Deployment of RHPAM Business Central on the assigned EC2 VM
+- [M] Generate the required AMI images
+- [M] Update the Launch Configuration of the Auto Scaling Groups to match the new AMI ids
+- [M] Configure the Jenkins server and the CI/CD pipeline
 
-## Configuring dependant components
-### Configuring Keycloak
-Install following instructions in [keycloak installer manual](./keycloak/Readme.md)
+### Configure the Keycloak realm
+RHPAM servers need the following resources in a new Keycloak realm:
+- `rest-all`, `admin` and `kie-server` roles
+- An RHPAM admin user qith roles `rest-all`, `admin` and `kie-server` and the `realm-admin`
+role for the `realm-management` client
+- A user to connect Kie Server to Business Central, with `rest-all` and `admin` roles 
+- A user to connect Business Central to Kie Server , with `kie-server` role 
+- A `business-central` client with `confidential` access-type and managing redirect URIs coming 
+from the Business Central's Load Balancer (both HTTP and HTTPS protocols)
+- A `kie-server` client with `confidential` access-type and managing redirect URIs coming 
+from the Kie Server's Load Balancer (both HTTP and HTTPS protocols)
 
-### Configuring PostgresQL
-The database is created and initialized during the creation of the KIE Server, in case it is not already there, using
-the connection properties defined in [runtime.properties](./runtime/kie-server/runtime.properties)
+#### Configure the Maven repository
+The Maven repository must be configured with one repository to store SNAPSHOT and RELEASE artifacts.
+The repository location is used in both Business Central and Kie Server deployments.
+##### Configure distributionManagement in RHPAM projects
+In order to deploy a RHPAM project on the configured Maven repository, the project `pom.xml` must
+include the following declaration:
+<distributionManagement>
+  <repository>
+    <id>rhpam</id>
+    <url><MAVEN_REPOSITORY_URL></url>
+  </repository>
+</distributionManagement>
 
-### Mounting EFS filesystem (optional)
-In case we need to mount an EFS filesystem, the [efs.sh](./efs/efs.sh) script is available to initialize the mount point
-on the target VM. 
+### Configure the PostgreSQL DB
+The database is created and initialized during the initial configuration of the KIE Server, using
+the connection properties defined in the Kie Server [runtime.properties](./runtime/kie-server/runtime.properties)
 
-See related [efs.properties](./efs/efs.properties) configuration properties to define the mounted path.
-
-**Note**: in case of mounted EFS filesystem, we will use this path to store `runtime.properties` and, for the `Business Central` 
-service, also to host the local Git repository.
-
-### Preparing SSH Tunnel (optional)
+### Deployment of RHPAM Business Central and Kie Server
+#### Software requirements
+* To run the deployment procedure you need a Linux workstation with `bash` shell and the following software:  
+  * `zip`
+  * `unzip`
+* The updated content of the current repository must be cloned on the same workstation.
+* Place the required software artifacts under the `eap/rhpam-on-aws-automation-postgresql/installer` folder of the repository,
+in the expected sub-folders:
+  * `jboss-eap` folder
+    * [jboss-eap-7.3.0-installer.jar][jboss-eap-installer]
+      * [jboss-eap-7.3.6-patch.zip][jboss-eap-patch]
+      * [keycloak-oidc-wildfly-adapter-12.0.4.zip][keycloak-adapter]
+  * `rhpam` folder
+    * [rhpam-installer-7.9.1.jar][rhpam-installer]
+  * `database` folder (create it if missing)
+    * [rhpam-7.9.1-add-ons.zip][rhpam-add-ons]
+#### Preparing SSH Tunnel (optional)
 In case the actual VM is reached through an SSH Tunnel, you can create the tunnel by running the provided utility
 [ssh-tunnel.sh](./lib/ssh-tunnel.sh) as follows:
 ```shell
-lib/ssh-tunnel.sh -t 1.2.3.4 -s abc.pem -u tuser -r 5.6.7.8 -l 5001
+lib/ssh-tunnel.sh -t <TUNNEL_HOST> -s <REMOTE_HOST.pem> -u <TUNNEL_USER> -r <REMOTE_HOST> -l <LOCAL_PORT>
 ```
-This creates a tunnel to the remote host `5.6.7.8` passing through host `1.2.3.4` at local port `5001`.
+This creates a tunnel to the remote host `<REMOTE_HOST>` passing through host `<TUNNEL_HOST>` at local port `<LOCAL_PORT>`.
+`<TUNNEL_USER>` user is used to connect the tunnel host, while the `<REMOTE_HOST.pem>` certificate is used for authentication. 
 
 You can test the tunnel by connecting as:
 ```shell
-ssh -i  abc.pem -p 5001 ruser@localhost
+ssh -i  <REMOTE_HOST.pem> -p <LOCAL_PORT> <REMOTE_USER>@localhost
 ```
-Note that `tuser` and `ruser` might actually be different.
+Note that `<TUNNEL_USER>` and `<REMOTE_USER>` might actually be different users.
 
-## Install and configure RHPAM services
-These steps are performed with the [installer.sh](./installer.sh) script that is configured with the following properties
-in [installer.properties](./installer.properties): 
-* `RHPAM_SERVER_IP`: the public IP of the VM to configure. **Note**: in case of SSH tunnel, use `localhost`
-* `RHPAM_SERVER_PORT`: the port used to connect the RHPAM service (default is `8080`)
-* `SSH_PORT`: The SSH connection port (deafult is 22). **Note**: if an SSH tunnel is used to reach the remote server, put 
-the local port of the tunnel (option `-l` of the `ssh-tunnel.sh` script)
-* `SSH_PEM_FILE`: the SSH key file
-* `SSH_USER_ID`: the SSH user
-* `RHPAM_SERVER`: one of: `business-central` or `kie-server`
-* `KIE_SERVER_TYPE`: only for `RHPAM_SERVER=kie-server`, one of: `unmanaged` or `managed`
-* `EAP_HOME`: the root folder of RHPAM installation
-* `RHPAM_HOME`: The RHPAM home folder (maven settings file, kie server config file)
-* `RHPAM_PROPS_DIR`: where rhpam properties are stored (runtime.properties). In case of EFS mounted filesystem, it has to 
-match the mounted path
-* `GIT_HOME`: only for `RHPAM_SERVER=business-central`, the folder where git repository is located (as `.niogit/`).
-In case of EFS mounted filesystem, it has to match the mounted path
-* `DRY_RUN_ONLY`: set to "yes" to generate only the list of commands in the `installer.log` file
+#### Install and configure RHPAM services
+The installation steps are performed with the [installer.sh](./installer.sh) script that is configured with the properties
+defined in [installer.properties](./installer.properties) 
 
-### Install KIE Server
-Update the environment properties in [installer.properties](./installer.properties), in particular:
-* `RHPAM_SERVER`: must be `kie-server`
-* `KIE_SERVER_TYPE`: either `managed` or `unmanaged`
-
-Also update all the runtime properties in [runtime.properties](./runtime/kie-server/runtime.properties) to connect to the
-actual Keycloak and PostgresQL instances, then run it as:
-```shell
-./installer.sh
-```
-
-### Install Business Central
-Update the environment properties in [installer.properties](./installer.properties), in particular:
+##### Install RHPAM Business Central
+Set the following in [installer.properties](./installer.properties):
 * `RHPAM_SERVER`: must be `business-central`
 
-Also update all the runtime properties in [runtime.properties](./runtime/business-central/runtime.properties) to connect to the
+Then, update all the runtime properties in [runtime.properties](./runtime/business-central/runtime.properties) to connect to the
 actual Keycloak instance, then run it as:
 ```shell
 ./installer.sh
 ```
 
-## Testing the deployment
-See [Deployment validation](./test/README.md) procedure.
+##### Install RHPAM Kie Server
+Set the following in [installer.properties](./installer.properties):
+* `RHPAM_SERVER`: must be `kie-server`
+* `KIE_SERVER_TYPE`: either `managed` or `unmanaged`
 
-## Deployment Notes
-### Unique server ID
-This `bash` function returns the local host name of the current AWS EC2 VM, purged of the suffix `.ec2.internal`:
+Then, update all the runtime properties defined in [runtime.properties](./runtime/kie-server/runtime.properties) to connect to the
+actual Keycloak and PostgresQL instances, then run it as:
 ```shell
-function get_hostname() {
-  TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600") &&
-    curl -s -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/local-hostname | cut -d'.' -f1
-}
+./installer.sh
 ```
-E.g., it returns something like `ip-10-0-1-211` which is unique within the local subnet.
 
-### Static access to Business Central (BC)
-BC uses an Auto Scale Group with capacity/min/max of 1 for automatic recovery. The ASG can be standalone or in conjunction with a Load Balancer.
-When using a LB, access from other systems (controller address from KS, client urls/uris in Keycloak) will be through using the LB DNS.
-Without an LB or, if KS needs to access BC directly NOT through the LB, BC needs to use a static IP.
-Runbook steps taken from [rhpam-on-aws-with-managed-postgresql runbook](../rhpam-on-aws-with-managed-postgresql/README.md) are marked with an __
+##### Testing the deployment
+A [functional checklist](./test/functional-checklist.md) procedure is provided to validate the deployment.
 
-#### With Load Balancer
-- Create the Target Groups  
-- Create the Load Balancer  
-receives a DNS with the following syntax: **name-id**.elb.**region**.amazonaws.com  
-- Create the Launch Configuration  
-- Create the Auto Scaling Group  
-- Update BC host in urls/uris in Keycloak -> client -> business-central
-- Update Bc host in KS runtime.properties on Ks instance -> restart ks.service
+### Configure the Git connectivity
+#### Business Central server setup
+The following steps are needed to define the SSH connection between the Business Central VM and the 
+remote Git server.
 
-#### Without Load Balancer
-- Create Elastic IP with TAG: `key:app, value=bc-eip`
-- Run `./installer/eip_attach/installer.sh` 
-- Update BC host in urls/uris in Keycloak -> client -> business-central
-- Update Bc host in KS runtime.properties on Ks instance -> restart ks.service
+Generate an SSH key for the `root` user using the PEM format, as in the following example:
+`ssh-keygen -t rsa -b 4096 -C "bci@redhat" -m PEM`
 
-### Good practices when testing things out on AWS:
-1. Stop resources (VMs, Databases, etc) at end of working day
-2. Delete obsolete AMIs: deregister AMI (note the AMI id) AND delete its snapshot using the AMI ID to find the correct one
-3. Release any not needed EIPs. An EIP is only free of charge if a couple of constraints are met: it must be associated with a RUNNING EC2 instance which has only one EIP attached and it also must be associated with an attached network interface [source](https://aws.amazon.com/premiumsupport/knowledge-center/elastic-ip-charges/) 
-4. VMs used by an ASG can be stopped BUT the ASG might/will spin up another instance instead => set capacity/min/max to 0
+For the `root` user, add to `~/.ssh/config` the reference to the key to use when dealing with the Git server.
+For example, if `1.2.3.4` is the Git server IP address and `id_rsa` is the name of the Key:
+```
+Host 1.2.3.4
+IdentityFile /root/.ssh/id_rsa
+```
+#### Git server setup
+Added the public key  defined in the previous step in the `~/.ssh/authorized_keys` file of the Git VM for the `git` user.
+
+#### Define per-project post-commit hook
+Follow these steps to configure a post-commit hook in a single RHPAM project to automatically push the 
+changes to the remote repository:
+```shell
+cd  <EFS_MOUNT_POINT>/.niogit/<SPACE>/<PROJECT_NAME>.git/hooks
+echo '#!/bin/sh
+git push origin +master' > post-commit
+chmod 744 post-commit
+```
+The procedure must be repeated for all the projects requiring automatic sync between the local and remote
+Git repositories.
+
+**Note**: the assumption is that the project was initially imported in Business Central using the
+`Import Project` function
+
+### Generate the required AMI images
+Use the AWS console to generate the base images from the RHPAM Business Central and Kie Server EC2 VMs.
+
+**Preliminary steps**:
+* Remove any deployed artifact from the RHPAM Kie Server so they're not saved in the base image
+
+### Update the Launch Configuration of the Auto Scaling Groups to match the new AMI ids
+Use the AWS console to generate a new Launch Configuration for RHPAM Business Central and RHPAM Kie
+Server using the newly generated AMI images, and connect them to the Auto Scaling Groups, replacing the
+original one.
+
+### Configure the Jenkins server and the CI/CD pipeline
+Instructions are provided in a separate [README.md](./jenkins/README.md)
+
+## Additional Notes
+### Isolate Development and Production environments
+For the sake of keeping these environments as much isolated as possible, the recommendation is to apply a different
+configuration for:
+* The Keycloak realm
+  * Create one for each runtime environment with a different name
+  * Create realm users with different names and passwords
+* The DB schema: create one for each runtime environment with a different name
+
+### Authenticated services under the Application Load Balancer 
+It is a recommended good practice to expose only secured endpoints to the service consumers outside the AWS network,
+and this can be achieved with the following configurations:
+* Create a `Forward rule` in the Load Balancer to map all the HTTPS requests at port 443 to the HTTP port 8080 of the associated 
+RHPAM service
+* Create a `Redirect rule` in the Load Balancer to map all the HTTP requests at port 80 to the HTTPS port 443 of the same Load Balancer
+
+### Define application endpoints in client apps
+According to the reference architecture, whenever the CI/CD pipeline deploys a new version of the artifacts, the client
+application needs to update the service endpoint URIs, since they might include the versioning information
+in their path, as in the following API to start a given task by ID:
+```
+PUT {{scheme}}://{{kieserver-url}}/services/rest/server/containers/{{containerId}}/tasks/{{taskInstanceId}}/states/started?user=rhpamadmin
+```
+
+### Updating server properties
+The `runtime.properties` files of the RHPAM services can be updated to reflect any change in the connected system 
+(e.g., it may be needed if we regenerate the Keycloak secret of the realm clients). After the change, the server(s)
+must be restarted, either by restarting the entire VM(s) or the specific Linux services (requires SSH connection).
+
+While the `runtime.properties` of the RHPAM Business Central is stored in the mounted EFS filesystem and shared by all 
+the running instances, the RHPAM Kie Server properties are stored in the local filesystem of each EC2 VM, so multiple
+changes might be needed.
+
+The recommendation is to adopt a similar pattern to externalize the configuration in a shared location, like:
+* EFS filesystem
+* S3 bucket
+* AWS Parameter Store
+This way, a single change would affect all the running instances. Service restart would be needed in any case.
+
+### Application rollouts and service availability  
+The execution of the CI/CD pipelines, for both the runtime environments, might imply a temporary unavailability of
+the services, because the original artifacts (or VMs, in case of `Production` environment) are deactivated
+before activating the updated artifacts.
+
+Considering that the client application might also need to be updated, and the limitations of the Application Load Balancer, 
+that just acts as a Reverse Proxy and is unable to work as a Service Router to forward specific requests to
+the available servers, a planned maintenance period is recommended before any version upgrade.
+
+### Interruption of the CI/CD pipeline 
+The CI/CD pipeline execution will be interrupted if any active process is currently instantiated: the RHPAM Kie Server prevents
+the upgrade of an application in such cases.
+
+A proper error message will be displayed when this happens.
+
+### Auto scaling Kie Server in Development environment
+In the Development environment, the RHPAM Kie Server runs from an image with no initial deployments: the deployment is
+populated before the RHPAM service starts, by using the `user-data` information injected into the EC2 VM from
+the associated Launch Configuration.
+
+This information is updated by the CI/CD pipeline and holds the artifact configuration using the well-known Maven
+GAV format: Group-Artifact-Version.
 
 <!-- links -->
-[reference-procedure]: https://github.com/RHEcosystemAppEng/rhpam-deployment/tree/main/eap/rhpam-on-aws-with-managed-postgresql
 [jboss-eap-installer]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&product=appplatform&version=7.3
 [jboss-eap-patch]: https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?product=appplatform&downloadType=patches&version=7.3
 [keycloak-adapter]: https://www.keycloak.org/archive/downloads-12.0.4.html
