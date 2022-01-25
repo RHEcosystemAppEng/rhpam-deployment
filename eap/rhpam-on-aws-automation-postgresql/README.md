@@ -32,7 +32,7 @@ The purpose of this activity is to define an automated procedure and the manual 
 the `Development` and `Production` environments, where the CI/CD pipelines updates the deployed artifacts on all the 
 servers and guarantee that they are running the same version at any time.
 
-The procedure is targetted to install and configure:
+The procedure is targeted to install and configure:
 - The RHPAM Business Central
 - The RHPAM Kie Server
 
@@ -64,7 +64,7 @@ the deployment follows these manual [M] and automated steps [A]:
 - [A] Configure the PostgreSQL DB
 - [A] Deployment of RHPAM Business Central  on the assigned EC2 VM (only `Development` environment)
 - [M] Configure the Git connectivity
-- [A] Deployment of RHPAM Business Central on the assigned EC2 VM
+- [A] Deployment of RHPAM Kie Server on the assigned EC2 VM
 - [M] Generate the required AMI images
 - [M] Update the Launch Configuration of the Auto Scaling Groups to match the new AMI ids
 - [M] Configure the Jenkins server and the CI/CD pipeline
@@ -72,10 +72,12 @@ the deployment follows these manual [M] and automated steps [A]:
 ### Configure the Keycloak realm
 RHPAM servers need the following resources in a new Keycloak realm:
 - `rest-all`, `admin` and `kie-server` roles
-- An RHPAM admin user qith roles `rest-all`, `admin` and `kie-server` and the `realm-admin`
+- An RHPAM admin user with roles `rest-all`, `admin` and `kie-server` and the `realm-admin`
 role for the `realm-management` client
-- A user to connect Kie Server to Business Central, with `rest-all` and `admin` roles 
-- A user to connect Business Central to Kie Server , with `kie-server` role 
+- A user to connect Kie Server to Business Central, with `rest-all` and `admin` roles (must match with `rhpamController_username` and
+  `rhpamController_password` in Kie Server [runtime.properties](./runtime/kie-server/runtime.properties)) 
+- A user to connect Business Central to Kie Server , with `kie-server` role (must match with `KIESERVER_USERNAME` and
+`KIESERVER_PASSWORD` in Business Central [runtime.properties](./runtime/business-central/runtime.properties))
 - A `business-central` client with `confidential` access-type and managing redirect URIs coming 
 from the Business Central's Load Balancer (both HTTP and HTTPS protocols)
 - A `kie-server` client with `confidential` access-type and managing redirect URIs coming 
@@ -261,7 +263,7 @@ A proper error message will be displayed when this happens.
 
 ### Auto scaling Kie Server in Development environment
 In the Development environment, the RHPAM Kie Server runs from an image with no initial deployments: the deployment is
-populated before the RHPAM service starts, by using the `user-data` information injected into the EC2 VM from
+updated immediately after the first launch of the server, by using the `user-data` information injected into the EC2 VM from
 the associated Launch Configuration.
 
 This information is updated by the CI/CD pipeline and holds the artifact configuration using the well-known Maven
