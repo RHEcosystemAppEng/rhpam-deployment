@@ -32,13 +32,13 @@ node('awsjdk11') {
                 echo "file location : ${AWS_FILE}"
                 def result = sh(script : "cat ${AWS_FILE}" ,returnStdout: true).trim()
 //                echo "content are : ${result}"
-                def result2 = sh(script : "aws configure set region ${awsRegion} ; cp ${AWS_FILE} ~/.aws/credentials" ,returnStdout: true).trim()
+                  def result2 = sh(script : "aws configure set region ${awsRegion} ; cp ${AWS_FILE} ~/.aws/credentials" ,returnStdout: true).trim()
 //                echo "result2 = ${result2}"
             }
 
                  }
                  
-        }
+
         
         stage('Fetching instances by tags')
         {
