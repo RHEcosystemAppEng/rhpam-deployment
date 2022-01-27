@@ -172,12 +172,13 @@ and there is no fear that secrets will be leaked or compromised
 #### The following credentials should be defined in Jenkins(their **_ids_** are listed):
 - maven-repo-secret - username and password for maven repository in a remote server
 - AWS_CREDENTIALS - AWS Access Key Id and Secret for AWS cli login, should be defined as user and password kind. 
-- KS_CREDENTIALS - Kie Server Controller Username and password for interacting with Kie Server using REST API
-
+- KS_CREDENTIALS - Kie Server Controller Username and password for interacting with Kie Server using REST API in unmanaged mode.
+- BC_CREDENTIALS - Business central controller's Username and password for deploying containers to managed kie servers
 - jenkins-sa-token(optional) - In case of using kubernetes pod templates as jenkins agent/slave, this is the token 
   of the service account that jenkins is using to connect to k8s cluster, should be defined with kind of Secret text.
 
-#### How to define credentials in jenkins:
+
+#### How to define credentials in jenkins
 From jenkins server main screen, go to Manage Jenkins-> go to security section-> click on Manage Credentials
 -> then on the bottom click on '(global)' link under Domains column->on the left panel click on 'Add Credentials'
 Then you should fill the details of secret as shown below:
@@ -237,6 +238,124 @@ _**where the given settings.xml for this is as follows:**_
 in settings.xml and choose jenkins credentials for the maven repo 
 and then the plugin will inject the user/password to the rendered
 settings.xml that will be injected to running agent during runtime_**
+
+### Configure Authentication to AWS from Jenkins using AWS IAC Role:
+
+Authentication through main Access key ID and Secret of an account( which have admin privileges)  can be replaced with 
+another Mechanism in which the authentication is made with an unprivileged user(from operation and actions that can be made on AWS cli perspective) ,
+which has a dedicated permission to 'assume a role' for a particular role that will grant this user its authorization and permissions to
+for all operation and actions that are specified and defined in the role.
+
+#### Preliminary Settings in AWS Console
+
+1. Go to AWS console, login to your account, and enter to IAM module there - https://console.aws.amazon.com/iamv2/home#/home
+2. Create new role -> go to left panel Access management group -> click on Roles -> Click on button 'Create role' --> choose usecase EC2,
+ and click on button\
+ located at the bottom 'Next: Permissions'
+  And in the new screen , choose and  attach the following policies at least for DEV Pipeline(AWS predefined policies)
+   1. AutoScalingFullAccess
+   2. AmazonEC2ReadOnlyAccess
+      If needed a more constrained policy instead of the first policy, can create a new policy for the actual
+      operations that are performed during the pipeline, as below:
+```json
+{
+  "Version": "2022-01-27",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "autoscaling:UpdateAutoScalingGroup",
+        "autoscaling:CreateLaunchConfiguration"
+      ],
+      "Resource": "*"
+    }
+
+  ]
+}
+   
+```
+3. define some user with minimum permissions(unprivileged user) , and create for it
+   access key - programmatic access(access key id and secret). can copy permissions from existing unprivileged user. 
+    
+4. Grant the user from section 3 the assumerole permission for role created in section 2:
+   1. Go to Roles on the left panel-> look up in the text editor search field for your role and enter it 
+   2. Go to Trust relationships tab-> click on button 'Edit trust relationship'
+   3. inside the Policy Document, define a permission for the user, as shown in the following json, 
+   need to insert a new entry to the JSON Array with the ARN of user from section 3 as value for  key Principal.AWS, when finished, click on 'Update Trust Policy'
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::793718559102:user/zgrinber"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+```
+
+#### Configuration and settings in Jenkins
+
+1. Define Credential entry at jenkins for access key id(as username) and access key secret(as password) for the unprivileged user that was created in AWS
+   As described in [How to define credentials in jenkins](#how-to-define-credentials-in-jenkins)
+2. Need to define an environment variable named 'AWS_PROFILE' with some profile name.
+   it should be done in agent configuration or if running the pipeline on jenkins master, go to Manage Jenkins->Configure System
+   ->search for global properties->check environment variables checkbox or if check, add new environment variable
+```properties
+Name=AWS_PROFILE
+Value=profileName
+```
+3. create new configuration file object in jenkins ('Config File Provider' Plugin installed is a prerequisite) 
+      1. From Jenkins main screen, go to Manage Jenkins on left panel-> click on 'Managed file'->
+      on the left panel click on 'Add a new Config'--> choose 'Custom file' radiobutton --> on the bottom, go to 'ID'
+      field, and type some meaningful name , for example: aws-credentials-file-> press on submit.
+      2. on appeared screen ,fill in all details as follows:
+         ![sample](./pictures/awsassumeroleauthentication.png)
+      An Explanation for all fields:
+   ```prototext
+   ID=Name of the file object to be used in pipeline whenever referenced,
+   
+   Name= Can be the same,
+   
+   Comment= Optional description of file object,
+   
+   Token= Definition of Place holder to be replaced with new values of user and password when used by pipeline, should be hardcoded SECRET.
+   
+   Credential=Choose the Credentials that was created in section 1,
+   
+   Content= the file structure skeleton. need to contain the following values:
+   
+      1.[profileName] - the name of the profile exactly as defined in section 2.
+      2.role_arn - the full arn of the aws role that was created.
+      3.source_profile - the user name to authenticate to aws with 
+      4.[user] - header of user name(should be the same as the value in section 3).
+      5.aws_access_key_id - should be $SECRET_USR so jenkins and plugin will know to
+                            inject the username of credential here when used by pipeline code.
+      6.aws_secret_access_key -should be $SECRET_PSW so jenkins and plugin will know to
+                            inject the password of credential here when used by pipeline code.    
+
+   ```
+   When finishing filling everything, click on submit.    
+
+4. Usage in pipeline - need to specify the file object id that was defined in former step
+   as can be  [seen here](./JenkinsfileDeployArtifact#L26-L39)
+
+   
+   
+   
+
+
+
 
 ### Setup A Kubernetes pod template agent
 
