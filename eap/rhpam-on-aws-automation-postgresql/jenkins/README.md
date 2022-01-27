@@ -252,10 +252,10 @@ for all operation and actions that are specified and defined in the role.
 2. Create new role -> go to left panel Access management group -> click on Roles -> Click on button 'Create role' --> choose usecase EC2,
  and click on button\
  located at the bottom 'Next: Permissions'
-  And in the new screen , choose and  attach the following policies at least for DEV Pipeline(AWS predefined policies)
+  And in the new screen , choose and attach the following policies at least for DEV Pipeline(AWS predefined policies)
    1. AutoScalingFullAccess
-   2. AmazonEC2ReadOnlyAccess
-      If needed a more constrained policy instead of the first policy, can create a new policy for the actual
+   2. AmazonEC2ReadOnlyAccess, 
+      If needed a more constrainted policy instead of the first policy, can create a new policy for the actual
       operations that are performed during the pipeline, as below:
 ```json
 {
