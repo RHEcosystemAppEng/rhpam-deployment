@@ -243,8 +243,8 @@ settings.xml that will be injected to running agent during runtime_**
 
 Authentication through main Access key ID and Secret of an account( which have admin privileges)  can be replaced with 
 another Mechanism in which the authentication is made with an unprivileged user(from operation and actions that can be made on AWS cli perspective) ,
-which has a dedicated permission to 'assume a role' for a particular role that will grant this user its authorization and permissions to
-for all operation and actions that are specified and defined in the role.
+which has a dedicated permission to 'assume a role' for a particular role that will grant this user its authorization and permissions 
+for all operations and actions that are specified and defined in the role.
 
 #### Preliminary Settings in AWS Console
 
@@ -252,7 +252,7 @@ for all operation and actions that are specified and defined in the role.
 2. Create new role -> go to left panel Access management group -> click on Roles -> Click on button 'Create role' --> choose usecase EC2,
  and click on button\
  located at the bottom 'Next: Permissions'
-  And in the new screen , choose and attach the following policies at least for DEV Pipeline(AWS predefined policies)
+  And in the new screen , choose and attach the following policies at least for DEV Pipeline(AWS predefined policies):
    1. AutoScalingFullAccess
    2. AmazonEC2ReadOnlyAccess, 
       If needed a more constrainted policy instead of the first policy, can create a new policy for the actual
@@ -280,8 +280,8 @@ for all operation and actions that are specified and defined in the role.
 4. Grant the user from section 3 the assumerole permission for role created in section 2:
    1. Go to Roles on the left panel-> look up in the text editor search field for your role and enter it 
    2. Go to Trust relationships tab-> click on button 'Edit trust relationship'
-   3. inside the Policy Document, define a permission for the user, as shown in the following json, 
-   need to insert a new entry to the JSON Array with the ARN of user from section 3 as value for  key Principal.AWS, when finished, click on 'Update Trust Policy'
+   3. inside the Policy Document, define a permission for the user, as shown in the following json(in this example, adding the assumerole permission to zgrinber user), 
+   need to insert a new entry to the JSON Array with the ARN of user from section 3 as value for key Principal.AWS, when finished, click on 'Update Trust Policy'
 ```json
 {
   "Version": "2012-10-17",
@@ -310,7 +310,7 @@ for all operation and actions that are specified and defined in the role.
    As described in [How to define credentials in jenkins](#how-to-define-credentials-in-jenkins)
 2. Need to define an environment variable named 'AWS_PROFILE' with some profile name.
    it should be done in agent configuration or if running the pipeline on jenkins master, go to Manage Jenkins->Configure System
-   ->search for global properties->check environment variables checkbox or if check, add new environment variable
+   ->search for global properties->check environment variables checkbox or if check, add new environment variable with the following details:
 ```properties
 Name=AWS_PROFILE
 Value=profileName
@@ -347,8 +347,8 @@ Value=profileName
    ```
    When finishing filling everything, click on submit.    
 
-4. Usage in pipeline - need to specify the file object id that was defined in former step
-   as can be  [seen here](./JenkinsfileDeployArtifact#L26-L39)
+4. Usage in pipeline - need to specify the file object id that was defined in former step and use it to configure the AWS cli credentials file
+   as can be  [seen here](./JenkinsfileDeployArtifact#L26-L39), this process must be performed before any invocation of aws cli operation in pipeline.
 
    
    
