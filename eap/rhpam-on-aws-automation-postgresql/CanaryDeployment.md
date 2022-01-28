@@ -2,7 +2,8 @@
 
 # Near zero downtime deployments
 ## Purpose
-Main goal is to update the deployments in Kie Server, in the production environment, with a **near zero downtime** deployment
+Main goal is to update the deployments in Kie Server, in the production environment, with a **near zero downtime** deployment.
+
 Optionally, we can define a [Canary deployment](https://wa.aws.amazon.com/wellarchitected/2020-07-02T19-33-23/wat.concept.canary-deployment.en.html)
 with `blue` and `green` workflows to provide rollback capability
 
@@ -103,6 +104,9 @@ According to this deployment, we can have only clients using the previous versio
 * In the simplest scenario, we could just add the new Target Group to the existing, single Auto Scaling Group, and terminate
 one by one the previous instances (termination policy configured to "Oldest instance"), but this would prevent having 
 the rollback capability
+* Avoid 404 responses and route the `green` flow on the `default` one, if there are no udated versions 
+* A notification from the deployment subsystem might help the clients to effectively switch to the latest path (e.g., change
+header from `blue` to `green`)
 
 ## Security constraints
 * CI/CD pipeline needs permissions to manage the Auto Scaling Group, create Target Groups and manipulate the 
