@@ -30,7 +30,7 @@ Repeat the above tests for the following scenarios:
 **Issues**:
 * ✅ [[Issue] Deployed process is not listed in Business Central console](https://issues.redhat.com/browse/APPENG-222)
 * ✅ [[Issue] Human task not listed under Task Inbox page](https://issues.redhat.com/browse/APPENG-227)
-* 🚧 [[Issue] 2 browsers showing different redirect URIs for 'business-central' client](https://issues.redhat.com/browse/APPENG-226)
+* ✅ [[Issue] 2 browsers showing different redirect URIs for 'business-central' client](https://issues.redhat.com/browse/APPENG-226)
 ## RHPAM Authoring with remote git
 The purpose is to connect the Business Central Git to the remote Git
 so that all changes are sync-ed between the two repositories.
@@ -71,16 +71,16 @@ chmod 744 post-commit
   - [x] Validate the changes are present
 
 ## User Management from Business Central
-- ❌ Admin>Roles page contains the roles defined in Keycloak `Rhpam` realm
-- [ ] Admin>Groups page contains `kie-server` role defined in Keycloak `Rhpam` realm
-- [ ] Admin>Users page contains the users defined in Keycloak `Rhpam` realm
-- [ ] Create a new user from Admin>Users page
-  - [ ] The user is reflected in the Keycloak `Rhpam` realm
-- [ ] Delete a user from Admin>Users page
-  - [ ] The user is removed from the Keycloak `Rhpam` realm
+- [x] Admin>Roles page contains the roles defined in Keycloak `Rhpam` realm
+- [x] Admin>Groups page contains `kie-server` role defined in Keycloak `Rhpam` realm
+- [x] Admin>Users page contains the users defined in Keycloak `Rhpam` realm
+- [x] Create a new user from Admin>Users page
+  - [x] The user is reflected in the Keycloak `Rhpam` realm
+- [x] Delete a user from Admin>Users page
+  - [x] The user is removed from the Keycloak `Rhpam` realm
 
 **Issues**:
-* 🚧 [[Issue] Admin page is not listing expected Roles, Groups and Users](https://issues.redhat.com/browse/APPENG-221)
+* ✅ [[Issue] Admin page is not listing expected Roles, Groups and Users](https://issues.redhat.com/browse/APPENG-221)
 
 ## Testing Kie-Server REST API
 - [x] Get list of available containers using `GET https://{{kieserver-url}}/services/rest/server/containers`
