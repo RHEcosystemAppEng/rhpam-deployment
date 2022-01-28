@@ -126,4 +126,4 @@ Repeat the above tests for the following scenarios:
 **Issues**:
 * ✅ [[Issue] Kie-Server APIs are not showing the active Human Tasks](https://issues.redhat.com/browse/APPENG-248)
 * ✅ [[Issue] Cannot start task from REST API](https://issues.redhat.com/browse/APPENG-251)
-* 🚧 [[Issue] Swagger page not available](https://issues.redhat.com/browse/APPENG-252)
+* ✅ [[Issue] Swagger page not available](https://issues.redhat.com/browse/APPENG-252)
