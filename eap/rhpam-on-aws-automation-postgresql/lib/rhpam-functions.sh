@@ -33,7 +33,7 @@ function configureAndStartService(){
   if [[ ${INSTALL_TYPE} == 'LOCAL' ]]; then
     execute "sudo mv /tmp/runtime.properties ${RHPAM_PROPS_DIR}"
     execute "sudo mv /tmp/${launcher} ${RHPAM_HOME}"
-    execute "cd ${RHPAM_HOME}; sudo ./${SERVICE_LAUNCHER} ${RHPAM_PROPS_DIR}> /dev/null 2>&1 &'"
+    execute "cd ${RHPAM_HOME}; sudo ./${SERVICE_LAUNCHER} ${RHPAM_PROPS_DIR} ${KIE_SERVER_TYPE}"
   else
     execute "sudo systemctl stop ${service};sudo systemctl disable ${service};sudo rm /etc/systemd/system/${service};sudo systemctl daemon-reload;sudo systemctl reset-failed"
     execute "sudo mv /tmp/runtime.properties ${RHPAM_PROPS_DIR}"
