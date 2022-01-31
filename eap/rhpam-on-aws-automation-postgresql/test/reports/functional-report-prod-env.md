@@ -31,4 +31,4 @@ Repeat the above tests for the following scenarios:
   - A failure response is expected
 
 **Issues**:
-* 🚧 [[Issue] Swagger page not available](https://issues.redhat.com/browse/APPENG-252)
+* ✅ [[Issue] Swagger page not available](https://issues.redhat.com/browse/APPENG-252)

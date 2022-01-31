@@ -113,6 +113,11 @@ function configureKieServer() {
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/rhpam-kieserver.cli"
 }
 
+function patchUnauthenticatedMethods() {
+  headerLog "patchUnauthenticatedMethods"
+  execute "sudo sed -i 's/.*\(<deny-uncovered-http-methods \/>\).*/<!--\1-->/' ${EAP_HOME}/standalone/deployments/kie-server.war/WEB-INF/web.xml"
+}
+
 ### Kie Server functions ###
 function configurePostgresQL() {
   headerLog "configurePostgresQL"
@@ -165,6 +170,9 @@ fi
 installEap
 installSsoAdapter
 installRhpam "${RHPAM_INSTALLER_XML}"
+if [ $(isKieServer) ]; then
+  patchUnauthenticatedMethods
+fi
 configureSso
 if [ $(isKieServer) ]; then
   installJdbcDriver
