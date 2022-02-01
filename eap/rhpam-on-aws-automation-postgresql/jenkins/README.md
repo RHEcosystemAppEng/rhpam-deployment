@@ -239,7 +239,54 @@ in settings.xml and choose jenkins credentials for the maven repo
 and then the plugin will inject the user/password to the rendered
 settings.xml that will be injected to running agent during runtime_**
 
-### Configure Authentication to AWS from Jenkins using AWS IAC Role:
+### Configure Auth to AWS for jenkins running on AWS EC2 using IAC Role
+For a Jenkins server that runs on an amazon EC2 VM Instance, the process of authenticating to
+AWS cli is very simple, just need to create a role in AWS IAM console, and attach that role to the EC2 instance that runs jenkins on aws EC2 console: 
+
+1. Go to AWS console, login to your account, and enter to IAM module there - https://console.aws.amazon.com/iamv2/home#/home
+2. Create new role -> go to left panel Access management group -> click on Roles -> Click on button 'Create role' --> choose usecase EC2,
+   and click on button\
+   located at the bottom 'Next: Permissions'
+   And in the new screen , choose and attach the following policies at least for DEV Pipeline(AWS predefined policies)
+    1. AutoScalingFullAccess
+    2. AmazonEC2ReadOnlyAccess,
+       If needed a more constrainted policy instead of the first policy, can create a new policy for the actual
+       operations that are performed during the pipeline, as below:
+```json
+{
+  "Version": "2022-01-27",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "autoscaling:UpdateAutoScalingGroup",
+        "autoscaling:CreateLaunchConfiguration"
+      ],
+      "Resource": "*"
+    }
+
+  ]
+}
+```
+3. Attach the role that was created to jenkins EC2 instance:
+   go to [AWS Console - EC2 Service ](https://console.aws.amazon.com/ec2/v2/home) -> go to
+   instances->check the instance of jenkins-> Click on Actions drop-down button->click on
+   security menu-> choose 'Modify IAM role'-> then in the new screen choose the appropritate role
+   that was defined in previous steps and finally click on save, see the following screenshots:
+![sample](./pictures/awsrolejenkins1.png)
+![sample](./pictures/awsrolejenkins2.png)
+
+4. That's it, now from jenkins master, you need only to configure the region on aws inside pipeline without
+   passing the access key id + secret, before any aws cli command is invoked.
+   In other words , in this case the stage of Authentication to AWS(in beginning of the pipeline)is reduced to:
+```java
+ stage('Authentication To AWS'){
+        sh(script:"aws configure set  default.region ${region}",returnStdout:true)
+        }
+```
+   
+
+### Configure Authentication to AWS from Jenkins using AWS IAM Role:
 
 Authentication through main Access key ID and Secret of an account( which have admin privileges)  can be replaced with 
 another Mechanism in which the authentication is made with an unprivileged user(from operation and actions that can be made on AWS cli perspective) ,
