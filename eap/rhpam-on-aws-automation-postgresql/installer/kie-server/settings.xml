@@ -16,6 +16,10 @@
                 <repository>
                     <id>rhpam</id>
                     <url>${MAVEN_REPO_URL}</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                        <updatePolicy>always</updatePolicy>
+                    </snapshots>
                 </repository>
             </repositories>
         </profile>
