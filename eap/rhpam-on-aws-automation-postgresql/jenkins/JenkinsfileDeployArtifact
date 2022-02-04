@@ -1,7 +1,7 @@
 //##pipeline for dev environment
 
 @Library('shared-jenkins-library') _
-node('awsjdk11') {
+node {
 //        def awsRegion = "us-east-1"
 //        def asgName = "ks-eip-asg"
         def launchConfigurationBaseName = "ls-ks-19-Jan-2"

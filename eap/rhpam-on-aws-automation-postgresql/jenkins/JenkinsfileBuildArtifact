@@ -1,4 +1,4 @@
-node('mvnjdk11') {
+node {
           stage('checkout repo from Git')
           {
              checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/zvigrinberg/first.git']]])
