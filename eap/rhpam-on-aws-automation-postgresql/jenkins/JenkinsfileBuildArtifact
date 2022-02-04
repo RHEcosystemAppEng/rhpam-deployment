@@ -1,7 +1,12 @@
 node {
           stage('checkout repo from Git')
           {
-             checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/zvigrinberg/first.git']]])
+
+              def branchFiltering = "${params.BRANCH_FILTERING}"
+
+              def gitRepository = "${params.GIT_REPOSITORY}"
+              stage('checkout repo from Git')
+             checkout([$class: 'GitSCM', branches: [[name: branchFiltering]], extensions: [], userRemoteConfigs: [[url: gitRepository]]])
     
           }
         

@@ -4,7 +4,7 @@
 node {
 //        def awsRegion = "us-east-1"
 //        def asgName = "ks-eip-asg"
-        def launchConfigurationBaseName = "ls-ks-19-Jan-2"
+        def launchConfigurationBaseName = "redhat-pam-KIE-KieLaunchConfiguration-mcBJo5KZpwal"
         def kieServerAddressPlusPort
         def bcAddressPlusPort
         def imageId
@@ -25,18 +25,9 @@ node {
         echo "Start of pipeline!! - going to deploy artifact ${groupId}-${artifact}-${version} on all managed KIE servers instances through Business central controller"
         stage('Authentication To AWS') {
 
-//                withCredentials([usernamePassword(credentialsId: 'AWS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
-//                     authenticateAWS (USER, PASSWORD, awsRegion)
-            configFileProvider(
-                    [configFile(fileId: 'aws-credentials-file', variable: 'AWS_FILE')]) {
-                echo "file location : ${AWS_FILE}"
-                def result = sh(script : "cat ${AWS_FILE}" ,returnStdout: true).trim()
-//                echo "content are : ${result}"
-                  def result2 = sh(script : "aws configure set region ${awsRegion} ; cp ${AWS_FILE} ~/.aws/credentials" ,returnStdout: true).trim()
-//                echo "result2 = ${result2}"
-            }
+                sh(script:"aws configure set  default.region ${region}",returnStdout:true)
 
-                 }
+             }
                  
 
         
