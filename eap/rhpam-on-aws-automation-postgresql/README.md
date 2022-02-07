@@ -86,6 +86,11 @@ from the Kie Server's Load Balancer (both HTTP and HTTPS protocols)
 #### Configure the Maven repository
 The Maven repository must be configured with one repository to store SNAPSHOT and RELEASE artifacts.
 The repository location is used in both Business Central and Kie Server deployments.
+
+Detailed instructions for `Sonatype Nexus Repository Manager`:
+* Login with a user with `nx-admin` role
+* Create a repository called `rhpam` of type `maven2/hosted` with policy `Mixed`
+
 ##### Configure distributionManagement in RHPAM projects
 In order to deploy a RHPAM project on the configured Maven repository, the project `pom.xml` must
 include the following declaration:
