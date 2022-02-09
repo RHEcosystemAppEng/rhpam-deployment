@@ -1,0 +1,24 @@
+echo "start pre-push hook script, on time:" >> /tmp/pre-push-log.out
+date >> /tmp/pre-push-log.out
+read local_ref local_sha remote_ref remote_sha
+echo "is going to push commit id:" $local_sha  >> /tmp/pre-push-log.out
+echo "is going to push remote commit id:" $remote_sha  >> /tmp/pre-push-log.out
+echo "is going to push local_ref:" $local_ref  >> /tmp/pre-push-log.out
+echo "is going to push remote_ref:" $remote_ref  >> /tmp/pre-push-log.out
+SQUASH_INDICATION=$(git show "$local_sha" | grep -i CICD)
+# optionally - to trigger the jenkins pipeline to build project in case the commit contains more than file or if commit message contains CICD token
+# NUM_OF_FILES=$(git show "$local_sha" --name-only | grep -v -E '(Author:)|(Date:)|(commit )'  | grep -E [a-zA-Z0-9./{}] -c)
+# if [[ -n "${SQUASH_INDICATION}" ]] ||  [[ $((NUM_OF_FILES)) > 1 ]]; then
+# Only if commit message contains CICD(not case sensitive) then invoke jenkins pipeline.
+if [[ -n "${SQUASH_INDICATION}" ]]; then
+
+    echo "waiting 2 seconds before invoking jenkins pipeline..." >> /tmp/pre-push-log.out
+    bash -c "sleep 2 \
+     ; curl -X GET --user yourusername:***** https://redhat-jenkins.dev-temenos-cloud.net/job/build-artifact/buildWithParameters?token=deploy-artifact-temenos &> /tmp/invokejenkins" &
+
+    echo "jenkins invoked successfully" >> /tmp/pre-push-log.out
+    echo "ending pre-push hook script, on time:" >> /tmp/pre-push-log.out
+    date >> /tmp/pre-push-log.out
+fi
+exit 0
+
