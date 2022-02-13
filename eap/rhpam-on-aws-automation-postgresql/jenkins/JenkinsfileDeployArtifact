@@ -25,7 +25,7 @@ node {
         echo "Start of pipeline!! - going to deploy artifact ${groupId}-${artifact}-${version} on all managed KIE servers instances through Business central controller"
         stage('Authentication To AWS') {
 
-                sh(script:"aws configure set  default.region ${region}",returnStdout:true)
+                sh(script:"aws configure set  default.region ${awsRegion}",returnStdout:true)
 
              }
                  
