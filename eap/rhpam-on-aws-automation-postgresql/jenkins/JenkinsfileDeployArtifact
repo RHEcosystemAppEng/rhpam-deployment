@@ -1,6 +1,6 @@
 //##pipeline for dev environment
 
-@Library('shared-jenkins-library') _
+@Library('shared-jenkins-library@jenkinsaws') _
 node {
 //        def awsRegion = "us-east-1"
 //        def asgName = "ks-eip-asg"
