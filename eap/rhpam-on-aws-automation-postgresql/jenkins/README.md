@@ -1064,7 +1064,7 @@ There are two jobs in the pipeline:
       is performed- can be changed in pipeline to whatever value that is desired and defined in ASG.
       In other words, the ASG defines a tag with key= 'app' and value = 'RHPAM-KS', and its tag new instance = yes.
         
-
+    
    
    
 [The pipeline's code of this job in dev environment -  can be viewed here](./JenkinsfileDeployArtifact)
@@ -1227,8 +1227,11 @@ _**Note:The pipeline code for production environment is in progrss**_
 
   2. Url and Script-Path tags in the above xml, are for defining the **location of the pipeline code for the job to be executed** 
      , So it needs to point to an existing repo and pipeline jenkinsfile.
+  
+  3. static methods approval - in case the pipeline is failing because of a static function or script that is not approved to run, please go in jenkins to Manage      Jenkins-->Security-->In-Process Script Approval--> inside there, click on approve next to the stathic method that is requested to be executed from script.
+     after approval, can try again to run the job.
+      ![approve static method invocation](./pictures/scriptapproval.png)
     
-     
    
 ### Shared Library Resources and files:
 
