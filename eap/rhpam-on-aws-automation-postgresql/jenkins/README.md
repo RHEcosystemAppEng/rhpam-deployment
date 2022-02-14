@@ -31,7 +31,7 @@
 * A Running Openshift Cluster
 
 ## Procedure:
-   **_Note: This part is only relevant for creating a jenkins automation server master on Openshift, if not relevant can skip it anf
+   **_Note: This part is only relevant for creating a jenkins automation server master on Openshift, if not relevant can skip it and
    [Go to Jenkins configuration](#jenkins-configuration)_**
 ### Creating a customized image with jenkins and aws cli utility:
 
@@ -104,6 +104,12 @@ zgrinber@zgrinber tmp]$ oc get route | awk '!/^(NAME)/' | awk '{print $2}'
 jenkins-test-zgrinber-dev.apps.sandbox.x8i5.p1.openshiftapps.com
 ```
 ## Jenkins Configuration
+
+### Jenkins Server vm Installations(if Running pipelines on master):
+1. latest version of aws cli should be installed.
+2. Apache maven version 3.6.3.
+3. JAVA 11 JDK should be installed as only java installation on machine, if not the only java, then need to specify the location of JDK 11 as
+   an environment variable JAVA_HOME so maven will be able to take the java compiler from there.
 
 ### Global Configuration
 FIrst, Go to global configuration Inside Jenkins Main screen(Dashboard)-> Go to *Manage Jenkins* on the left panel-> Click on *Configure System*
