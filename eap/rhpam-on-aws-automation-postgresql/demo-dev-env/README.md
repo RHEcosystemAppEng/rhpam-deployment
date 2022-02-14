@@ -3,15 +3,26 @@ Showing a real use case development flow and how this triggers the development p
 on the RHPAM Kie Server(s).
 
 * Reference git flow
+  * Master branch has production code
+  * Feature branch to develop features and merge into master
+  * `CICD` comment  to trigger the Dev CI/CD pipeline
+  * Other pipelines can follow in cascade
 ![](./gitflow.png)
 
 * Authoring environment
+  * “A developer can push artifacts from business central to a kie server”
+  * EFS to provide data recovery
+  * Git hooks in place to sync a remote Git repository
 ![](./authoring.png)
 
 * Development environment
+  * When the user saves a workflow, then the artifacts are stored in Maven
+  * Any artifacts are loaded to the target Kie servers from the Maven Repo
+  * It can share the RHPAM servers with Authoring environment (mutually exclusive access to the servers)
 ![](./dev.png)
 
 * Production environment
+  * Running unmanaged, immutable servers
 ![](./prod.png)
 
 
