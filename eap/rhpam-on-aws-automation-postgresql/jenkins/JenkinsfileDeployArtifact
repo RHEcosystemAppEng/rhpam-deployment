@@ -20,6 +20,7 @@ node {
         def version = "${params.ARTIFACT_VERSION}"
         def awsRegion = "${params.AWS_REGION}"
         def asgName = "${params.ASG_NAME}"
+        def bcLoadBalancer = "${params.BC_LOAD_BALANCER}"
         def containerId = artifact + "_" + version
         String lastVersion = ""
         echo "Start of pipeline!! - going to deploy artifact ${groupId}-${artifact}-${version} on all managed KIE servers instances through Business central controller"
@@ -90,7 +91,7 @@ node {
                         bcAddressPlusPort = stripStartAndEnd(bcAddressPlusPort) + ":8080"
                         withCredentials([usernamePassword(credentialsId: 'BC_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
 //                            def call(String server,String userName,String password)
-                            kieServersInstancesController = getAllKieServersInJson(bcAddressPlusPort, USER, PASSWORD)
+                            kieServersInstancesController = getAllKieServersInJson(bcLoadBalancer, USER, PASSWORD)
                             kieServersInstancesControllerJSon = readJSON text : kieServersInstancesController
 
                         }
@@ -102,7 +103,7 @@ node {
 //                def call(String server,String userName,String password, String groupId , String artifactId, String version,String kieServerId )
                 def kieServerId = kieServersInstancesControllerJSon["server-template"][0]["server-id"]
 //                def call(String server,String userName,String password, String groupId , String artifactId, String version,String kieServerId )
-                lastVersion = getArtifactLatestVersionFromKieServerController(bcAddressPlusPort,USER,PASSWORD,groupId,artifact,version,kieServerId)
+                lastVersion = getArtifactLatestVersionFromKieServerController(bcLoadBalancer,USER,PASSWORD,groupId,artifact,version,kieServerId)
                 lastVersion = lastVersion.toString();
                 echo "last version is ${lastVersion}"
             }
@@ -117,13 +118,13 @@ node {
                     //if version of artifact changed(usually incremented) - then need to deploy the new artifact.
                       if(!lastVersion.trim().equalsIgnoreCase(version)) {
 //                      def call(String server,String userName,String password,String containerId, String groupId , String artifactId, String version,String kieServerId )
-                          deployToKieServerArtifactController(bcAddressPlusPort, USER, PASSWORD, containerId, groupId, artifact, version, kieServerId)
+                          deployToKieServerArtifactController(bcLoadBalancer, USER, PASSWORD, containerId, groupId, artifact, version, kieServerId)
                       }
 //                     version of artifact didn't changed, but Artifact content changed then need to replace container with the same version
                     else
                       {
 //                      def call(String server,String userName,String password,String containerId, String groupId , String artifactId, String version,String kieServerId )
-                          deployToKieServerArtifactControllerReplace(bcAddressPlusPort, USER, PASSWORD, containerId, groupId, artifact, version, kieServerId)
+                          deployToKieServerArtifactControllerReplace(bcLoadBalancer, USER, PASSWORD, containerId, groupId, artifact, version, kieServerId)
                       }
 
                     }
@@ -143,7 +144,7 @@ node {
                          //undeployArtifactFromKieServer - def call(String server,String userName,String password,String containerId)
                          def oldContainerId = artifact + "_" + lastVersion
 //                        def call(String server,String userName,String password,String containerId,String kieServerId )
-                        undeployArtifactFromKieServerController(bcAddressPlusPort, USER, PASSWORD, oldContainerId,kieServerId)
+                        undeployArtifactFromKieServerController(bcLoadBalancer, USER, PASSWORD, oldContainerId,kieServerId)
 
                         }
 
