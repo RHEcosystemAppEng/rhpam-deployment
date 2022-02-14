@@ -112,8 +112,8 @@ FIrst, Go to global configuration Inside Jenkins Main screen(Dashboard)-> Go to 
    search for `Global properties` header and check a checkbox named "Environment variables"
    , Click the 'add' Button and then fill in the following values in the new fields:
 ```properties
-Name=HOME 
-Value= /bitnami/jenkins/home
+Name=PATH 
+Value= /opt/maven/bin:/sbin:/bin:/usr/sbin:/usr/bin
 ```
 - **_Define a shared library for usage in pipelines_**: 
   
@@ -123,7 +123,7 @@ Value= /bitnami/jenkins/home
 #### Text Values:
 ```prototext 
 Name=shared-jenkins-library,
-Default Version= main,
+Default Version= jenkinsaws,
 Retrieval method= Modern SCM,
 Source Code Management=https://github.com/RHEcosystemAppEng/rhpam-deployment.git 
 
@@ -171,11 +171,7 @@ jenkins and the plugin masking the secrets from being displayed on logs, so they
 and there is no fear that secrets will be leaked or compromised 
 #### The following credentials should be defined in Jenkins(their **_ids_** are listed):
 - maven-repo-secret - username and password for maven repository in a remote server
-- AWS_CREDENTIALS - AWS Access Key Id and Secret for AWS cli login, should be defined as user and password kind. 
-- KS_CREDENTIALS - Kie Server Controller Username and password for interacting with Kie Server using REST API in unmanaged mode.
 - BC_CREDENTIALS - Business central controller's Username and password for deploying containers to managed kie servers
-- jenkins-sa-token(optional) - In case of using kubernetes pod templates as jenkins agent/slave, this is the token 
-  of the service account that jenkins is using to connect to k8s cluster, should be defined with kind of Secret text.
 
 
 #### How to define credentials in jenkins
@@ -405,6 +401,8 @@ Value=profileName
 
 
 ### Setup A Kubernetes pod template agent
+
+**_Note: This part relevant only if wants to run jenkins agent using pod tempalted on openshift/k8s cluster._**
 
 Jenkins jobs can run on master node(jenkins master), but it's not considered
 as best practice because of the following reasons:
@@ -1037,7 +1035,8 @@ So most of the configuration can be expressed in a declarative way in
 
 There are two jobs in the pipeline:
 
-1. Build Artifact - Which checkout a git repository contains a RHPAM project ,
+1. Build Artifact - Which gets a GIT_REPOSITORY and BRANCH_FILTERING as parameters, and checkout that git repository on that master 
+   which expected to contain a RHPAM project , and then
    parse the pom.xml of it, takes that groupId, Artifact, And version, and build
    the project using maven, a KJAR artifact is generated and deployed to a remote
    maven server, afterwards it invokes a deployment job(Deploy Artifact job) of that artifact with its
@@ -1093,6 +1092,22 @@ _**Note:The pipeline code for production environment is in progrss**_
         </hudson.triggers.SCMTrigger>
       </triggers>
     </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>GIT_REPOSITORY</name>
+          <description>Git repository of artifacts</description>
+          <defaultValue>git@10.0.0.46:/home/git/demo.git</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition> 
+        <hudson.model.StringParameterDefinition>
+          <name>BRANCH_FILTERING</name>
+          <description>Project-id in the pom.xml</description>
+           <defaultValue>master</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>  
+       </parameterDefinitions>
+     </hudson.model.ParametersDefinitionProperty>  
   </properties>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@2648.va9433432b33c">
     <scm class="hudson.plugins.git.GitSCM" plugin="git@4.10.1">
@@ -1161,6 +1176,12 @@ _**Note:The pipeline code for production environment is in progrss**_
           <defaultValue>asg-ks-19-Jan</defaultValue>
           <trim>false</trim>
         </hudson.model.StringParameterDefinition>
+         <hudson.model.StringParameterDefinition>
+          <name>BC_LOAD_BALANCER</name>
+          <description>address of load balancer of the Business central</description>
+          <defaultValue>bci.dev-temenos-cloud.net:443</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>         
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
