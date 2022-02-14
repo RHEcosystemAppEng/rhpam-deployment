@@ -114,7 +114,7 @@ node {
                 kieServersInstancesControllerJSon["server-template"].each{ json ->
                 def kieServerId = json["server-id"]
                 echo "Deploying to kieServerId: ${kieServerId} Using business central controller, Business-central Ip Address and port:${bcAddressPlusPort} "
-                withCredentials([usernamePassword(credentialsId: 'KS_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
+                withCredentials([usernamePassword(credentialsId: 'BC_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
                     //if version of artifact changed(usually incremented) - then need to deploy the new artifact.
                       if(!lastVersion.trim().equalsIgnoreCase(version)) {
 //                      def call(String server,String userName,String password,String containerId, String groupId , String artifactId, String version,String kieServerId )
