@@ -20,7 +20,7 @@ def call(String server,String userName,String password,String containerId, Strin
 //    def basicAuthBase64 = sh(script: "echo -n $userPass | base64",returnStdout: true ).trim()
 //    def authHeader = "Authorization: Basic " + basicAuthBase64
 //    echo "result is ${basicAuthBase64}"
-    def result = sh(script: "curl --user ${userPass} --location --request POST ${url} \
+    def result = sh(script: "curl -v --user ${userPass} --location --request POST ${url} \
             --header 'Accept: application/json' \
             --header 'Content-Type: application/json' \
              --data '{\n" +

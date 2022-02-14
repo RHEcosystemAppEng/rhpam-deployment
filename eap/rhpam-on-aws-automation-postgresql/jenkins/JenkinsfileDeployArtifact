@@ -139,7 +139,7 @@ node {
 
                     kieServersInstancesControllerJSon["server-template"].each{ json ->
                     def kieServerId = json["server-id"]
-                    echo "Undeploying from kieServerId: ${kieServerId} , Business central IP Address ${bcAddressPlusPort} "
+                    echo "Undeploying from kieServerId: ${kieServerId} , Business central  Address ${bcAddressPlusPort} "
                     withCredentials([usernamePassword(credentialsId: 'BC_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
                          //undeployArtifactFromKieServer - def call(String server,String userName,String password,String containerId)
                          def oldContainerId = artifact + "_" + lastVersion
