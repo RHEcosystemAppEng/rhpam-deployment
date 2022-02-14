@@ -15,7 +15,7 @@ def call(String server,String userName,String password,String containerId, Strin
 {
     echo "started deployToKieServerArtifactControllerReplace/8"
     def contextUrl = "/business-central/rest/controller/management/servers/${kieServerId}/containers/"
-    def url = "https://" + server + contextUrl + containerId + "?resetBeforeUpdate=false"
+    def url = "http://" + server + contextUrl + containerId + "?resetBeforeUpdate=false"
     def userPass = userName + ":" + password;
 //    def basicAuthBase64 = sh(script: "echo -n $userPass | base64",returnStdout: true ).trim()
 //    def authHeader = "Authorization: Basic " + basicAuthBase64
