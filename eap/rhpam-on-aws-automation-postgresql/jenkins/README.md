@@ -31,7 +31,8 @@
 * A Running Openshift Cluster
 
 ## Procedure:
-
+   **_Note: This part is only relevant for creating a jenkins automation server master on Openshift, if not relevant can skip it anf
+   [Go to Jenkins configuration](#jenkins-configuration)_**
 ### Creating a customized image with jenkins and aws cli utility:
 
 **Create a new image from jenkins bitnami newest image version**
@@ -405,6 +406,8 @@ Value=profileName
 
 
 ### Setup A Kubernetes pod template agent
+
+**_Note: This part relevant only if wants to run jenkins agent using pod tempalted on openshift/k8s cluster._**
 
 Jenkins jobs can run on master node(jenkins master), but it's not considered
 as best practice because of the following reasons:
@@ -1204,8 +1207,11 @@ _**Note:The pipeline code for production environment is in progrss**_
 
   2. Url and Script-Path tags in the above xml, are for defining the **location of the pipeline code for the job to be executed** 
      , So it needs to point to an existing repo and pipeline jenkinsfile.
+  
+  3. static methods approval - in case the pipeline is failing because of a static function or script that is not approved to run, please go in jenkins to Manage      Jenkins-->Security-->In-Process Script Approval--> inside there, click on approve next to the stathic method that is requested to be executed from script.
+     after approval, can try again to run the job.
+      ![approve static method invocation](./pictures/scriptapproval.png)
     
-     
    
 ### Shared Library Resources and files:
 
