@@ -15,7 +15,7 @@ def call(String server,String userName,String password,String containerId,String
 {
     echo "started undeployArtifactFromKieServerController/5"
     def contextUrl = "/business-central/rest/controller/management/servers/${kieServerId}/containers/"
-    def url = "http://" + server + contextUrl + containerId
+    def url = "https://" + server + contextUrl + containerId
     def userPass = userName + ":" + password;
     def result = sh(script: "curl --user ${userPass} --location --request DELETE ${url} \
             --header 'Accept: application/json' \

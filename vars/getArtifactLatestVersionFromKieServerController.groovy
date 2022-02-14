@@ -14,7 +14,7 @@ def call(String server,String userName,String password, String groupId , String 
 
     echo "started getArtifactLatestVersionFromKieServerController/7"
     def contextUrl = "/business-central/rest/controller/management/servers/${kieServerId}/containers"
-    String url = "http://$server$contextUrl"
+    String url = "https://$server$contextUrl"
 //    echo "url= ${url}"
 //    echo "user= ${userName}"
 
