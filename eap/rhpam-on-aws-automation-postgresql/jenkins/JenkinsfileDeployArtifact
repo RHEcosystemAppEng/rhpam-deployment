@@ -65,7 +65,7 @@ node {
              imageId = instanceJson.Reservations["Instances"][0].ImageId
                 instanceType = instanceJson.Reservations["Instances"][0].InstanceType
                 securityGroup = instanceJson.Reservations["Instances"][0].SecurityGroups[0].GroupId
-                kieServerAddressPlusPort = instanceJson.Reservations["Instances"][0].PublicIpAddress.toString()
+                kieServerAddressPlusPort = instanceJson.Reservations["Instances"][0].PrivateIpAddress.toString()
                 kieServerAddressPlusPort = stripStartAndEnd(kieServerAddressPlusPort) + ":8080"
                 keyName = instanceJson.Reservations["Instances"][0].KeyName
 
@@ -75,7 +75,7 @@ node {
 
         stage('Retrieve all Managed Kie-servers')
                 {
-                    //get public ip address of Business central
+                    //get private ip address of Business central
                   def bcServersInstancesJson =  readJSON text: bcServersInstances
                   def bcInstanceId
                     if(bcServersInstancesJson.Tags.isEmpty())
@@ -86,7 +86,7 @@ node {
                         bcInstanceId = bcServersInstancesJson.Tags[0].ResourceId
                         def bcInstanceJsonString = getInstanceDetailsById(bcInstanceId)
                         bcInstanceJson = readJSON text: bcInstanceJsonString
-                        bcAddressPlusPort = bcInstanceJson.Reservations["Instances"][0].PublicIpAddress.toString()
+                        bcAddressPlusPort = bcInstanceJson.Reservations["Instances"][0].PrivateIpAddress.toString()
                         bcAddressPlusPort = stripStartAndEnd(bcAddressPlusPort) + ":8080"
                         withCredentials([usernamePassword(credentialsId: 'BC_CREDENTIALS', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
 //                            def call(String server,String userName,String password)
