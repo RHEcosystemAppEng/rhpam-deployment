@@ -26,7 +26,10 @@ def call(String server,String userName,String password,String containerId, Strin
              --data '{\n" +
             "  \"container-id\" : \"${artifactId}_${version}\",\n" +
             "  \"container-name\" : \"${artifactId}\",\n" +
-            "  \"server-template-key\" : \"${kieServerId}\",\n" +
+            "  \"server-template-key\": {\n" +
+            "    \"server-id\": \"${kieServerId}\",\n" +
+            "    \"server-name\": \"${kieServerId}\"\n" +
+            "  }," +
             "  \"release-id\" : {\n" +
             "    \"group-id\" : \"${groupId}\",\n" +
             "    \"artifact-id\" : \"${artifactId}\",\n" +
