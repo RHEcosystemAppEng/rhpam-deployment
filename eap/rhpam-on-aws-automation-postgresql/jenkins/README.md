@@ -1231,7 +1231,7 @@ _**Note:The pipeline code for production environment is in progrss**_
 
      ![define a web-hook](./pictures/webhookchangetriggering.png)
 
-  2. Url and Script-Path tags in the above xml, are for defining the **location of the pipeline code for the job to be executed** 
+  2. Url and scriptPath tags in the above xml, are for defining the **location of the pipeline code for the job to be executed** 
      , So it needs to point to an existing repo and pipeline jenkinsfile.
   
   3. static methods approval - in case the pipeline is failing because of a static function or script that is not approved to run, please go in jenkins to Manage      Jenkins-->Security-->In-Process Script Approval--> inside there, click on approve next to the stathic method that is requested to be executed from script.
