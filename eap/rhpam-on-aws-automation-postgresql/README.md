@@ -119,6 +119,7 @@ in the expected sub-folders:
     * [jboss-eap-7.3.0-installer.jar][jboss-eap-installer]
       * [jboss-eap-7.3.6-patch.zip][jboss-eap-patch]
       * [keycloak-oidc-wildfly-adapter-12.0.4.zip][keycloak-adapter]
+        * It is in the "Client Adapters" section of the download page, in the row for "JBoss EAP" version 7 (zip format)
   * `rhpam` folder
     * [rhpam-installer-7.9.1.jar][rhpam-installer]
   * `database` folder (create it if missing)
