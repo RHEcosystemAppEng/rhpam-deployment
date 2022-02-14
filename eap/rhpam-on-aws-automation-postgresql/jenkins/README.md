@@ -31,7 +31,8 @@
 * A Running Openshift Cluster
 
 ## Procedure:
-
+   **_Note: This part is only relevant for creating a jenkins automation server master on Openshift, if not relevant can skip it anf
+   [Go to Jenkins configuration](#jenkins-configuration)_**
 ### Creating a customized image with jenkins and aws cli utility:
 
 **Create a new image from jenkins bitnami newest image version**
@@ -106,7 +107,7 @@ jenkins-test-zgrinber-dev.apps.sandbox.x8i5.p1.openshiftapps.com
 
 ### Global Configuration
 FIrst, Go to global configuration Inside Jenkins Main screen(Dashboard)-> Go to *Manage Jenkins* on the left panel-> Click on *Configure System*
-- **_Define a HOME environment variable for jenkins:_**
+- **_Define a PATH environment variable for jenkins:_**
 
 
    search for `Global properties` header and check a checkbox named "Environment variables"
@@ -1035,7 +1036,7 @@ So most of the configuration can be expressed in a declarative way in
 
 There are two jobs in the pipeline:
 
-1. Build Artifact - Which gets a GIT_REPOSITORY and BRANCH_FILTERING as parameters, and checkout that git repository on that master 
+1. Build Artifact - Which gets a GIT_REPOSITORY and BRANCH_FILTERING as parameters, and checkout that git repository with that branch 
    which expected to contain a RHPAM project , and then
    parse the pom.xml of it, takes that groupId, Artifact, And version, and build
    the project using maven, a KJAR artifact is generated and deployed to a remote
@@ -1047,11 +1048,12 @@ There are two jobs in the pipeline:
 
    [The pipeline's code of this job - can be viewed here](./JenkinsfileBuildArtifact)
 
-2. Deploy Artifact - which get as parameters the groupId, artifact and version(abbreviated - 'GAV'),
-   authenticate itself to aws using aws cli to the region parameter, and deploy
+2. Deploy Artifact - which get as parameters the groupId, artifact and version(abbreviated - 'GAV'), as well as AWS region,
+   and ASG_NAME + BC_LOAD_BALANCER(the last two better be defaulted with ASG of kie servers and with load balancer of BC , respectively),
+   then authenticate itself to aws using aws cli to the region parameter, and deploy
    the maven artifact to all kie servers registered and managed by BC, and then update the auto-scaling group
    to be with a new launch configuration that will have a new user-data with details of new deployed artifact.
-   the pipeline code(JenkinsFile) files for dev & prod are different, as the requirements are different
+   the pipeline code(JenkinsFile) files for dev & prod are different, as the requirement and architectures for both environment are different
      
    Assumptions that the pipeline makes:
    1. the Auto Scaling Group(ASG) of the Kie Servers is a parameter to the pipeline code, with some default name.
