@@ -45,7 +45,7 @@ git init --bare
 ```shell
 sudo su
 cd /root/efs-mount-point/.niogit/Demo/demo.git
-git remote add origin git@10.0.0.46:/home/git/demo.git
+git remote add origin git@GIT_SERVER_IP:/home/git/demo.git
 git remote -v
 ```
 
@@ -71,7 +71,7 @@ This is needed to sync the local and the remote git
 * Clone the project to verify the changes are synced on the remote git
 ```shell
 cd /tmp
-git clone git@10.0.0.46:/home/git/demo.git
+git clone git@GIT_SERVER_IP:/home/git/demo.git
 cd demo
 git remote -v
 ```
@@ -92,7 +92,7 @@ SQUASH_INDICATION=$(git show "$local_sha" | grep -i CICD)
 if [[ -n "${SQUASH_INDICATION}" ]]; then
     echo "waiting 2 seconds before invoking jenkins pipeline..." >> /tmp/pre-push-log.out
     bash -c "sleep 2 \
-     ; curl -X GET --user redhat-admin:redhat@1234 https://redhat-jenkins.dev-temenos-cloud.net/job/build-artifact/buildWithParameters?token=deploy-artifact-temenos >> /tmp/pre-push-log.out" &
+     ; curl -X GET --user USERNAME:PASSWORD https://JENKINS_SERVER_URL/job/build-artifact/buildWithParameters?token=deploy-artifact-temenos >> /tmp/pre-push-log.out" &
 
     echo "jenkins invoked successfully" >> /tmp/pre-push-log.out
     echo "ending pre-push hook script, on time:" >> /tmp/pre-push-log.out
