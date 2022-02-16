@@ -74,18 +74,26 @@ RHPAM servers need the following resources in a new Keycloak realm:
 - `rest-all`, `admin` and `kie-server` roles
 - An RHPAM admin user with roles `rest-all`, `admin` and `kie-server` and the `realm-admin`
 role for the `realm-management` client
-- A user to connect Kie Server to Business Central, with `rest-all` role (must match with `rhpamController_username` and
+- (*) A user to connect Kie Server to Business Central, with `rest-all` role (must match with `rhpamController_username` and
   `rhpamController_password` in Kie Server [runtime.properties](./runtime/kie-server/runtime.properties)) 
-- A user to connect Business Central to Kie Server , with `kie-server` role (must match with `KIESERVER_USERNAME` and
+- (*) A user to connect Business Central to Kie Server , with `kie-server` role (must match with `KIESERVER_USERNAME` and
 `KIESERVER_PASSWORD` in Business Central [runtime.properties](./runtime/business-central/runtime.properties))
 - A `business-central` client with `confidential` access-type and managing redirect URIs coming 
 from the Business Central's Load Balancer (both HTTP and HTTPS protocols)
 - A `kie-server` client with `confidential` access-type and managing redirect URIs coming 
 from the Kie Server's Load Balancer (both HTTP and HTTPS protocols)
 
+(*)**Note**: it is important that, when we define the password for these users, we set to `OFF` the value of the
+`Temporary` option 
+
 #### Configure the Maven repository
 The Maven repository must be configured with one repository to store SNAPSHOT and RELEASE artifacts.
 The repository location is used in both Business Central and Kie Server deployments.
+
+Detailed instructions for `Sonatype Nexus Repository Manager`:
+* Login with a user with `nx-admin` role
+* Create a repository called `rhpam` of type `maven2/hosted` with policy `Mixed`
+
 ##### Configure distributionManagement in RHPAM projects
 In order to deploy a RHPAM project on the configured Maven repository, the project `pom.xml` must
 include the following declaration:
@@ -114,6 +122,7 @@ in the expected sub-folders:
     * [jboss-eap-7.3.0-installer.jar][jboss-eap-installer]
       * [jboss-eap-7.3.6-patch.zip][jboss-eap-patch]
       * [keycloak-oidc-wildfly-adapter-12.0.4.zip][keycloak-adapter]
+        * It is in the "Client Adapters" section of the download page, in the row for "JBoss EAP" version 7 (zip format)
   * `rhpam` folder
     * [rhpam-installer-7.9.1.jar][rhpam-installer]
   * `database` folder (create it if missing)
