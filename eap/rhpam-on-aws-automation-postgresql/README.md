@@ -74,14 +74,17 @@ RHPAM servers need the following resources in a new Keycloak realm:
 - `rest-all`, `admin` and `kie-server` roles
 - An RHPAM admin user with roles `rest-all`, `admin` and `kie-server` and the `realm-admin`
 role for the `realm-management` client
-- A user to connect Kie Server to Business Central, with `rest-all` role (must match with `rhpamController_username` and
+- (*) A user to connect Kie Server to Business Central, with `rest-all` role (must match with `rhpamController_username` and
   `rhpamController_password` in Kie Server [runtime.properties](./runtime/kie-server/runtime.properties)) 
-- A user to connect Business Central to Kie Server , with `kie-server` role (must match with `KIESERVER_USERNAME` and
+- (*) A user to connect Business Central to Kie Server , with `kie-server` role (must match with `KIESERVER_USERNAME` and
 `KIESERVER_PASSWORD` in Business Central [runtime.properties](./runtime/business-central/runtime.properties))
 - A `business-central` client with `confidential` access-type and managing redirect URIs coming 
 from the Business Central's Load Balancer (both HTTP and HTTPS protocols)
 - A `kie-server` client with `confidential` access-type and managing redirect URIs coming 
 from the Kie Server's Load Balancer (both HTTP and HTTPS protocols)
+
+(*)**Note**: it is important that, when we define the password for these users, we set to `OFF` the value of the
+`Temporary` option 
 
 #### Configure the Maven repository
 The Maven repository must be configured with one repository to store SNAPSHOT and RELEASE artifacts.
