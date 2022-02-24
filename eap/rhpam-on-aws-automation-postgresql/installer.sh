@@ -66,6 +66,7 @@ function copyResources(){
   if [ $(isKieServer) ]; then
     copyFolder "./installer/kie-server"
     copyFolder "./runtime/kie-server"
+    copyFolder "./runtime/kie-server/${KIE_SERVER_TYPE}"
   else
     copyFolder "./installer/business-central"
     copyFolder "./runtime/business-central"
