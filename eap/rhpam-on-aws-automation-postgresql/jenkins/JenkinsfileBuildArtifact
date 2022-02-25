@@ -39,7 +39,8 @@ node {
             def artifact = sh(script : "cat pom.xml | grep -i -m 1 artifactid | awk -F '>' '{print \$2}' | awk -F '<' '{print \$1}'",returnStdout: true).trim()
             def version = sh(script : "cat pom.xml | grep -i -m 1 \"<version>\" | awk -F '>' '{print \$2}' | awk -F '<' '{print \$1}'",returnStdout: true).trim()
             //invoke the deploy job of builded artifact on a sample region. if needed, this line can be replicated for the rest of the relevant regions in AWS.
-            build wait: false, job: 'deploy-maven-artifact', parameters: [string(name: 'GROUPID', value: groupId), string(name: 'ARTIFACTID', value: artifact), string(name: 'ARTIFACT_VERSION', value: version), string(name: 'AWS_REGION', value: "eu-central-1")]
+            def awsRegion = "${params.AWS_REGION}"
+            build wait: false, job: 'deploy-maven-artifact', parameters: [string(name: 'GROUPID', value: groupId), string(name: 'ARTIFACTID', value: artifact), string(name: 'ARTIFACT_VERSION', value: version), string(name: 'AWS_REGION', value: awsRegion)]
             echo 'job was triggered!'
         }
             

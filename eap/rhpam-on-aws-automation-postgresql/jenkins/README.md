@@ -1037,13 +1037,13 @@ So most of the configuration can be expressed in a declarative way in
 There are two jobs in the pipeline:
 
 1. Build Artifact - Which gets a GIT_REPOSITORY and BRANCH_FILTERING as parameters, and checkout that git repository with that branch 
-   which expected to contain a RHPAM project , and then
-   parse the pom.xml of it, takes that groupId, Artifact, And version, and build
+   which expected to contain a RHPAM project, and then
+   parse the pom.xml of it, takes that groupId, artifact, and version, and build
    the project using maven, a KJAR artifact is generated and deployed to a remote
    maven server, afterwards it invokes a deployment job(Deploy Artifact job) of that artifact with its
    exact id(groupId,artifact,Version), and an AWS region to deploy the artifact to the
    KIE Servers at this region, optionally can include an invocation command of the deploy job
-   for each relevant AWS region.
+   for each relevant AWS region. The AWS region is defined by the AWS_REGION parameter (must have a valid default value)
    
 
    [The pipeline's code of this job - can be viewed here](./JenkinsfileBuildArtifact)
