@@ -5,6 +5,7 @@ node {
 //        def awsRegion = "us-east-1"
 //        def asgName = "ks-eip-asg"
         def launchConfigurationBaseName = "redhat-pam-KIE-KieLaunchConfiguration-mcBJo5KZpwal"
+        def launchConfigurationBaseName = "${params.LAUNCH_CONFIGURATION_NAME}"
         def kieServerAddressPlusPort
         def bcAddressPlusPort
         def imageId
