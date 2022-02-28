@@ -20,7 +20,8 @@ node {
             remote.user='ec2-user'
             remote.identityFile = identityFile
             remote.allowAnyHosts = true
-            sshCommand remote: remote, command: "ls -lrt /opt/rhpam-7.9.1"
+
+            sshCommand remote: remote, sudo: true, command: "ls -lrt /opt/rhpam-7.9.1"
         }
     }
     stage('Create new AMI for immutable server')
