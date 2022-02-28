@@ -1,0 +1,50 @@
+@Library('shared-jenkins-library@jenkinsaws') _
+node {
+    echo "Start of pipeline!!"
+    stage('Create template VM')
+    {
+    }
+    stage('Wait until Kie Server is ready')
+    {
+    }
+    stage('Deploy new artifacts')
+    {
+    }
+    stage('Configure the immutable server')
+    {
+        withCredentials([file(credentialsId: 'KEY_PAIR_PEM', variable: 'identityFile')]) {
+            echo "identityFile is ${identityFile}"
+            def remote = [:]
+            remote.name = 'ks'
+            remote.host = '3.84.31.178'
+            remote.user='ec2-user'
+            remote.identityFile = identityFile
+            remote.allowAnyHosts = true
+            sshCommand remote: remote, command: "ls -lrt /opt/rhpam-7.9.1"
+        }
+    }
+    stage('Create new AMI for immutable server')
+    {
+    }
+    stage('Terminate the template VM')
+    {
+    }
+    stage('Create Launch Configuration')
+    {
+    }
+    stage('Create Auto Scaling Group')
+    {
+    }
+    stage('Wait until all new servers are ready')
+    {
+    }
+    stage('Create new Target Group')
+    {
+    }
+    stage('Create Application Load Balancer')
+    {
+    }
+    stage('Update Application Load Balancer')
+    {
+    }
+}
