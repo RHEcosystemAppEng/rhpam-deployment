@@ -1058,7 +1058,7 @@ There are two jobs in the pipeline:
    Assumptions that the pipeline makes:
    1. the Auto Scaling Group(ASG) of the Kie Servers is a parameter to the pipeline code, with some default name.
    
-   2. launch Configuration base name of ASG is known to the pipeline code.
+   2. launch Configuration base name of ASG is taken from the LAUNCH_CONFIGURATION_NAME parameter (please provide a default value).
    
    3. Kie Servers instances all have tag called 'app' with value of 'RHPAM-KS' and it's derived from ASG when a scale out action 
       is performed- can be changed in pipeline to whatever value that is desired and defined in ASG.
