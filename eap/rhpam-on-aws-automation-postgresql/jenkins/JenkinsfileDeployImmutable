@@ -1,5 +1,5 @@
 @Library('shared-jenkins-library@jenkinsaws') _
-node('awsjdk11') {
+node() {
     echo "Start of immutable deployment pipeline!!"
 
     def templateVmName = "${params.TEMPLATE_VM_NAME_PREFIX}-${currentBuild.number}"
@@ -31,12 +31,7 @@ node('awsjdk11') {
     def loadBalancerArn = null
 
     stage('Authentication To AWS') {
-        configFileProvider(
-            [configFile(fileId: 'aws-credentials-file', variable: 'AWS_FILE')]) {
-        echo "file location : ${AWS_FILE}"
-        def result = sh(script : "cat ${AWS_FILE}" ,returnStdout: true).trim()
-        def result2 = sh(script : "aws configure set region ${awsRegion} ; cp ${AWS_FILE} ~/.aws/credentials" ,returnStdout: true).trim()
-        }
+        def result = sh(script : "aws configure set region ${awsRegion}" ,returnStdout: true).trim()
     }
     stage('Create template VM')
     {
