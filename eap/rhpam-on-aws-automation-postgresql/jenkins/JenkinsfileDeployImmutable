@@ -2,12 +2,14 @@
 node('awsjdk11') {
     echo "Start of immutable deployment pipeline!!"
 
-    def templateVmName = "${params.TEMPLATE_VM_NAME}-${currentBuild.number}"
+    def templateVmName = "${params.TEMPLATE_VM_NAME_PREFIX}-${currentBuild.number}"
     def awsRegion = "${params.AWS_REGION}"
     def keyPairName = "${params.KEY_PAIR_NAME}"
     def securityGroupId = "${params.SECURITY_GROUP_ID}"
-    def subnetId1 = "${params.SUBNET_ID1}"
-    def subnetId2 = "${params.SUBNET_ID2}"
+    def vmSubnetId1 = "${params.VM_SUBNET_ID1}"
+    def vmSubnetId2 = "${params.VM_SUBNET_ID2}"
+    def lbSubnetId1 = "${params.LB_SUBNET_ID1}"
+    def lbSubnetId2 = "${params.LB_SUBNET_ID2}"
     def vpcId = "${params.VPC_ID}"
     def loadBalancerName = "${params.LOAD_BALANCER_NAME.replaceAll('\\.','-')}"
     def launchConfigurationName = "${params.LAUNCH_CONFIGURATION_NAME_PREFIX}-b${currentBuild.number}"
@@ -48,7 +50,7 @@ node('awsjdk11') {
         echo "started createEc2Instance named ${templateVmName} with image ${amiId}"
 
         def unmanagedServer = sh(script: "aws ec2 run-instances --image-id ${amiId} --count 1 \
-                --instance-type t2.medium --key-name ${keyPairName} --security-group-ids ${securityGroupId} --subnet-id ${subnetId1} \
+                --instance-type t2.medium --key-name ${keyPairName} --security-group-ids ${securityGroupId} --subnet-id ${vmSubnetId1} \
                 --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=${templateVmName}},{Key=type,Value=template-server}]'",
                 returnStdout : true)
         unmanagedServerId = readJSON(text: unmanagedServer)["Instances"][0]["InstanceId"]
@@ -149,7 +151,7 @@ node('awsjdk11') {
                 --min-size ${minSize} \
                 --max-size ${maxSize} \
                 --desired-capacity ${desiredCapacity} \
-                --vpc-zone-identifier '${subnetId1},${subnetId2}' \
+                --vpc-zone-identifier '${vmSubnetId1},${vmSubnetId2}' \
                 --tags 'ResourceId=${autoScalingGroupName},ResourceType=auto-scaling-group,Key=app,Value=RHPAM-KS,PropagateAtLaunch=true' \
                 'ResourceId=${autoScalingGroupName},ResourceType=auto-scaling-group,Key=pipeline,Value=production,PropagateAtLaunch=true' \
                 'ResourceId=${autoScalingGroupName},ResourceType=auto-scaling-group,Key=deploymentContainer,Value=${containerId},PropagateAtLaunch=true' \
@@ -228,7 +230,7 @@ node('awsjdk11') {
                     --name ${loadBalancerName} \
                     --type application \
                     --scheme internet-facing \
-                    --subnets ${subnetId1} ${subnetId2} \
+                    --subnets ${lbSubnetId1} ${lbSubnetId2} \
                     --security-groups ${securityGroupId}",
                     returnStdout : true)
             loadBalancerArn = readJSON(text: loadBalancer).LoadBalancers[0].LoadBalancerArn
