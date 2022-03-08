@@ -1,0 +1,201 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1145.v7f2433caa07f">
+  <actions/>
+  <description>A pipeline to build and deploy an immutable RHPAM server image on the AWS cloud</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.plugins.jira.JiraProjectProperty plugin="jira@3.6"/>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>UNMANAGED_SERVER_AMI_NAME</name>
+          <description>Name of the AMI for the unmanaged RHPAM Kie Server v7.9.1</description>
+          <defaultValue>rhpam-server-7.9.1-unmanaged</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>TEMPLATE_VM_NAME_PREFIX</name>
+          <description>Prefix name of the EC2 instance for the template server.
+The actual name includes the Jenkind build number</description>
+          <defaultValue>rhpam-server-template-7.9.1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>IMMUTABLE_SERVER_AMI_PREFIX</name>
+          <description>Prefix name of the immutable server AMI.
+The actual name includes the artifact name and version, and the Jenkind build number</description>
+          <defaultValue>ami-immutable-server-7.9.1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>LOAD_BALANCER_NAME</name>
+          <description>The name of Application Load Balancer to be created or updated by the deployment
+Note: can have a maximum of 32 characters, must contain only alphanumeric characters or hyphens, must not begin or end with a hyphen, and must not begin with “internal-“</description>
+          <defaultValue>lb-immutable-server-7.9.1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>LAUNCH_CONFIGURATION_NAME_PREFIX</name>
+          <description>Prefix name of the launch configuration for the immutable servers.
+The actual name includes the Jenkind build number</description>
+          <defaultValue>lc-immutable-server-7.9.1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>ASG_NAME_PREFIX</name>
+          <description>Prefix name of the auto scaling group for the immutable servers.
+The actual name includes the Jenkind build number</description>
+          <defaultValue>asg-immutable-server-7.9.1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>TARGET_GROUP_NAME_PREFIX</name>
+          <description>Prefix name of the auto scaling group for the immutable servers.
+Note: can have a maximum of 32 characters, must contain only alphanumeric characters or hyphens, must not begin or end with a hyphen, and must not begin with “internal-“.</description>
+          <defaultValue>tg-immutable-server-7.9.1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>AWS_REGION</name>
+          <description>The AWS region to deploy the immutable environment</description>
+          <defaultValue>AWS_REGION</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+       <hudson.model.StringParameterDefinition>
+          <name>SECURITY_GROUP_ID</name>
+          <description>ID of AWS security group to create:
+The template EC2 instance
+The launch configuration
+The application load balancer</description>
+          <defaultValue>SECURITY_GROUP_ID</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>KEY_PAIR_NAME</name>
+          <description>Name of the AWS Key pair to create:
+The template EC2 instance
+The launch configuration</description>
+          <defaultValue>KEY_PAIR_NAME</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>VPC_ID</name>
+          <description>The ID of the VPC where the deployment runs</description>
+          <defaultValue>VPC_ID</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>VM_SUBNET_ID1</name>
+          <description>ID of the AWS subnet to create:
+The template EC2 instance
+The auto scaling group</description>
+          <defaultValue>VM_SUBNET_ID1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>VM_SUBNET_ID2</name>
+          <description>ID of the secondary AWS subnet to create:
+The auto scaling group</description>
+          <defaultValue>VM_SUBNET_ID2</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>LB_SUBNET_ID1</name>
+          <description>ID of the AWS subnet to create the application load balancer</description>
+          <defaultValue>LB_SUBNET_ID1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+            <name>LB_SUBNET_ID2</name>
+            <description>ID of the secondary AWS subnet to create the application load balancer</description>
+            <defaultValue>LB_SUBNET_ID2</defaultValue>
+            <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>SSH_USER</name>
+          <description>The user to SSH to the EC2 VM to update the RHPAM configuration</description>
+          <defaultValue>ec2-user</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>RHPAM_PATH</name>
+          <description>The installation path of RHPAM on the EC2 VM</description>
+          <defaultValue>/opt/rhpam-7.9.1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>USE_PUBLIC_IP</name>
+          <description>If true, the public IP of the EC2 instance are used to connect the REST endpoints of the Kie Server, otherwise the private IP are used.
+Note: in order to use the private IPs, the Jenkins pipeline must run inside the same VPC as the EC2 VM</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>DEPLOYMENT_GROUP_ID</name>
+          <description>The Maven groupId of the deployed artifact</description>
+          <defaultValue>DEPLOYMENT_GROUP_ID</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>DEPLOYMENT_ARTIFACT_ID</name>
+          <description>The Maven artifactId of the deployed artifact</description>
+          <defaultValue>DEPLOYMENT_ARTIFACT_ID</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>DEPLOYMENT_VERSION</name>
+          <description>The Maven version of the deployed artifact</description>
+          <defaultValue>DEPLOYMENT_VERSION</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>ASG_MIN_CAPACITY</name>
+          <description>The minimum number of immutable servers in the auto scaling group</description>
+          <defaultValue>1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>ASG_MAX_CAPACITY</name>
+          <description>The maximum number of immutable servers in the auto scaling group</description>
+          <defaultValue>5</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>ASG_DESIRED_CAPACITY</name>
+          <description>The desired number of immutable servers in the auto scaling group</description>
+          <defaultValue>2</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>CLEANUP_UNUSED_RESOURCES</name>
+          <description>Remove unused resources like:
+- detached auto scaling group and launch configuration
+- unused AMI images</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@2648.va9433432b33c">
+    <scm class="hudson.plugins.git.GitSCM" plugin="git@4.10.3">
+      <configVersion>2</configVersion>
+      <userRemoteConfigs>
+        <hudson.plugins.git.UserRemoteConfig>
+          <url>https://github.com/RHEcosystemAppEng/rhpam-deployment.git</url>
+        </hudson.plugins.git.UserRemoteConfig>
+      </userRemoteConfigs>
+      <branches>
+        <hudson.plugins.git.BranchSpec>
+          <name>*/jenkinsaws</name>
+        </hudson.plugins.git.BranchSpec>
+      </branches>
+      <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+      <submoduleCfg class="empty-list"/>
+      <extensions/>
+    </scm>
+    <scriptPath>eap/rhpam-on-aws-automation-postgresql/jenkins/JenkinsfileDeployImmutable</scriptPath>
+    <lightweight>true</lightweight>
+  </definition>
+  <triggers/>
+  <authToken>deploy-immutable-artifact</authToken>
+  <disabled>false</disabled>
+</flow-definition>
