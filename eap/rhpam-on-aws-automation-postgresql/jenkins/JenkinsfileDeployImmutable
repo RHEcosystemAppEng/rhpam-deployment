@@ -1,0 +1,316 @@
+@Library('shared-jenkins-library@jenkinsaws') _
+node() {
+    echo "Start of immutable deployment pipeline!!"
+
+    def templateVmName = "${params.TEMPLATE_VM_NAME_PREFIX}-${currentBuild.number}"
+    def awsRegion = "${params.AWS_REGION}"
+    def keyPairName = "${params.KEY_PAIR_NAME}"
+    def securityGroupId = "${params.SECURITY_GROUP_ID}"
+    def vmSubnetId1 = "${params.VM_SUBNET_ID1}"
+    def vmSubnetId2 = "${params.VM_SUBNET_ID2}"
+    def lbSubnetId1 = "${params.LB_SUBNET_ID1}"
+    def lbSubnetId2 = "${params.LB_SUBNET_ID2}"
+    def vpcId = "${params.VPC_ID}"
+    def loadBalancerName = "${params.LOAD_BALANCER_NAME.replaceAll('\\.','-')}"
+    def launchConfigurationName = "${params.LAUNCH_CONFIGURATION_NAME_PREFIX}-b${currentBuild.number}"
+    def autoScalingGroupName = "${params.ASG_NAME_PREFIX}-b${currentBuild.number}"
+
+    def usePublicIp = params.USE_PUBLIC_IP
+    def addressField = (usePublicIp)? 'PublicIpAddress' : 'PrivateIpAddress'
+
+    def containerId = "${params.DEPLOYMENT_ARTIFACT_ID}-v${params.DEPLOYMENT_VERSION}"
+    def immutableAMIName="${params.IMMUTABLE_SERVER_AMI_PREFIX}-${containerId}-b${currentBuild.number}"
+    def targetGroupName="${params.TARGET_GROUP_NAME_PREFIX.replaceAll('\\.','-')}-b${currentBuild.number}"
+
+    def desiredCapacity = "${params.ASG_DESIRED_CAPACITY}"
+
+    def unmanagedServerId = null
+    def unmanagedServerIp = null
+    def immutableAmiId = null
+    def targetGroupArn = null
+    def loadBalancerArn = null
+
+    stage('Authentication To AWS') {
+        def result = sh(script : "aws configure set region ${awsRegion}" ,returnStdout: true).trim()
+    }
+    stage('Create template VM')
+    {
+        def unmanagedServerAmiName = "${params.UNMANAGED_SERVER_AMI_NAME}"
+        echo "started getAmiByName ${unmanagedServerAmiName}"
+        def unmanagedServerAmiId = sh(script: "aws ec2 describe-images --owners self --query 'Images[*].[ImageId]' --output text --filters 'Name=name,Values=${unmanagedServerAmiName}'",
+            returnStdout : true).trim()
+        echo "result is ${unmanagedServerAmiId}"
+
+        def amiId = unmanagedServerAmiId
+        echo "started createEc2Instance named ${templateVmName} with image ${amiId}"
+
+        def unmanagedServer = sh(script: "aws ec2 run-instances --image-id ${amiId} --count 1 \
+                --instance-type t2.medium --key-name ${keyPairName} --security-group-ids ${securityGroupId} --subnet-id ${vmSubnetId1} \
+                --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=${templateVmName}},{Key=type,Value=template-server}]'",
+                returnStdout : true)
+        unmanagedServerId = readJSON(text: unmanagedServer)["Instances"][0]["InstanceId"]
+        echo "unmanaged server is ${unmanagedServer}"
+        echo "unmanaged server Id is ${unmanagedServerId}"
+    }
+    stage('Wait until Kie Server is ready')
+    {
+        echo "using IP of field: ${addressField}"
+
+        while (unmanagedServerIp == null) {
+            def unmanagedServerInstance = sh(script: "aws ec2 describe-instances --filters 'Name=tag:Name,Values=${templateVmName}'",
+                    returnStdout : true)
+            unmanagedServerIp = readJSON(text: unmanagedServerInstance)["Reservations"][0]["Instances"][0]["${addressField}"]
+            state = readJSON(text: unmanagedServerInstance)["Reservations"][0]["Instances"][0]["State"]["Name"]
+            echo "${addressField} of template server is ${unmanagedServerIp} (state is ${state})"
+            sleep( (unmanagedServerIp == null) ? 10 : 0)
+        }
+
+        def isReady = false
+        while (!isReady) {
+            def exitCode = sh(script: "curl -w '%{http_code}' --fail --output /dev/null --silent --connect-timeout 10 \
+                    http://${unmanagedServerIp}:8080/kie-server/services/rest/server/readycheck",
+                    returnStatus: true)
+            echo "exitCode is ${exitCode}"
+            if (exitCode == 0) {
+                def httpState = sh(script: "curl -w '%{http_code}' --fail --output /dev/null --silent --connect-timeout 10 \
+                        http://${unmanagedServerIp}:8080/kie-server/services/rest/server/readycheck",
+                        returnStdout : true).trim()
+                isReady = ("${httpState}" == "200")
+                echo "httpState is ${httpState}, is ready=${isReady}"
+            }
+            sleep( (!isReady) ? 10 : 0)
+        }
+    }
+    stage('Deploy new artifacts')
+    {
+        echo "deploying Maven artifact ${containerId}=${params.DEPLOYMENT_GROUP_ID}:${params.DEPLOYMENT_ARTIFACT_ID}:${params.DEPLOYMENT_VERSION}"
+        withCredentials([usernamePassword(credentialsId: 'RHPAM_ADMIN_CREDENTIALS', passwordVariable: 'rhpamAdminPassword', usernameVariable: 'rhpamAdminUser')]) {
+            def deploymentResult = sh(script: "curl -X PUT http://${unmanagedServerIp}:8080/kie-server/services/rest/server/containers/${containerId} \
+                    --user '${rhpamAdminUser}:${rhpamAdminPassword}' \
+                    --header 'Accept: application/json' \
+                    --header 'Content-Type: application/json' \
+                    --data-raw '{\"container-id\": \"${containerId}\", \"release-id\": { \"group-id\": \"${params.DEPLOYMENT_GROUP_ID}\", \"artifact-id\": \"${params.DEPLOYMENT_ARTIFACT_ID}\", \"version\": \"${params.DEPLOYMENT_VERSION}\"}}'",
+                     returnStdout : true).trim()
+            echo "deployment result is ${deploymentResult}"
+        }
+    }
+    stage('Configure the immutable server')
+    {
+        withCredentials([file(credentialsId: 'KEY_PAIR_PEM', variable: 'identityFile')]) {
+            echo "identityFile is ${identityFile}"
+            def remote = [:]
+            remote.name = 'ks'
+            remote.host = "${unmanagedServerIp}"
+            remote.user='ec2-user'
+            remote.identityFile = identityFile
+            remote.allowAnyHosts = true
+
+            sshCommand remote: remote, sudo: true,
+                command: "${params.RHPAM_PATH}/bin/jboss-cli.sh -c --command='/system-property=org.kie.server.mgmt.api.disabled:add(value=true)'"
+        }
+    }
+    stage('Create new AMI for immutable server')
+    {
+        def immutableAmi = sh(script: "aws ec2 create-image --instance-id ${unmanagedServerId} --name ${immutableAMIName}",
+                returnStdout : true).trim()
+        immutableAmiId = readJSON(text: immutableAmi)["ImageId"]
+        echo "image Id for immutable server is ${immutableAmiId} - waiting until it becomes available"
+        sh(script: "aws ec2 wait image-available --owners self --image-ids ${immutableAmiId}")
+        echo "now image ${immutableAmiId} is available"
+    }
+    stage('Terminate the template VM')
+    {
+        def result = sh(script: "aws ec2 terminate-instances --instance-ids ${unmanagedServerId}",
+                returnStdout : true).trim()
+        echo "terminated immutable server"
+    }
+    stage('Create Launch Configuration')
+    {
+        def immutableLaunchConfiguration = sh(script: "aws autoscaling create-launch-configuration --launch-configuration-name ${launchConfigurationName} \
+                --image-id ${immutableAmiId} \
+                --instance-type t2.medium \
+                --security-groups ${securityGroupId} \
+                --associate-public-ip-address \
+                --key-name ${keyPairName}",
+                returnStdout : true).trim()
+        echo "created immutable launch configuration ${launchConfigurationName}"
+    }
+    stage('Create Auto Scaling Group')
+    {
+        def minSize = "${params.ASG_MIN_CAPACITY}"
+        def maxSize = "${params.ASG_MAX_CAPACITY}"
+
+        def immutableAutoScalingGroup = sh(script: "aws autoscaling create-auto-scaling-group \
+                --auto-scaling-group-name ${autoScalingGroupName}  \
+                --launch-configuration-name ${launchConfigurationName} \
+                --min-size ${minSize} \
+                --max-size ${maxSize} \
+                --desired-capacity ${desiredCapacity} \
+                --vpc-zone-identifier '${vmSubnetId1},${vmSubnetId2}' \
+                --tags 'ResourceId=${autoScalingGroupName},ResourceType=auto-scaling-group,Key=app,Value=RHPAM-KS,PropagateAtLaunch=true' \
+                'ResourceId=${autoScalingGroupName},ResourceType=auto-scaling-group,Key=pipeline,Value=production,PropagateAtLaunch=true' \
+                'ResourceId=${autoScalingGroupName},ResourceType=auto-scaling-group,Key=deploymentContainer,Value=${containerId},PropagateAtLaunch=true' \
+                'ResourceId=${autoScalingGroupName},ResourceType=auto-scaling-group,Key=buildNumber,Value=${currentBuild.number},PropagateAtLaunch=true'",
+                returnStdout : true).trim()
+        echo "created auto scaling group ${autoScalingGroupName}"
+    }
+    stage('Wait until all new servers are ready')
+    {
+        def allInstancesStarted = false
+        def immutableServerInstances = null
+        while (!allInstancesStarted) {
+            immutableServerInstances = sh(script: "aws ec2 describe-instances --filters 'Name=tag:aws:autoscaling:groupName,Values=${autoScalingGroupName}'",
+                    returnStdout : true)
+            def counter = 0;
+            def instances = readJSON(text: immutableServerInstances).Reservations.each{ reservation ->
+                counter = counter + reservation.Instances.size()
+            }
+            allInstancesStarted = ("${counter}" == "${desiredCapacity}")
+            echo "started ${counter} instances out of ${desiredCapacity} desired"
+            sleep( (!allInstancesStarted) ? 10 : 0)
+        }
+
+        readJSON(text: immutableServerInstances)Reservations.each{reservation->
+            reservation.Instances.each{ instance ->
+                def instanceId = instance.InstanceId
+                echo "trying instance ${instanceId}"
+                sh(script: "aws ec2 wait instance-running --instance-ids ${instanceId}")
+
+                echo "now instance ${instanceId} is running"
+                def immutableServerInstance = sh(script: "aws ec2 describe-instances --instance-ids ${instanceId}",
+                        returnStdout : true)
+                def immutableServerIp = readJSON(text: immutableServerInstance).Reservations[0].Instances[0]["${addressField}"]
+                echo "waiting until ${immutableServerIp} is ready"
+
+                def isReady = false
+                while (!isReady) {
+                    def exitCode = sh(script: "curl -w '%{http_code}' --fail --output /dev/null --silent --connect-timeout 10 \
+                            http://${immutableServerIp}:8080/kie-server/services/rest/server/readycheck",
+                            returnStatus: true)
+                    echo "exitCode is ${exitCode}"
+                    if (exitCode == 0) {
+                        def httpState = sh(script: "curl -w '%{http_code}' --fail --output /dev/null --silent --connect-timeout 10 \
+                                http://${immutableServerIp}:8080/kie-server/services/rest/server/readycheck",
+                                returnStdout : true).trim()
+                        isReady = ("${httpState}" == "200")
+                        echo "httpState is ${httpState}, is ready=${isReady}"
+                    }
+                    sleep( (!isReady) ? 10 : 0)
+                }
+            }
+        }
+    }
+    stage('Create new Target Group')
+    {
+        def targetGroup = sh(script: "aws elbv2 create-target-group \
+                --name ${targetGroupName} \
+                --protocol HTTP \
+                --port 8080 \
+                --target-type instance \
+                --vpc-id ${vpcId} \
+                --tags 'Key=app,Value=RHPAM-KS' 'Key=pipeline,Value=production' \
+               'Key=deploymentContainer,Value=${containerId}' 'Key=buildNumber,Value=${currentBuild.number}'",
+                returnStdout : true)
+        echo "created target group ${targetGroup}"
+        targetGroupArn = readJSON(text: targetGroup).TargetGroups[0].TargetGroupArn
+        echo "targetGroupArn is ${targetGroupArn}"
+    }
+    stage('Create or update Application Load Balancer')
+    {
+        def exitCode = sh(script: "aws elbv2 describe-load-balancers --names ${loadBalancerName}",
+                    returnStatus: true)
+        if (exitCode != 0) {
+            echo "cannot find load balancer by name ${loadBalancerName} - creating load balancer"
+            def loadBalancer = sh(script: "aws elbv2 create-load-balancer \
+                    --name ${loadBalancerName} \
+                    --type application \
+                    --scheme internet-facing \
+                    --subnets ${lbSubnetId1} ${lbSubnetId2} \
+                    --security-groups ${securityGroupId}",
+                    returnStdout : true)
+            loadBalancerArn = readJSON(text: loadBalancer).LoadBalancers[0].LoadBalancerArn
+            echo "created load balancer ${loadBalancer}"
+            echo "loadBalancerArn is ${loadBalancerArn}"
+            sh(script: "aws elbv2 wait load-balancer-available --load-balancer-arns ${loadBalancerArn}")
+            echo "now load balancer is available"
+
+            def currentLoadBalancer = sh(script: "aws elbv2 describe-load-balancers --names ${loadBalancerName}",
+                        returnStdout: true)
+            def loadBalancerDnsName = readJSON(text: currentLoadBalancer).LoadBalancers[0].DNSName
+
+            sh(script: "aws autoscaling attach-load-balancer-target-groups \
+                    --auto-scaling-group-name ${autoScalingGroupName} \
+                    --target-group-arns ${targetGroupArn}")
+            echo "attached target group ${targetGroupArn} to auto scaling group ${autoScalingGroupName}"
+
+            def loadBalancerListener = sh(script: "aws elbv2 create-listener \
+                    --load-balancer-arn ${loadBalancerArn} \
+                    --protocol HTTP \
+                    --port 80 \
+                    --default-actions 'Type=forward,TargetGroupArn=${targetGroupArn}'",
+            returnStdout : true)
+            echo "created listener: ${loadBalancerListener}"
+
+            echo "load balancer available and set at ${loadBalancerDnsName}"
+        } else {
+            def currentLoadBalancer = sh(script: "aws elbv2 describe-load-balancers --names ${loadBalancerName}",
+                        returnStdout: true)
+            loadBalancerArn = readJSON(text: currentLoadBalancer).LoadBalancers[0].LoadBalancerArn
+            def loadBalancerDnsName = readJSON(text: currentLoadBalancer).LoadBalancers[0].DNSName
+            echo "found existing load balancer by name ${loadBalancerName} - loadBalancerArn is ${loadBalancerArn}"
+
+            sh(script: "aws autoscaling attach-load-balancer-target-groups \
+                    --auto-scaling-group-name ${autoScalingGroupName} \
+                    --target-group-arns ${targetGroupArn}")
+            echo "attached target group ${targetGroupArn} to auto scaling group ${autoScalingGroupName}"
+
+            def loadBalancerListener = sh(script: "aws elbv2 describe-listeners \
+                    --load-balancer-arn ${loadBalancerArn}",
+                    returnStdout : true)
+            def loadBalancerListenerArn = readJSON(text: loadBalancerListener).Listeners[0].ListenerArn
+            echo "modifying default rule for listener ${loadBalancerListenerArn}"
+
+            def updatedLoadBalancerListener = sh(script: "aws elbv2 modify-listener \
+                    --listener-arn ${loadBalancerListenerArn} \
+                    --default-actions 'Type=forward,TargetGroupArn=${targetGroupArn}'",
+                    returnStdout : true)
+            echo "updated listener: ${updatedLoadBalancerListener}"
+
+            echo "load balancer available and updated at ${loadBalancerDnsName}"
+        }
+    }
+    stage('Cleanup unused resources')
+    {
+        def cleanup = params.CLEANUP_UNUSED_RESOURCES
+        if (cleanup) {
+            echo "removing unused resources"
+            def allAutoScalingGroups = sh(script: "aws autoscaling describe-auto-scaling-groups \
+                    --filters 'Name=tag:app,Values=RHPAM-KS' 'Name=tag:pipeline,Values=production'",
+                    returnStdout : true)
+            readJSON(text: allAutoScalingGroups).AutoScalingGroups.each{autoScalingGroup->
+                def name = autoScalingGroup.AutoScalingGroupName
+                if (name != autoScalingGroupName) {
+                    sh(script: "aws autoscaling delete-auto-scaling-group --force-delete --auto-scaling-group-name ${name}")
+                    echo "removed unused auto scaling group ${name}"
+
+                    sh(script: "aws autoscaling delete-launch-configuration --launch-configuration-name ${autoScalingGroup.LaunchConfigurationName}")
+                    echo "removed unused launch configuration ${autoScalingGroup.LaunchConfigurationName}"
+                }
+            }
+
+            def allTargetGroups = sh(script: "aws resourcegroupstaggingapi get-resources \
+                    --resource-type-filters 'elasticloadbalancing:targetgroup' \
+                    --tag-filters 'Key=app,Values=RHPAM-KS' 'Key=pipeline,Values=production'",
+                    returnStdout : true)
+            readJSON(text: allTargetGroups).ResourceTagMappingList.each{targetGroup->
+                def arn = targetGroup.ResourceARN
+                if (arn != targetGroupArn) {
+                    sh(script: "aws elbv2 delete-target-group --target-group-arn ${arn}")
+                    echo "removed unused target group ${arn}"
+                }
+            }
+        } else {
+            echo "cleanup step disabled"
+        }
+    }
+}
