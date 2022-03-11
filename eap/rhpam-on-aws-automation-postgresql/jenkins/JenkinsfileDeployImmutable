@@ -98,8 +98,8 @@ node() {
     {
         withCredentials([file(credentialsId: 'KEY_PAIR_PEM', variable: 'identityFile')]) {
             echo "identityFile is ${identityFile}"
-            def result=sh(script: "ssh -o StrictHostKeyChecking=no -i ${identityFile} ec2-user@44.202.64.20 \
-                    ${params.RHPAM_PATH}/bin/jboss-cli.sh -c --command='/system-property=org.kie.server.mgmt.api.disabled:add(value=true)'",
+            def result=sh(script: "ssh -o StrictHostKeyChecking=no -i ${identityFile} ec2-user@${unmanagedServerIp} \
+                    \"sudo ${params.RHPAM_PATH}/bin/jboss-cli.sh -c --command='/system-property=org.kie.server.mgmt.api.disabled:add(value=true)'\"",
                     returnStdout : true).trim()
             echo "${result}"
         }
