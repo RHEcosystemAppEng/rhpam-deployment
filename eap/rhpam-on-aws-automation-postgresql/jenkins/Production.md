@@ -3,7 +3,6 @@
 * Create `Credentials>Secret File` with ID `KEY_PAIR_PEM` and add the content of the pem file from the `Browse` button
 * Create `Credentials>Username and password` with ID `RHPAM_ADMIN_CREDENTIALS` and configure username and password of an 
 admin user (used to deploy the container artifacts from Jenkins to the server)
-* Install `SSH Pipeline Steps` plugin in Jenkins
 * Include path to AWS CLI v2 to `PATH` variable under `Manage Jenkins>Configure System>Global environment`
 * **Also consider all the installation and configuration options defined in [README.md](./README.md)**  
 
