@@ -8,7 +8,7 @@ on a new set of immutable RHPAM Kie Server(s).
   * _`CICD` comment  to trigger the Dev CI/CD pipeline_
   * Changes are validated against Validation pipeline (out of scope)
   * Version is updated from SNAPSHOT to RELEASE
-  * `RELEASE` comment to trigger the Production CI/CD pipeline
+  * `BUILD_RELEASE` comment to trigger the Production CI/CD pipeline
 ![](../demo-dev-env/gitflow.png)
 
 * Production environment
@@ -31,23 +31,22 @@ Following changes are needed to trigger the production pipeline when the `RELEAS
 cd /root/efs-mount-point/.niogit/Demo/demo.git
 echo 'read local_ref local_sha remote_ref remote_sha
 date >> /tmp/pre-push-log.out
+BUILD_TYPE="NA"
 SQUASH_INDICATION=$(git show "$local_sha" | grep -i CICD)
-# Only if commit message contains CICD(not case sensitive) then invoke jenkins pipeline.
 if [[ -n "${SQUASH_INDICATION}" ]]; then
-    echo "waiting 2 seconds before invoking jenkins pipeline..." >> /tmp/pre-push-log.out
-    bash -c "sleep 2 \
-     ; curl -X GET --user USERNAME:PASSWORD https://JENKINS_SERVER_URL/job/build-artifact/buildWithParameters?token=deploy-artifact-temenos >> /tmp/pre-push-log.out" &
-
-    echo "jenkins invoked successfully" >> /tmp/pre-push-log.out
-    echo "ending pre-push hook script, on time:" >> /tmp/pre-push-log.out
-    date >> /tmp/pre-push-log.out
+    BUILD_TYPE="CICD"
+else
+    RELEASE_INDICATION=$(git show "$local_sha" | grep -i BUILD_RELEASE)
+    if [[ -n "${RELEASE_INDICATION}" ]]; then
+      BUILD_TYPE="RELEASE"
+    fi
 fi
-RELEASE_INDICATION=$(git show "$local_sha" | grep -i RELEASE)
 # Only if commit message contains RELEASE(not case sensitive) then invoke jenkins production pipeline.
-if [[ -n "${RELEASE_INDICATION}" ]]; then
-    echo "waiting 2 seconds before invoking jenkins pipeline..." >> /tmp/pre-push-log.out
+if [[ "$BUILD_TYPE" != "NA" ]]; then
+    API_TOKEN="11b33d64fd0ffce13bda714cb4de6ac7a8"
+    echo "waiting 2 seconds before invoking jenkins pipeline for ${BUILD_TYPE}..." >> /tmp/pre-push-log.out
     bash -c "sleep 2 \
-     ; curl -X GET --user USERNAME:PASSWORD https://JENKINS_SERVER_URL/job/deploy-immutable-artifact/buildWithParameters?token=deploy-immutable-artifact >> /tmp/pre-push-log.out" &
+     ; curl -X POST --user admin:$API_TOKEN '"'"'http://3.89.131.157:8080/job/build-artifact/buildWithParameters?token=build-token&BUILD_TYPE=$BUILD_TYPE'"'"' >> /tmp/pre-push-log.out" &
 
     echo "jenkins invoked successfully" >> /tmp/pre-push-log.out
     echo "ending pre-push hook script, on time:" >> /tmp/pre-push-log.out
