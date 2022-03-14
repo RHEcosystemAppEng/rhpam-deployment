@@ -62,7 +62,7 @@ This is needed to trigger the pipeline when a commit comment includes the `RELEA
 * Update project version to a new version (SNAPHOT)
 * Run `Build&Install` and check the remote Maven repository
 * Update project version to release the current version
-* Commit with `RELEASE` comment
+* Commit with `BUILD_RELEASE` comment
 * Verify using the load-balancer URL that the deployment is updated
   * Get containers
   * Get process
