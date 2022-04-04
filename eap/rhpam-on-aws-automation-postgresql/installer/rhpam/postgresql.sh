@@ -19,3 +19,5 @@ else
   ${PSQL} < quartz_tables_postgres.sql
   ${PSQL} < task_assigning_tables_postgresql.sql
 fi
+
+sudo dnf -y remove postgresql

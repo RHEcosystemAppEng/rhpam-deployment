@@ -1,0 +1,3 @@
+module add --name=com.mysql \
+    --resources=/tmp/mysql-connector-java-8.0.27/mysql-connector-java-8.0.27.jar \
+    --dependencies=javax.api,javax.transaction.api

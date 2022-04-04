@@ -4,6 +4,9 @@ RHPAM_INSTALLER=rhpam-installer-7.9.1.jar
 
 POSTGRESQL_DOWNLOAD_URL=https://jdbc.postgresql.org/download/postgresql-42.3.1.jar
 POSTGRESQL_DRIVER=postgresql-42.3.1.jar
+# Note: must be 8.0.22 to avoid "Not a java.util.Date" exception
+MYSQL_DOWNLOAD_URL=https://downloads.mysql.com/archives/get/p/3/file/mysql-connector-java-8.0.22.zip
+MYSQL_DRIVER=mysql-connector-java-8.0.22/mysql-connector-java-8.0.22.jar
 
 function installRhpam(){
   headerLog "installRhpam $1"

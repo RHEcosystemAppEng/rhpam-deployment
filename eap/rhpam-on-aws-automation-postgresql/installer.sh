@@ -130,21 +130,47 @@ function configurePostgresQL() {
   cd ./installer/database/rhpam-7.9.1-migration-tool/ddl-scripts && zip -r ../../postgresql.zip  postgresql && cd -
   copyFile "./installer/database" "postgresql.zip"
   rm -rf installer/database/rhpam-7.9.1-migration-tool
-  rm -f installer/database/ rhpam-7.9.1-migration-tool.zip
+  rm -f installer/database/rhpam-7.9.1-migration-tool.zip
   rm -f installer/database/postgresql.zip
 
   execute "/tmp/postgresql.sh"
 }
 
+function configureMySQL() {
+  headerLog "configureMySQL"
+  unzip -o ./installer/database/rhpam-7.9.1-add-ons.zip -d ./installer/database rhpam-7.9.1-migration-tool.zip
+  rm -rf installer/database/rhpam-7.9.1-migration-tool
+  unzip -o ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/mysqlinnodb/mysql-innodb-jbpm-schema.sql"
+  unzip -o ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/mysqlinnodb/quartz_tables_mysql_innodb.sql"
+  unzip -o ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/mysqlinnodb/task_assigning_tables_mysql_innodb.sql"
+  cd ./installer/database/rhpam-7.9.1-migration-tool/ddl-scripts && zip -r ../../mysqlinnodb.zip  mysqlinnodb && cd -
+  copyFile "./installer/database" "mysqlinnodb.zip"
+  rm -rf installer/database/rhpam-7.9.1-migration-tool
+  rm -f installer/database/rhpam-7.9.1-migration-tool.zip
+  rm -f installer/database/mysqlinnodb.zip
+
+  execute "/tmp/mysqlinnodb.sh"
+}
+
 function installJdbcDriver(){
   headerLog "installJdbcDriver"
-  execute "curl ${POSTGRESQL_DOWNLOAD_URL} --output /tmp/${POSTGRESQL_DRIVER}"
-  execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/postgres-module.cli"
+  if [[ ${DB_TYPE} == 'mysql' ]]; then
+    execute "curl -L ${MYSQL_DOWNLOAD_URL} --output /tmp/mysql.zip"
+    execute "unzip -o /tmp/mysql.zip -d /tmp ${MYSQL_DRIVER}"
+    execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/mysql-module.cli"
+  elif [[ ${DB_TYPE} == 'postgresql' ]]; then
+    execute "curl ${POSTGRESQL_DOWNLOAD_URL} --output /tmp/${POSTGRESQL_DRIVER}"
+    execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --file=/tmp/postgres-module.cli"
+  fi
 }
 
 function configureDS(){
   headerLog "configureDS"
-  execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --properties=/tmp/runtime.properties --file=/tmp/postgres-datasource.cli"
+  if [[ ${DB_TYPE} == 'mysql' ]]; then
+    execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --properties=/tmp/runtime.properties --file=/tmp/mysql-datasource.cli"
+  elif [[ ${DB_TYPE} == 'postgresql' ]]; then
+    execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --properties=/tmp/runtime.properties --file=/tmp/postgres-datasource.cli"
+  fi
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh  --timeout=60000 --file=/tmp/delete-h2.cli"
   execute "sudo ${EAP_HOME}/bin/jboss-cli.sh --connect --timeout=60000 --command='/subsystem=datasources/data-source=KieServerDS:test-connection-in-pool'"
 }
@@ -166,7 +192,14 @@ if [[ ${INSTALL_TYPE} == 'REMOTE_FULL' ]]; then
   stopFirewallService
 fi
 if [ $(isKieServer) ]; then
-  configurePostgresQL
+  if [[ ${DB_TYPE} == 'mysql' ]]; then
+    configureMySQL
+  elif [[ ${DB_TYPE} == 'postgresql' ]]; then
+    configurePostgresQL
+  else
+    log "Unsupported DB_TYPE=${DB_TYPE}-Exiting"
+    exit 1
+  fi
 fi
 installEap
 installSsoAdapter
