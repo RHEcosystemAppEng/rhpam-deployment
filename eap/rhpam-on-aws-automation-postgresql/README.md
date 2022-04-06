@@ -1,7 +1,7 @@
 # RHPAM deployments on AWS
 The reference architecture includes a distributed network of the following services:
 * Maven repository
-* PostgreSQL database
+* PostgreSQL or MySQL database
 * Git server
 * Jenkins CI/CD
 * Keycloak authentication server
@@ -61,7 +61,7 @@ Starting from the empty reference AWS architecture (e.g., no RHPAM deployments a
 the deployment follows these manual [M] and automated steps [A]:
 - [M] Configure the Keycloak realm
 - [M] Configure the Maven repository
-- [A] Configure the PostgreSQL DB
+- [A] Configure the PostgreSQL or MySQL DB
 - [A] Deployment of RHPAM Business Central  on the assigned EC2 VM (only `Development` environment)
 - [M] Configure the Git connectivity
 - [A] Deployment of RHPAM Kie Server on the assigned EC2 VM
@@ -106,7 +106,7 @@ include the following declaration:
 </distributionManagement>
 ```
 
-### Configure the PostgreSQL DB
+### Configure the PostgreSQL or MySQL DB
 The database is created and initialized during the initial configuration of the KIE Server, using
 the connection properties defined in the Kie Server [runtime.properties](./runtime/kie-server/runtime.properties)
 
@@ -146,6 +146,30 @@ Note that `<TUNNEL_USER>` and `<REMOTE_USER>` might actually be different users.
 The installation steps are performed with the [installer.sh](./installer.sh) script that is configured with the properties
 defined in [installer.properties](./installer.properties) 
 
+* `INSTALL_TYPE`- The type of installation, one of:
+  * `LOCAL` - java, services are NOT installed and /or started/stopped
+  * `REMOTE_FULL` - all is done
+  * `REMOTE_PARTIAL` - java, app server, services are NOT installed and/or started/stopped. Use it when only need to
+  provision app
+* `DB_TYPE` - The DB type, one of:
+  * `postgresql`
+  * `mysql`
+* `RHPAM_SERVER_IP` - The public IP of the VM to configure. If an SSH tunnel is used to reach the remote server, put `localhost`
+* `RHPAM_SERVER_PORT` - The port of the RHPAM service 
+* `SSH_PORT` - The SSH port to connect. If an SSH tunnel is used to reach the remote server, put the local port of the tunnel
+* `SSH_PEM_FILE` - The name of the SSH key file
+* `SSH_USER_ID` - The SSH user
+* `RHPAM_SERVER` - The RHPAM server, one of: `business-central` or `kie-server`
+* `KIE_SERVER_TYPE` - [only for `RHPAM_SERVER=kie-server`] The Kie Server type, one of: `unmanaged`, `managed`
+* `EAP_HOME` - The root folder of RHPAM installation
+* `RHPAM_HOME` - The RHPAM home folder (e.g., where maven settings file and server config files are located)
+* `RHPAM_PROPS_DIR` - The folder where server properties are stored (`runtime.properties`). In case of EFS mounted filesystem, 
+it has to match the mounted path so that these properties are shared in case of scaled setups 
+* `GIT_HOME` - [only for `RHPAM_SERVER=business-central`] Folder where the git repository is located (as .niogit/). In
+case of EFS mounted filesystem, it has to match the mounted path so that the git projects are preserved in case a new
+EC2 instance is started
+* `DRY_RUN_ONLY` - Set to "yes" to only generate the list of commands in the installer.log file
+
 ##### Install RHPAM Business Central
 Set the following in [installer.properties](./installer.properties):
 * `RHPAM_SERVER`: must be `business-central`
@@ -160,9 +184,10 @@ actual Keycloak instance, then run it as:
 Set the following in [installer.properties](./installer.properties):
 * `RHPAM_SERVER`: must be `kie-server`
 * `KIE_SERVER_TYPE`: either `managed` or `unmanaged`
+* `DB_TYPE`: define the actual DB type
 
 Then, update all the runtime properties defined in [runtime.properties](./runtime/kie-server/runtime.properties) to connect to the
-actual Keycloak and PostgresQL instances, then run it as:
+actual Keycloak and DB instances (PostgresQL or MySQL), then run it as:
 ```shell
 ./installer.sh
 ```
