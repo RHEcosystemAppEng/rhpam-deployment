@@ -110,6 +110,14 @@ include the following declaration:
 The database is created and initialized during the initial configuration of the KIE Server, using
 the connection properties defined in the Kie Server [runtime.properties](./runtime/kie-server/runtime.properties)
 
+#### Running custom SQL code
+Custom SQL scripts can be executed during the installation of the Kie Server, after the creation of the RHPAM DB schema.
+
+To run custom scripts, just put the files in the [installer/database/customSql](./installer/database/customSql) folder:
+* All "*.sql" files will be executed in unpredictable order
+* If any ordering is needed, aggregate the dependant files in a single file
+* The SQL language used must be compliant with the DB type specified in [installer.properties](./installer.properties) as `DB_TYPE`
+
 ### Deployment of RHPAM Business Central and Kie Server
 #### Software requirements
 * To run the deployment procedure you need a Linux workstation with `bash` shell and the following software:  

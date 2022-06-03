@@ -19,6 +19,13 @@ else
   ${MYSQL} < mysql-innodb-jbpm-schema.sql
   ${MYSQL} < quartz_tables_mysql_innodb.sql
   ${MYSQL} < task_assigning_tables_mysql_innodb.sql
+
+  cd /tmp/customSql
+  for sql in *.sql
+  do
+    echo "Running custom SQL ${sql}"
+    ${MYSQL} < ${sql}
+  done
 fi
 
 sudo yum remove -y mysql

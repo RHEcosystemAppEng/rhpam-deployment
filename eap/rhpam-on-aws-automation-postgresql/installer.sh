@@ -128,6 +128,7 @@ function configurePostgresQL() {
   unzip -o ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/postgresql/quartz_tables_postgres.sql"
   unzip -o ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/postgresql/task_assigning_tables_postgresql.sql"
   cd ./installer/database/rhpam-7.9.1-migration-tool/ddl-scripts && zip -r ../../postgresql.zip  postgresql && cd -
+  cd ./installer/database && zip -urv postgresql.zip customSql/*.sql && cd -
   copyFile "./installer/database" "postgresql.zip"
   rm -rf installer/database/rhpam-7.9.1-migration-tool
   rm -f installer/database/rhpam-7.9.1-migration-tool.zip
@@ -144,6 +145,7 @@ function configureMySQL() {
   unzip -o ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/mysqlinnodb/quartz_tables_mysql_innodb.sql"
   unzip -o ./installer/database/rhpam-7.9.1-migration-tool.zip -d ./installer/database/ "rhpam-7.9.1-migration-tool/ddl-scripts/mysqlinnodb/task_assigning_tables_mysql_innodb.sql"
   cd ./installer/database/rhpam-7.9.1-migration-tool/ddl-scripts && zip -r ../../mysqlinnodb.zip  mysqlinnodb && cd -
+  cd ./installer/database && zip -urv mysqlinnodb.zip customSql/*.sql && cd -
   copyFile "./installer/database" "mysqlinnodb.zip"
   rm -rf installer/database/rhpam-7.9.1-migration-tool
   rm -f installer/database/rhpam-7.9.1-migration-tool.zip

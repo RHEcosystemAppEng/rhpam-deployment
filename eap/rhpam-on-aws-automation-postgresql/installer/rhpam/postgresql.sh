@@ -18,6 +18,13 @@ else
   ${PSQL} < postgresql-jbpm-schema.sql
   ${PSQL} < quartz_tables_postgres.sql
   ${PSQL} < task_assigning_tables_postgresql.sql
+
+  cd /tmp/customSql
+  for sql in *.sql
+  do
+    echo "Running custom SQL ${sql}"
+    ${PSQL} < ${sql}
+  done
 fi
 
 sudo dnf -y remove postgresql
