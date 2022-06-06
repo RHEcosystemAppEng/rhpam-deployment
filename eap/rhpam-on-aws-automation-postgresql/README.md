@@ -250,6 +250,21 @@ original one.
 Instructions are provided in a separate [README.md](./jenkins/README.md)
 
 ## Additional Notes
+### Running Postman collection scripts
+[Postman](https://www.postman.com/) collection scripts can be executed from the Kie Server host by using the new script
+[postman.sh](./postman.sh), as in:
+```shell
+postman.sh <collection_script.json>
+```
+
+Notes:
+* The script needs the [installer.properties](./installer.properties) to be configured with settings to locate the Kie Server host
+* The Kie Server must be running at the time the script is executed
+* All the URLs in the collection script (usually, a JSON document) must use the HTTP protocol and the local host at the port
+defined in the `RHPAM_SERVER_PORT` property, as in: `http://localhost:8080/...`
+* In case of authenticated APIs, the collection script must include proper `username` and `password` fields, matching one 
+of the users configured in the Keycloak console (they must have `admin` and `rest-all` roles)
+
 ### EC2 VM tags required by the Jenkins pipeline
 The reference pipeline implementation lookups the RHPAM server instances by querying by tag the AWS network. The following  
 required tags must be then configured on the EC2 VM instances:

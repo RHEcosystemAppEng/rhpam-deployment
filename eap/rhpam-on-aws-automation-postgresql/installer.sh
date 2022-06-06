@@ -5,11 +5,7 @@ source $(dirname "$0")/lib/common-functions.sh
 source $(dirname "$0")/lib/eap-functions.sh
 source $(dirname "$0")/lib/rhpam-functions.sh
 
-SERVICE_SCRIPT=unset
-SERVICE_LAUNCHER=unset
-RHPAM_INSTALLER_XML=unset
-INSTALL_LOCATION_USE_SUDO=unset
-INSTALL_LOCATION_IS_REMOTE=unset
+
 
 function isKieServer() {
   if [[ "$RHPAM_SERVER" == "kie-server" ]]; then
@@ -17,46 +13,6 @@ function isKieServer() {
   else
     echo ""
   fi
-}
-
-function initInstaller() {
-  headerLog "initInstaller"
-  rm $(dirname $0)/installer.log
-  log "$(date) Starting installation of ${RHPAM_SERVER} on ${RHPAM_SERVER_IP}"
-  log "DRY_RUN_ONLY=${DRY_RUN_ONLY}"
-  log "SSH_PEM_FILE=${SSH_PEM_FILE}"
-  log "SSH_USER_ID=${SSH_USER_ID}"
-  log "RHPAM_SERVER_IP=${RHPAM_SERVER_IP}"
-  log "RHPAM_SERVER_PORT=${RHPAM_SERVER_PORT}"
-  log "RHPAM_SERVER=${RHPAM_SERVER}"
-  log "KIE_SERVER_TYPE=${KIE_SERVER_TYPE}"
-  log "EAP_HOME=${EAP_HOME}"
-  log "RHPAM_HOME=${RHPAM_HOME}"
-  log "RHPAM_PROPS_DIR=${RHPAM_PROPS_DIR}"
-  log "GIT_HOME=${GIT_HOME}"
-
-  INSTALL_LOCATION_USE_SUDO=true
-  INSTALL_LOCATION_IS_REMOTE=true
-  if [ ${INSTALL_TYPE} == 'LOCAL' ]
-  then
-    INSTALL_LOCATION_USE_SUDO=false
-    INSTALL_LOCATION_IS_REMOTE=false
-  fi
-  if [[ $(isKieServer) ]]; then
-    SERVICE_SCRIPT="ks.service"
-    SERVICE_LAUNCHER="ks-service.sh"
-    RHPAM_INSTALLER_XML="ks-auto.xml"
-  else
-    SERVICE_SCRIPT="bc.service"
-    SERVICE_LAUNCHER="bc-service.sh"
-    RHPAM_INSTALLER_XML="bc-auto.xml"
-  fi
-
-  log "INSTALL_LOCATION_USE_SUDO=${INSTALL_LOCATION_USE_SUDO}"
-  log "INSTALL_LOCATION_IS_REMOTE=${INSTALL_LOCATION_IS_REMOTE}"
-  log "SERVICE_SCRIPT=${SERVICE_SCRIPT}"
-  log "SERVICE_LAUNCHER=${SERVICE_LAUNCHER}"
-  log "RHPAM_INSTALLER_XML=${RHPAM_INSTALLER_XML}"
 }
 
 function copyResources(){
